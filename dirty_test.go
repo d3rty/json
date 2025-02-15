@@ -15,7 +15,8 @@ type Event0 struct {
 type Event struct {
 	dirty.Enabled // Step 1: Enabling dirty
 
-	ID int `json:"id"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 // Dirty links Event to EventDirty // Step 2: Linking dirty model
@@ -56,9 +57,10 @@ func TestUnmarshal_Green(t *testing.T) {
 func TestUnmarshal_Yellow(t *testing.T) {
 	var e Event
 	require.NoError(t,
-		dirty.Unmarshal([]byte(`{"id":"123"}`), &e),
+		dirty.Unmarshal([]byte(`{"id":"123","name":"foobar"}`), &e),
 	)
 	assert.Equal(t, 123, e.ID)
+	assert.Equal(t, "foobar", e.Name)
 
 	result := dirty.ExtractResult[EventDirty](&e)
 
