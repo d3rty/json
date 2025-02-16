@@ -141,6 +141,9 @@ func (v *Array) UnmarshalJSON(data []byte) error {
 
 	var s string
 	if data[0] != '[' {
+		if data[0] == 'n' { // null
+			return nil
+		}
 		return fmt.Errorf("dirty.Array cant be parsed from: %s", s)
 	}
 	if len(data) < 2 {
@@ -166,6 +169,9 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 
 	var s string
 	if data[0] != '{' {
+		if data[0] == 'n' { // null
+			return nil
+		}
 		return fmt.Errorf("dirty.Object cant be parsed from: %s", s)
 	}
 	if len(data) < 2 {
@@ -179,6 +185,6 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data[1:len(data)-1], &obj); err != nil {
 		return fmt.Errorf("dirty.Object cant be parsed from json content: %w", err)
 	}
-	*v = Object(obj)
+	*v = obj
 	return nil
 }

@@ -3,14 +3,20 @@
 package dirty
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"reflect"
 )
 
 // d3rtyMarker is an internal marker interface
 // it allows Unmarshal function to validate that it's a custom dirty model.
 type d3rtyMarker interface {
 	unmarshal([]byte) error
+}
+
+type d3rtyDecoder interface {
+	decode(*json.Decoder) error
 }
 
 // d3rtyContainer is an internal interface
@@ -34,9 +40,10 @@ type Enabled struct {
 
 var _ d3rtyMarker = (*Enabled)(nil)
 
-func (e *Enabled) result() any                 { return e.res }
-func (e *Enabled) init(v any)                  { e.res = v }
-func (e *Enabled) unmarshal(data []byte) error { return json.Unmarshal(data, e.res) }
+func (e *Enabled) result() any                    { return e.res }
+func (e *Enabled) init(v any)                     { e.res = v }
+func (e *Enabled) unmarshal(data []byte) error    { return json.Unmarshal(data, e.res) }
+func (e *Enabled) decode(dec *json.Decoder) error { return dec.Decode(e.res) }
 
 // Disabled can mark your model as valid dirty.Model but won't enable dirtying.
 // You can easily switch from `dirty.Enabled` to `dirty.Disabled` keeping all models & interfaces working
@@ -51,8 +58,15 @@ func (d *Disabled) unmarshal(data []byte) error { return nil }
 // isDisabled is check if we need to ignore dirty unmarshalling.
 func (Disabled) isDisabled() { return }
 
-// Unmarshal is the main Unmarshal function
-func Unmarshal(data []byte, clean any) error {
+func Unmarshal(data []byte, v interface{}) error {
+	r := bytes.NewReader(data)
+	dec := json.NewDecoder(r)
+	return decodeValue(dec, reflect.ValueOf(v))
+}
+
+// UnmarshalOld is the main Unmarshal function
+// Legacy: is kept for reference
+func UnmarshalOld(data []byte, clean any) error {
 	// Green phase: we could convert directly to clean
 	var err error
 	if err = json.Unmarshal(data, clean); err == nil {

@@ -19,6 +19,11 @@ type Event struct {
 	Name string `json:"name"`
 }
 
+type Envelope struct {
+	Total  int     `json:"total"`
+	Events []Event `json:"data"`
+}
+
 // Dirty links Event to EventDirty // Step 2: Linking dirty model
 func (e *Event) Dirty() any {
 	return &EventDirty{}
@@ -68,4 +73,17 @@ func TestUnmarshal_Yellow(t *testing.T) {
 
 	assert.Empty(t, result.Warnings()) // TODO warnings must be 1
 	assert.Empty(t, result.Errors())
+}
+
+func TestUnmarshal_Envelope(t *testing.T) {
+	var e Envelope
+	require.NoError(t,
+		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar"}]}`), &e),
+	)
+	assert.Equal(t, 1, e.Total)
+	assert.NotEmpty(t, e.Events)
+
+	evt := e.Events[0]
+	assert.Equal(t, 123, evt.ID)
+	assert.Equal(t, "foobar", evt.Name)
 }
