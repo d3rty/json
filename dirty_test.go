@@ -9,14 +9,19 @@ import (
 )
 
 type Event0 struct {
-	ID int `json:"id"`
+	ID     int  `json:"id"`
+	Active bool `json:"active"`
 }
 
 type Event struct {
 	dirty.Enabled // Step 1: Enabling dirty
 
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID     int    `json:"id"`
+	Name   string `json:"name"`
+	Active bool   `json:"active"`
+
+	// MustBool won't be considered in dirty model, so it must parsed
+	MustBool bool `json:"must_bool"`
 }
 
 type Envelope struct {
@@ -30,13 +35,16 @@ func (e *Event) Dirty() any {
 }
 
 type EventDirty struct {
-	ID dirty.Number `json:"id"`
+	ID     dirty.Number `json:"id"`
+	Active dirty.Bool   `json:"active"`
 }
 
 func ExampleUnmarshal() {
-	// Step 3: Safe dirty unmarshal. "123" will be parsed in clean model as 123
+	// Step 3: Safe dirty unmarshal.
+	// "123" will be parsed in clean model as 123
+	// "on" will be parsed in clean model as true
 	var e Event
-	err := dirty.Unmarshal([]byte(`{"id":"123"}`), &e)
+	err := dirty.Unmarshal([]byte(`{"id":"123","active":"on"}`), &e)
 
 	_ = err // err happens when couldn't do anything
 
@@ -54,36 +62,42 @@ func ExampleUnmarshal() {
 
 func TestUnmarshal_Green(t *testing.T) {
 	var e Event0
-	require.NoError(t, dirty.Unmarshal([]byte(`{"id":123}`), &e))
+	require.NoError(t, dirty.Unmarshal([]byte(`{"id":123, "active":true}`), &e))
 
 	assert.Equal(t, 123, e.ID)
+	assert.Equal(t, true, e.Active)
 }
 
 func TestUnmarshal_Yellow(t *testing.T) {
 	var e Event
 	require.NoError(t,
-		dirty.Unmarshal([]byte(`{"id":"123","name":"foobar"}`), &e),
+		dirty.Unmarshal([]byte(`{"id":"123","name":"foobar", "active":"on"}`), &e),
 	)
 	assert.Equal(t, 123, e.ID)
 	assert.Equal(t, "foobar", e.Name)
+	assert.Equal(t, true, e.Active)
 
 	result := dirty.ExtractResult[EventDirty](&e)
 
 	assert.Equal(t, dirty.ColorYellow, result.Color())
 
-	assert.Empty(t, result.Warnings()) // TODO warnings must be 1
+	assert.Empty(t, result.Warnings()) // TODO warnings must be 2
 	assert.Empty(t, result.Errors())
 }
 
 func TestUnmarshal_Envelope(t *testing.T) {
 	var e Envelope
 	require.NoError(t,
-		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar"}]}`), &e),
+		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","active":"1","must_bool":"true"}]}`), &e),
 	)
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)
 
+	// It should be RED because of lost "must_bool" field
+
 	evt := e.Events[0]
 	assert.Equal(t, 123, evt.ID)
 	assert.Equal(t, "foobar", evt.Name)
+	assert.Equal(t, true, evt.Active)
+	assert.Equal(t, false, evt.MustBool) // as it wasn't parsed as bool
 }

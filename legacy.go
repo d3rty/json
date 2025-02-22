@@ -41,10 +41,10 @@ package dirty
 // 	// Currently for idea purpose that's OK
 // 	buffer, err := json.Marshal(scheme)
 // 	if err != nil {
-// 		return errors.New("fixme 1")
+// 		return errors.New("err1")
 // 	}
 // 	if err := json.Unmarshal(buffer, clean); err != nil {
-// 		return errors.New("fixme 2")
+// 		return errors.New("err2")
 // 	}
 
 // 	// Yellow Phase: OK: converting from dirty into clean model
