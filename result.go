@@ -18,6 +18,7 @@ const (
 )
 
 // Result stores the result of unmarshalling (as a filled Dirty model)
+// TODO: Whole concept of Result should be reconsidered and improved.
 // TODO: with its color and warnings/errors.
 type Result[D any] struct {
 	color Color
