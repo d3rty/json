@@ -5,84 +5,62 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"reflect"
 	"strings"
 )
 
-// decodeValue decodes JSON tokens into the provided reflect.Value.
-func decodeValue(dec *json.Decoder, rv reflect.Value) error {
-	// Ensure rv is a pointer.
+type Token = json.Token
+
+type CleanDecoder interface {
+	Token() (Token, error)
+	More() bool
+	Decode(v any) error
+}
+
+type Decoder struct {
+	clean CleanDecoder
+}
+
+func NewDecoder(r io.Reader) *Decoder {
+	return &Decoder{clean: json.NewDecoder(r)}
+}
+
+func (dec *Decoder) Decode(val any) error {
+	rv := reflect.ValueOf(val)
 	if rv.Kind() != reflect.Ptr || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")
 	}
-
-	// Dereference to the actual value.
-	val := rv.Elem()
-	return decodeInto(dec, val)
+	return dec.decodeInto(rv.Elem()) // decode into dereferenced value
 }
 
 // decodeInto recursively decodes JSON from dec into the provided value.
-func decodeInto(dec *json.Decoder, val reflect.Value) error {
+func (dec *Decoder) decodeInto(val reflect.Value) error {
 	switch val.Kind() {
 	case reflect.Struct:
 		// Check if the struct (via its address) implements CustomUnmarshaler.
 		if val.CanAddr() {
 			original := val.Addr().Interface()
-			if dd, ok := original.(d3rtyDecoder); ok {
-				// We expect our magic struct to also be Dirtyable.
-				dirtyable, ok := original.(Dirtyable)
-				if !ok {
-					return errors.New("magic struct does not implement Dirtyable")
-				}
-				schema := dirtyable.Dirty() // schema is a pointer to a relaxed version
-				// Read the entire JSON object for this struct into a raw buffer.
-				var raw json.RawMessage
-				if err := dec.Decode(&raw); err != nil {
-					return fmt.Errorf("buffering raw JSON failed: %w", err)
-				}
-				// First, try decoding the raw JSON into the original (clean) type.
-				cleanErr := json.Unmarshal(raw, original)
-				if cleanErr == nil {
-					// Clean decode worked; nothing more to do.
-					return nil
-				}
-				// If clean decoding fails, initialize dirty schema.
-				if container, ok := original.(d3rtyContainer); ok {
-					container.init(schema)
-				}
-				// Now create a new decoder from the same raw JSON bytes.
-				dirtyDec := json.NewDecoder(bytes.NewReader(raw))
-				if err := dd.decode(dirtyDec); err != nil {
-					return fmt.Errorf("dirty decode failed: %w", err)
-				}
-				// Merge: marshal the dirty schema to JSON...
-				buf, err := json.Marshal(schema)
-				if err != nil {
-					return fmt.Errorf("marshalling dirty schema failed: %w", err)
-				}
-				// ... then unmarshal into the original struct.
-				if err := json.Unmarshal(buf, original); err != nil {
-					return fmt.Errorf("merging dirty schema failed: %w", err)
-				}
-				return nil
+			if dirtyable, ok := original.(Dirtyable); ok {
+				return dec.decodeDirty(dirtyable)
 			}
 		}
-		return decodeStruct(dec, val)
+		return dec.decodeStruct(val)
 
 	case reflect.Slice:
-		return decodeSlice(dec, val)
+		return dec.decodeSlice(val)
 
 	case reflect.Array:
-		return decodeArray(dec, val)
+		return dec.decodeArray(val)
 
 	case reflect.Map:
-		return decodeMap(dec, val)
+		return dec.decodeMap(val)
 
 	default:
 		// For scalars or any type that cannot contain nested structs,
 		// just use standard decoding.
 		ptr := reflect.New(val.Type())
-		if err := dec.Decode(ptr.Interface()); err != nil {
+		if err := dec.clean.Decode(ptr.Interface()); err != nil {
 			return err
 		}
 		val.Set(ptr.Elem())
@@ -90,10 +68,60 @@ func decodeInto(dec *json.Decoder, val reflect.Value) error {
 	}
 }
 
+func (dec *Decoder) decodeDirty(v Dirtyable) error {
+	// Dirty implementation currently is not so fast.
+	// But our aim is the result (dirty decoding) rather than the speed.
+
+	// we need to recover JSON data for the current struct
+	// use raw json.Decode for it
+	var raw json.RawMessage
+	if err := dec.clean.Decode(&raw); err != nil {
+		return fmt.Errorf("buffering tee JSON failed: %w", err)
+	}
+
+	// thisDec is the decoder for the current struct
+	curDec := NewDecoder(bytes.NewReader(raw))
+
+	// Try clean decoding
+	if cleanErr := curDec.clean.Decode(v); cleanErr == nil {
+		// Clean decode worked; nothing more to do.
+		return nil
+	}
+	// re-init because so we can read again
+	curDec = NewDecoder(bytes.NewReader(raw))
+
+	// scheme is a pointer to a dirty version of the struct
+	scheme := v.Dirty()
+
+	// If clean decoding fails, initialize dirty schema.
+	container, ok := v.(d3rtyContainer)
+	if !ok {
+		return fmt.Errorf("expected dirty container")
+	}
+	container.init(scheme)
+
+	res := container.result()
+	if err := curDec.clean.Decode(res); err != nil && !errors.Is(err, io.EOF) {
+		return fmt.Errorf("dirty decode failed: %w", err)
+	}
+
+	// Merge: marshal the dirty schema to JSON...
+	// TODO: this part looks the ugliest. We're OK for now, but it's not good.
+	buf, err := json.Marshal(scheme)
+	if err != nil {
+		return fmt.Errorf("marshalling dirty schema failed: %w", err)
+	}
+	// ... then unmarshal into the original struct.
+	if err := json.Unmarshal(buf, v); err != nil {
+		return fmt.Errorf("merging dirty schema failed: %w", err)
+	}
+	return nil
+}
+
 // decodeStruct decodes a JSON object into a struct value.
-func decodeStruct(dec *json.Decoder, val reflect.Value) error {
+func (dec *Decoder) decodeStruct(val reflect.Value) error {
 	// Expect the next token to be '{'
-	t, err := dec.Token()
+	t, err := dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -104,9 +132,9 @@ func decodeStruct(dec *json.Decoder, val reflect.Value) error {
 
 	typ := val.Type()
 	// Loop over all fields in the JSON object.
-	for dec.More() {
+	for dec.clean.More() {
 		// Field name (as string).
-		t, err := dec.Token()
+		t, err := dec.clean.Token()
 		if err != nil {
 			return err
 		}
@@ -141,7 +169,7 @@ func decodeStruct(dec *json.Decoder, val reflect.Value) error {
 					fv.Set(reflect.New(fv.Type().Elem()))
 				}
 				// Decode into the underlying value.
-				if err := decodeInto(dec, reflect.Indirect(fv)); err != nil {
+				if err := dec.decodeInto(reflect.Indirect(fv)); err != nil {
 					return fmt.Errorf("error decoding field %q: %w", sf.Name, err)
 				}
 				break
@@ -150,14 +178,14 @@ func decodeStruct(dec *json.Decoder, val reflect.Value) error {
 		// Field not found in struct: skip the value.
 		if !fieldFound {
 			var skip interface{}
-			if err := dec.Decode(&skip); err != nil {
+			if err := dec.clean.Decode(&skip); err != nil {
 				return err
 			}
 		}
 	}
 
 	// Consume the ending '}' token.
-	t, err = dec.Token()
+	t, err = dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -169,9 +197,9 @@ func decodeStruct(dec *json.Decoder, val reflect.Value) error {
 }
 
 // decodeSlice decodes a JSON array into a slice value.
-func decodeSlice(dec *json.Decoder, val reflect.Value) error {
+func (dec *Decoder) decodeSlice(val reflect.Value) error {
 	// Expect '[' as the starting token.
-	t, err := dec.Token()
+	t, err := dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -184,17 +212,17 @@ func decodeSlice(dec *json.Decoder, val reflect.Value) error {
 	sliceVal := reflect.MakeSlice(val.Type(), 0, 0)
 
 	// Process each element.
-	for dec.More() {
+	for dec.clean.More() {
 		// Create a new element value.
 		elem := reflect.New(elemType).Elem()
-		if err := decodeInto(dec, elem); err != nil {
+		if err := dec.decodeInto(elem); err != nil {
 			return fmt.Errorf("error decoding slice element: %w", err)
 		}
 		sliceVal = reflect.Append(sliceVal, elem)
 	}
 
 	// Consume the ending ']' token.
-	t, err = dec.Token()
+	t, err = dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -207,9 +235,9 @@ func decodeSlice(dec *json.Decoder, val reflect.Value) error {
 }
 
 // decodeArray decodes a JSON array into an array value (fixed length).
-func decodeArray(dec *json.Decoder, val reflect.Value) error {
+func (dec *Decoder) decodeArray(val reflect.Value) error {
 	// Expect '[' as the starting token.
-	t, err := dec.Token()
+	t, err := dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -220,23 +248,23 @@ func decodeArray(dec *json.Decoder, val reflect.Value) error {
 
 	length := val.Len()
 	for i := 0; i < length; i++ {
-		if !dec.More() {
+		if !dec.clean.More() {
 			return errors.New("not enough elements in JSON array")
 		}
 		elem := val.Index(i)
-		if err := decodeInto(dec, elem); err != nil {
+		if err := dec.decodeInto(elem); err != nil {
 			return fmt.Errorf("error decoding array element %d: %w", i, err)
 		}
 	}
 	// If there are extra elements, skip them.
-	for dec.More() {
+	for dec.clean.More() {
 		var skip interface{}
-		if err := dec.Decode(&skip); err != nil {
+		if err := dec.clean.Decode(&skip); err != nil {
 			return err
 		}
 	}
 	// Consume the ending ']' token.
-	t, err = dec.Token()
+	t, err = dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -249,14 +277,14 @@ func decodeArray(dec *json.Decoder, val reflect.Value) error {
 
 // decodeMap decodes a JSON object into a map value.
 // We assume the map key type is either string or can be decoded from a JSON string.
-func decodeMap(dec *json.Decoder, val reflect.Value) error {
+func (dec *Decoder) decodeMap(val reflect.Value) error {
 	// If the map is nil, allocate it.
 	if val.IsNil() {
 		val.Set(reflect.MakeMap(val.Type()))
 	}
 
 	// Expect '{' as the start.
-	t, err := dec.Token()
+	t, err := dec.clean.Token()
 	if err != nil {
 		return err
 	}
@@ -267,9 +295,9 @@ func decodeMap(dec *json.Decoder, val reflect.Value) error {
 
 	keyType := val.Type().Key()
 	elemType := val.Type().Elem()
-	for dec.More() {
+	for dec.clean.More() {
 		// Map keys are provided as tokens (usually strings).
-		t, err := dec.Token()
+		t, err := dec.clean.Token()
 		if err != nil {
 			return err
 		}
@@ -293,13 +321,13 @@ func decodeMap(dec *json.Decoder, val reflect.Value) error {
 
 		// Decode the value.
 		elem := reflect.New(elemType).Elem()
-		if err := decodeInto(dec, elem); err != nil {
+		if err := dec.decodeInto(elem); err != nil {
 			return err
 		}
 		val.SetMapIndex(key, elem)
 	}
 	// Consume the ending '}' token.
-	t, err = dec.Token()
+	t, err = dec.clean.Token()
 	if err != nil {
 		return err
 	}
