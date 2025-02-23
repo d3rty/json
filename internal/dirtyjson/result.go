@@ -1,4 +1,4 @@
-package dirty
+package dirtyjson
 
 // Color means the color of dirty unmarshalling
 type Color int

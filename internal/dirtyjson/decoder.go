@@ -1,4 +1,4 @@
-package dirty
+package dirtyjson
 
 import (
 	"bytes"

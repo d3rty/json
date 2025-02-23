@@ -2,7 +2,11 @@
 // Dirty JSON data is JSON with unstable schema, flaky keys, etc.
 package dirty
 
-import "bytes"
+import (
+	"bytes"
+
+	"github.com/d3rty/json/internal/dirtyjson"
+)
 
 // Unmarshal parses the JSON-encoded data, allowing schema to be dirty,
 // and stores the result in the value pointed to by v.
@@ -10,37 +14,42 @@ import "bytes"
 func Unmarshal(data []byte, v interface{}) error {
 	r := bytes.NewReader(data)
 
-	return NewDecoder(r).Decode(v)
+	return dirtyjson.NewDecoder(r).Decode(v)
 }
 
-// d3rtyContainer is an internal interface
-// that allow us to init and retrieve dirty data
-type d3rtyContainer interface {
-	init(any)
-	result() any
-}
+// Number is a custom type for unmarshalling numbers.
+// Numbers can be parsed from strings or actual JSON numbers.
+// Other types will be rejected.
+type Number = dirtyjson.Number
 
-// Dirtyable is a clean model that has dirty model attached
-// It's used as a way to link clean model with dirty model
-type Dirtyable interface {
-	Dirty() any
-}
+// String s a custom type for unmarshalling strings.
+// Anything except actual json string will be rejected.
+type String = dirtyjson.String
 
-// Enabled is an atom struct that enables dirty unmarshalling for a given clean model.
-// It MUST be embedded into any clean model (clean model also MUST implement Dirtyable interface)
-type Enabled struct {
-	res any
-}
+// Bool is a custom type for unmarshalling booleans.
+// Bools can be parsed from
+//   - strings ("true", "false", "yes", "no", "on", "off", "1", "0")
+//   - numbers (1, 0)
+//   - actual JSON booleans.
+//
+// Other types will be rejected.
+type Bool = dirtyjson.Bool
 
-func (e *Enabled) result() any { return e.res }
-func (e *Enabled) init(v any)  { e.res = v }
+// Array is a custom type for unmarshalling arrays.
+// Anything except actual JSON arrays will be rejected.
+type Array = dirtyjson.Array
 
-// Disabled can mark your model as valid dirty.Model but won't enable dirtying.
-// You can easily switch from `dirty.Enabled` to `dirty.Disabled` keeping all models & interfaces working
-// but with pure json.Unmarshal only.
-type Disabled struct{}
+// Object is a custom type for unmarshalling objects.
+// Anything except actual JSON objects will be rejected.
+type Object = dirtyjson.Object
 
-// Adjust Disabled logic, so actually we DO store the Green results
-func (*Disabled) result() any { return nil }
-func (*Disabled) init(_ any)  {}
-func (*Disabled) isDisabled() {} // isDisabled disabled dirtying (keeping all interfaces working)
+// Enabled is an atom struct that enables dirty unmarshalling
+// for a given clean model. It MUST be embedded into any clean model.
+// The clean model also MUST implement Dirtyable interface.
+type Enabled = dirtyjson.Enabled
+
+// Disabled is an atom struct that that remains syntaxly valid dirty model,
+// but disables dirty unmarshalling.
+// You can easily switch from `dirty.Enabled` to `dirty.Disabled`
+// keeping all models & interfaces working (falling back to standard (clean) json.Unmarshal).
+type Disabled = dirtyjson.Disabled

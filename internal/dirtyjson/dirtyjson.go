@@ -1,4 +1,4 @@
-package dirty
+package dirtyjson
 
 import (
 	"encoding/json"
@@ -8,30 +8,46 @@ import (
 	"strings"
 )
 
+// d3rtyContainer is an internal interface
+// that allow us to init and retrieve dirty data
+type d3rtyContainer interface {
+	init(any)
+	result() any
+}
+
+// Dirtyable is a clean model that has dirty model attached
+// It's used as a way to link clean model with dirty model
+type Dirtyable interface {
+	Dirty() any
+}
+
+type Enabled struct {
+	res any
+}
+
+func (e *Enabled) result() any { return e.res }
+func (e *Enabled) init(v any)  { e.res = v }
+
+// Disabled is an atom struct that that remains syntaxly valid dirty model,
+// but disables dirty unmarshalling.
+// You can easily switch from `dirty.Enabled` to `dirty.Disabled`
+// keeping all models & interfaces working (falling back to standard (clean) json.Unmarshal).
+type Disabled struct{}
+
+func (*Disabled) result() any { return nil }
+func (*Disabled) init(_ any)  {}
+func (*Disabled) isDisabled() {} // isDisabled disabled dirtying (keeping all interfaces working)
+
 type (
-	// Number is a custom type for unmarshalling numbers.
-	// Numbers can be parsed from strings or actual JSON numbers.
-	// Other types will be rejected.
+	// Number can marshall anything (that is possible) into float64.
 	Number float64
-
-	// String s a custom type for unmarshalling strings.
-	// Anything except actual json string will be rejected.
+	// String is just a string.
 	String string
-
-	// Bool is a custom type for unmarshalling booleans.
-	// Bools can be parsed from
-	// 	- strings ("true", "false", "yes", "no", "on", "off", "1", "0")
-	//  - numbers (1, 0)
-	//  - actual JSON booleans.
-	// Other types will be rejected.
+	// Bool can marshall anything (that is possible) into bool.
 	Bool bool
-
-	// Array is a custom type for unmarshalling arrays.
-	// Anything except actual JSON arrays will be rejected.
+	// Array for now is just for now is json's array.
 	Array []any
-
-	// Object is a custom type for unmarshalling objects.
-	// Anything except actual JSON objects will be rejected.
+	// Object for now is just for now is json's object.
 	Object map[string]any
 
 	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringifed.
