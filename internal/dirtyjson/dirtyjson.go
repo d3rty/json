@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/d3rty/json/internal/config"
 )
 
 // d3rtyContainer is an internal interface
@@ -61,26 +63,41 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Number: UnmarshalJSON on nil pointer")
 	}
 
-	var s string
-	switch data[0] {
-	case '"':
-		if len(data) < 2 {
-			return errors.New("dirty.Number missing closing quote")
-		}
-		if data[len(data)-1] != '"' {
-			return errors.New("dirty.Number missing closing quote")
-		}
+	cfg := config.Get().Number
 
+	var s string
+	// If the value is a quoted string.
+	if data[0] == '"' {
+		if !cfg.AllowString {
+			return fmt.Errorf("dirty.Number: string input not allowed")
+		}
+		if len(data) < 2 || data[len(data)-1] != '"' {
+			return errors.New("dirty.Number: invalid string value")
+		}
 		s = string(data[1 : len(data)-1])
-	default:
+	} else {
 		s = string(data)
 	}
 
-	f, err := strconv.ParseFloat(s, 64)
-	if err != nil {
-		return fmt.Errorf("dirty.Number can't parse a number: %w", err)
+	// Remove spaces if allowed.
+	if cfg.AllowSpacing {
+		s = strings.ReplaceAll(s, " ", "")
 	}
-	*v = Number(f)
+	// Remove commas if allowed.
+	if cfg.AllowComma {
+		s = strings.ReplaceAll(s, ",", "")
+	}
+
+	// Parse the float.
+	n, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	if err != nil {
+		return fmt.Errorf("dirty.Number: cannot parse number: %w", err)
+	}
+
+	// we can't know about AllowFloatishIntegers here, as we don't know the destination clean type
+	// (and we probably won't never know it here. so it will be at a later stage)
+
+	*v = Number(n)
 	return nil
 }
 
@@ -113,40 +130,73 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Bool: UnmarshalJSON on nil pointer")
 	}
 
+	cfg := config.Get().Bool
+
 	var s string
+	// Check if the incoming value is a quoted string.
 	if data[0] == '"' {
-		if len(data) < 2 {
-			return errors.New("dirty.Bool missing closing quote")
+		if !cfg.AllowString {
+			return fmt.Errorf("dirty.Bool: string input not allowed")
 		}
-		if data[len(data)-1] != '"' {
-			return errors.New("dirty.Bool missing closing quote")
+		if len(data) < 2 || data[len(data)-1] != '"' {
+			return errors.New("dirty.Bool: invalid string value")
 		}
-
 		s = string(data[1 : len(data)-1])
+	} else {
+		// Otherwise, treat it as a raw token (number or boolean).
+		s = string(data)
+	}
 
-		switch strings.ToLower(s) {
-		case "true", "yes", "on", "1":
+	// Normalize the string.
+	s = strings.TrimSpace(strings.ToLower(s))
+
+	// If the input was a string (or we are allowing string interpretation)
+	if cfg.AllowString {
+		// Check against the configured true strings.
+		for _, ts := range cfg.TrueStrings {
+			if s == strings.ToLower(ts) {
+				*v = true
+				return nil
+			}
+		}
+		// Check against the configured false strings.
+		for _, fs := range cfg.FalseStrings {
+			if s == strings.ToLower(fs) {
+				*v = false
+				return nil
+			}
+		}
+		// If no match was found in string mode...
+		if cfg.FallbackFromStringToRed {
+			return fmt.Errorf("dirty.Bool: unrecognized string value %q", s)
+		}
+		*v = Bool(cfg.FallbackStringValue)
+		return nil
+	}
+
+	// If string input is not allowed but number input is allowed.
+	if cfg.AllowNumber {
+		// Attempt to parse it as a float.
+		n, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return fmt.Errorf("dirty.Bool: cannot parse numeric value %q: %w", s, err)
+		}
+		if cfg.TrueNumbers(n) {
 			*v = true
 			return nil
-		case "false", "no", "off", "0":
+		}
+		if cfg.FalseNumbers(n) {
 			*v = false
 			return nil
-		default:
-			return fmt.Errorf("dirty.Bool cant be parsed from json content: %s", s)
 		}
-	}
-
-	s = string(data)
-
-	if s == "true" {
-		*v = true
-		return nil
-	} else if s == "false" {
-		*v = false
+		if cfg.FallbackFromNumberToRed {
+			return fmt.Errorf("dirty.Bool: unrecognized numeric value %v", n)
+		}
+		*v = Bool(cfg.FallbackNumberValue)
 		return nil
 	}
 
-	return fmt.Errorf("dirty.Bool cant be parsed from: %s", s)
+	return fmt.Errorf("dirty.Bool: unsupported value %q", s)
 }
 
 // UnmarshalJSON converts []byte into an Array.

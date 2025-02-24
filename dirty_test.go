@@ -9,16 +9,16 @@ import (
 )
 
 type Event0 struct {
-	ID     int  `json:"id"`
-	Active bool `json:"active"`
+	ID       int  `json:"id"`
+	IsActive bool `json:"is_active"`
 }
 
 type Event struct {
 	dirty.Enabled // Step 1: Enabling dirty
 
-	ID     int    `json:"id"`
-	Name   string `json:"name"`
-	Active bool   `json:"active"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	IsActive bool   `json:"is_active"`
 
 	// MustBool won't be considered in dirty model, so it must parsed
 	MustBool bool `json:"must_bool"`
@@ -35,8 +35,8 @@ func (e *Event) Dirty() any {
 }
 
 type EventDirty struct {
-	ID     dirty.Number `json:"id"`
-	Active dirty.Bool   `json:"active"`
+	ID       dirty.Number `json:"id"`
+	IsActive dirty.Bool   `json:"is_active"`
 }
 
 // func ExampleUnmarshal() {
@@ -65,7 +65,7 @@ func TestUnmarshal_Green(t *testing.T) {
 	require.NoError(t, dirty.Unmarshal([]byte(`{"id":123, "active":true}`), &e))
 
 	assert.Equal(t, 123, e.ID)
-	assert.Equal(t, true, e.Active)
+	assert.Equal(t, true, e.IsActive)
 }
 
 func TestUnmarshal_Yellow(t *testing.T) {
@@ -75,7 +75,7 @@ func TestUnmarshal_Yellow(t *testing.T) {
 	)
 	assert.Equal(t, 123, e.ID)
 	assert.Equal(t, "foobar", e.Name)
-	assert.Equal(t, true, e.Active)
+	assert.Equal(t, true, e.IsActive)
 
 	// result := dirty.ExtractResult[EventDirty](&e)
 
@@ -88,7 +88,7 @@ func TestUnmarshal_Yellow(t *testing.T) {
 func TestUnmarshal_Envelope(t *testing.T) {
 	var e Envelope
 	require.NoError(t,
-		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","active":"1","must_bool":"true"}]}`), &e),
+		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","is_active":"1","must_bool":"true"}]}`), &e),
 	)
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)
@@ -98,6 +98,6 @@ func TestUnmarshal_Envelope(t *testing.T) {
 	evt := e.Events[0]
 	assert.Equal(t, 123, evt.ID)
 	assert.Equal(t, "foobar", evt.Name)
-	assert.Equal(t, true, evt.Active)
+	assert.Equal(t, true, evt.IsActive)
 	assert.Equal(t, false, evt.MustBool) // as it wasn't parsed as bool
 }
