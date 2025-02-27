@@ -2,6 +2,8 @@
 
 Flexible JSON unmarshalling for Go—gracefully handling schema variations and forgiving mistakes.
 
+> 🚧 Project is a `Work In Progress` thing.
+
 ## Overview
 
 **d3rty/json** is a robust Go library for parsing JSON data from third-party sources you can’t fully control or trust.
