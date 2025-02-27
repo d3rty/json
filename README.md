@@ -1,6 +1,6 @@
-# d3rty/json
+# d3rty/json 🧼
 
-Flexible JSON unmarshalling for Go—gracefully handling schema variations and forgiving mistakes.
+Flexible JSON unmarshalling for Go: gracefully handling schema variations and forgiving mistakes.
 
 > 🚧 Project is a `Work In Progress` thing.
 
