@@ -7,22 +7,6 @@ import (
 	"github.com/d3rty/json/internal/option"
 )
 
-type BoolFromNumberParser string
-
-const (
-	// BoolFromNumberParserBinary is the "1/0" parser. 1 is true, 0 is false.
-	// Other numbers are considerd "non parsed" (fallback value or Red result).
-	BoolFromNumberBinary BoolFromNumberParser = "binary"
-
-	// BoolFromNumberParserPositiveNegative is the "<=0 vs >0" parser.
-	// Positive numbers are true. Negative numbers And zero are false.
-	BoolFromNumberPositiveNegative BoolFromNumberParser = "positive_negative"
-
-	// BoolFromNumberParserSignOfOne is the "-1/1" parser.
-	// -1 means false, 1 means true. Other numbers are considerd "non parsed" (fallback value or Red result).
-	BoolFromNumberSignOfOne BoolFromNumberParser = "sign_of_one"
-)
-
 // Config holds global settings for dirty unmarshalling.
 type Config struct {
 	// Bool is the configuration for dirty.Bool.
@@ -162,6 +146,22 @@ type Config struct {
 		}
 	}
 }
+
+type BoolFromNumberParser string
+
+const (
+	// BoolFromNumberParserBinary is the "1/0" parser. 1 is true, 0 is false.
+	// Other numbers are considerd "non parsed" (fallback value or Red result).
+	BoolFromNumberBinary BoolFromNumberParser = "binary"
+
+	// BoolFromNumberParserPositiveNegative is the "<=0 vs >0" parser.
+	// Positive numbers are true. Negative numbers And zero are false.
+	BoolFromNumberPositiveNegative BoolFromNumberParser = "positive_negative"
+
+	// BoolFromNumberParserSignOfOne is the "-1/1" parser.
+	// -1 means false, 1 means true. Other numbers are considerd "non parsed" (fallback value or Red result).
+	BoolFromNumberSignOfOne BoolFromNumberParser = "sign_of_one"
+)
 
 // defaultConfig is the source-of-truth for the default configuration.
 func defaultConfig() *Config {
