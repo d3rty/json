@@ -7,13 +7,22 @@ import (
 	"github.com/d3rty/json/internal/option"
 )
 
+// TODO: FromNull behavior should be done via Option
+// So, if dirty model has the Option type, then FromNull should respect the option type.
+
 // Config holds global settings for dirty unmarshalling.
 type Config struct {
 	// Bool is the configuration for dirty.Bool.
 	Bool struct {
+		// Bool.Allowed allows booleans to be decoded in a dirty way.
+		// When false, everything inside Bool.* is ignored.
+		//
+		// Default: true
+		Allowed bool
+
 		FromStrings struct {
 			// FromStrings.Allowed allows boolean to be decoded from a string.
-			// By default it will only decode bools from "true" and "false" strings.
+			// If no specific options given, it will only decode bools from "true" and "false" strings.
 			//
 			// Default: true
 			Allowed bool
@@ -55,7 +64,7 @@ type Config struct {
 
 		FromNumbers struct {
 			// Allowed allows boolean to be decoded from an integer.
-			// By default it will only decode bools from 1 or 0 numbers.
+			// If not specified, it will only decode bools from 1 or 0 numbers.
 			//
 			// Default: true
 			Allowed bool
@@ -77,7 +86,7 @@ type Config struct {
 
 		FromNull struct {
 			// Allowed allows boolean to be decoded from a null.
-			// By default it will decode null as false.
+			// If not specified, it will decode null as false.
 			//
 			// Default: true
 			Allowed bool
@@ -92,6 +101,12 @@ type Config struct {
 
 	// Number is the configuration for dirty.Number.
 	Number struct {
+		// Number.Allowed allows booleans to be decoded in a dirty way.
+		// When false, everything inside Bool.* is ignored.
+		//
+		// Default: true
+		Allowed bool
+
 		FromStrings struct {
 			// FromStrings.Allowed indicates whether numeric values provided as strings should be accepted.
 			//
@@ -145,20 +160,55 @@ type Config struct {
 			Allowed bool
 		}
 	}
+
+	// FlexKeys is the configuration for json keys flexibility.
+	FlexKeys struct {
+		// Allowed allows keys to be flexible.
+		// If false, whole FlexKeys.* configuration is ignored.
+		//
+		// Default: false
+		Allowed bool
+
+		// CaseInsensitive specifies whether keys are allowed to be insensitive.
+		// Note: can cause Red result when struct meets multiple keys that are considered the same.
+		// E.g. `{"key":"value", "KEY":"value"}` will be considered as Yellow/Red:
+		//    - If the structfield's tag does strictly matches at least one of json's key candidate, then it's Yellow.
+		//    - If the structfield's tag doesn't match strictly any json's key candidates, then it's Red.
+		//
+		// Default: false
+		CaseInsensitive bool
+
+		// ChameleonCase means that the keys of different camelCase/snake_case/kebab-case/PascalCase are considered the same.
+		// Note: same as with CaseInsensitive this can be both Yellow and Red. (read example above on CaseInsensitive)
+		//
+		// Default: false
+		ChameleonCase bool
+	}
 }
+
+// ResetToClean resets config so it's clean
+func (cfg *Config) ResetToClean() *Config {
+	cfg.FlexKeys.Allowed = false
+	cfg.Bool.Allowed = false
+	cfg.Number.Allowed = false
+
+	return cfg
+}
+
+// TODO: cfg.Print()
 
 type BoolFromNumberParser string
 
 const (
-	// BoolFromNumberParserBinary is the "1/0" parser. 1 is true, 0 is false.
-	// Other numbers are considerd "non parsed" (fallback value or Red result).
+	// BoolFromNumberBinary is the "1/0" parser. 1 is true, 0 is false.
+	// Other numbers are considered "non parsed" (fallback value or Red result).
 	BoolFromNumberBinary BoolFromNumberParser = "binary"
 
-	// BoolFromNumberParserPositiveNegative is the "<=0 vs >0" parser.
+	// BoolFromNumberPositiveNegative is the "<=0 vs >0" parser.
 	// Positive numbers are true. Negative numbers And zero are false.
 	BoolFromNumberPositiveNegative BoolFromNumberParser = "positive_negative"
 
-	// BoolFromNumberParserSignOfOne is the "-1/1" parser.
+	// BoolFromNumberSignOfOne is the "-1/1" parser.
 	// -1 means false, 1 means true. Other numbers are considerd "non parsed" (fallback value or Red result).
 	BoolFromNumberSignOfOne BoolFromNumberParser = "sign_of_one"
 )
@@ -167,12 +217,13 @@ const (
 func defaultConfig() *Config {
 	var cfg Config
 
+	cfg.Bool.Allowed = true
 	cfg.Bool.FromStrings.Allowed = true
 	cfg.Bool.FromStrings.CustomListForTrue = []string{"true", "yes", "on", "1"}
 	cfg.Bool.FromStrings.CustomListForFalse = []string{"false", "no", "off", "0"}
+	cfg.Bool.FromStrings.RespectFromNumbersLogic = true
 	cfg.Bool.FromStrings.FalseForEmptyString = true
 	cfg.Bool.FromStrings.FallbackValue = option.Some(false)
-	cfg.Bool.FromStrings.RespectFromNumbersLogic = true
 
 	cfg.Bool.FromNumbers.Allowed = true
 	cfg.Bool.FromNumbers.CustomParseFunc = BoolFromNumberBinary
@@ -181,6 +232,7 @@ func defaultConfig() *Config {
 	cfg.Bool.FromNull.Allowed = true
 	cfg.Bool.FromNull.Inverse = false
 
+	cfg.Number.Allowed = true
 	cfg.Number.FromStrings.Allowed = true
 	cfg.Number.FromStrings.SpacingAllowed = true
 	cfg.Number.FromStrings.ExponentNotationAllowed = true
@@ -189,6 +241,18 @@ func defaultConfig() *Config {
 	cfg.Number.FromBools.Allowed = true
 	cfg.Number.FromNull.Allowed = true
 
+	// FlexKeys are disabled by default.
+	cfg.FlexKeys.Allowed = false
+	cfg.FlexKeys.CaseInsensitive = false
+	cfg.FlexKeys.ChameleonCase = false
+
+	return &cfg
+}
+
+// cleanConfig returns config that behaves like clean (strint) json.Unmarshal
+func cleanConfig() *Config {
+	var cfg Config
+	// everything false by default makes it clean :)
 	return &cfg
 }
 
@@ -211,14 +275,18 @@ func Global() *Config {
 	return clone(globalConfig)
 }
 
-// Set updates the global configuration.
+// Clean returns a copy of the clean configuration.
+// Returned copy is a clone. It's modifying doesn't affect the original config.
+func Clean() *Config {
+	return cleanConfig()
+}
+
+// UpdateGlobal updates the global configuration.
 // It's often a good idea to validate new values before setting them.
-func UpdateGlobal(updateFn func(config *Config)) *Config {
+func UpdateGlobal(updateFn func(config *Config)) {
 	mu.Lock()
 	updateFn(globalConfig)
 	defer mu.Unlock()
-
-	return clone(globalConfig)
 }
 
 // clone via json round-trip. It's a simple (but not the most efficient) way to clone the config.

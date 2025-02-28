@@ -8,6 +8,8 @@ import (
 	"io"
 	"reflect"
 	"strings"
+
+	"github.com/d3rty/json/internal/config"
 )
 
 // Token is needed for `CleanDecoder` interface
@@ -123,8 +125,14 @@ func (dec *Decoder) decodeDirty(v Dirtyable) error {
 
 	container.init(scheme)
 	res := container.result()
-	if err := curDec.cleanDecode(res); err != nil && !errors.Is(err, io.EOF) {
-		return fmt.Errorf("dirty decode failed: %w", err)
+	if !config.Global().FlexKeys.Allowed {
+		if err := curDec.cleanDecode(res); err != nil && !errors.Is(err, io.EOF) {
+			return fmt.Errorf("dirty decode failed: %w", err)
+		}
+	} else {
+		if err := curDec.Decode(res); err != nil && !errors.Is(err, io.EOF) {
+			return fmt.Errorf("dirty decode failed: %w", err)
+		}
 	}
 
 	// Merge: marshal the dirty schema to JSON...
@@ -183,7 +191,8 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 					name = parts[0]
 				}
 			}
-			if name == fieldName {
+
+			if keyMatch(fieldName, name, config.Global()) {
 				fieldFound = true
 				fv := val.Field(i)
 				// If field is a pointer and nil, allocate it.
@@ -216,6 +225,34 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 		return errors.New("expected end of object '}'")
 	}
 	return nil
+}
+
+// keyMatch matches json keys (input json vs model) corresponding to the given config
+func keyMatch(jsonKey, modelKey string, cfg *config.Config) bool {
+	if jsonKey == modelKey {
+		return true
+	}
+
+	if !cfg.FlexKeys.Allowed || (!cfg.FlexKeys.CaseInsensitive && !cfg.FlexKeys.ChameleonCase) {
+		return false
+	}
+
+	if cfg.FlexKeys.CaseInsensitive && !cfg.FlexKeys.ChameleonCase {
+		return strings.EqualFold(jsonKey, modelKey)
+	}
+
+	//
+	// ChameleonCase (for now slow implementation is OK. TODO: make it faster)
+	//
+	normalizedJsonKey := strings.ToLower(jsonKey)
+	normalizedJsonKey = strings.ReplaceAll(normalizedJsonKey, "_", "")
+	normalizedJsonKey = strings.ReplaceAll(normalizedJsonKey, "-", "")
+
+	normalizedModelKey := strings.ToLower(modelKey)
+	normalizedModelKey = strings.ReplaceAll(normalizedModelKey, "_", "")
+	normalizedModelKey = strings.ReplaceAll(normalizedModelKey, "-", "")
+
+	return normalizedJsonKey == normalizedModelKey
 }
 
 // decodeSlice decodes a JSON array into a slice value.

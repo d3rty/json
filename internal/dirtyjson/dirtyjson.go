@@ -65,6 +65,11 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 	}
 
 	cfg := config.Global().Number
+	if !cfg.Allowed { // TODO: that's bad. do it better
+		cfg.FromNull.Allowed = false
+		cfg.FromStrings.Allowed = false
+		cfg.FromNull.Allowed = false
+	}
 
 	var s string
 	// If the value is a quoted string.
@@ -165,6 +170,11 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 	}
 
 	cfg := config.Global().Bool
+	if !cfg.Allowed { // TODO: that's bad. do it better
+		cfg.FromNull.Allowed = false
+		cfg.FromStrings.Allowed = false
+		cfg.FromNull.Allowed = false
+	}
 
 	var (
 		boolFromNumber = func(n float64) option.Bool {

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	dirty "github.com/d3rty/json"
+	"github.com/d3rty/json/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -68,6 +69,33 @@ func TestUnmarshal_Envelope(t *testing.T) {
 	var e Envelope
 	require.NoError(t,
 		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","is_active":"1","must_bool":"true"}]}`), &e),
+	)
+	assert.Equal(t, 1, e.Total)
+	assert.NotEmpty(t, e.Events)
+
+	// It should be RED because of lost "must_bool" field
+
+	evt := e.Events[0]
+	assert.Equal(t, 123, evt.ID)
+	assert.Equal(t, "foobar", evt.Name)
+	assert.Equal(t, true, evt.IsActive)
+	assert.Equal(t, false, evt.MustBool) // as it wasn't parsed as bool
+}
+
+func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
+	config.UpdateGlobal(func(cfg *config.Config) {
+		cfg.ResetToClean()
+		// only enable things we need here
+		cfg.FlexKeys.Allowed = true
+		cfg.FlexKeys.ChameleonCase = true
+		cfg.FlexKeys.CaseInsensitive = true
+		cfg.Number.Allowed = true
+		cfg.Bool.Allowed = true
+	})
+
+	var e Envelope
+	require.NoError(t,
+		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","Is-Active":"1","must_bool":"true"}]}`), &e),
 	)
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)
