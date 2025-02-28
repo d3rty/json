@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/d3rty/json/internal/config"
+	"github.com/d3rty/json/internal/option"
 )
 
 // d3rtyContainer is an internal interface
@@ -63,40 +64,77 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Number: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Get().Number
+	cfg := config.Global().Number
 
 	var s string
 	// If the value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.AllowString {
+		if !cfg.FromStrings.Allowed {
 			return fmt.Errorf("dirty.Number: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.Number: invalid string value")
 		}
 		s = string(data[1 : len(data)-1])
-	} else {
-		s = string(data)
+		s = strings.TrimSpace(s)
+
+		// Remove spaces if allowed.
+		if cfg.FromStrings.SpacingAllowed {
+			s = strings.ReplaceAll(s, " ", "")
+		}
+		// Remove commas if allowed.
+		if cfg.FromStrings.CommasAllowed {
+			s = strings.ReplaceAll(s, ",", "")
+		}
+
+		// TODO: ensure cfg.FromStrings.ExponentNotationAllowed is respected
+
+		// Parse the float.
+		n, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+		if err != nil {
+			return fmt.Errorf("dirty.Number: cannot parse number: %w", err)
+		}
+
+		// TODO: handle cfg.FromStrings.FloatishAllowed
+		// we can't know about it here, as we don't know the destination clean type
+		// (and we probably won't never know it here. so it will be at a later stage)
+
+		*v = Number(n)
+		return nil
 	}
 
-	// Remove spaces if allowed.
-	if cfg.AllowSpacing {
-		s = strings.ReplaceAll(s, " ", "")
+	// Raw token (can be number, boolean, null, objet, array)
+
+	if s[0] == 'n' /* null  */ {
+		if cfg.FromNull.Allowed {
+			*v = Number(0.0)
+			return nil
+		}
+
+		return errors.New("dirty.Number: numbers from nulls are not allowed")
+	} else if s[0] == 't' {
+		if cfg.FromBools.Allowed {
+			*v = Number(1.0)
+			return nil
+		}
+		return errors.New("dirty.Number: numbers from bools are not allowed")
+	} else if s[0] == 'f' {
+		if cfg.FromBools.Allowed {
+			*v = Number(0.0)
+			return nil
+		}
+		return errors.New("dirty.Number: numbers from bools are not allowed")
+	} else if s[0] == '[' || s[0] == '{' {
+		return errors.New("dirty.Number: can't parse bools from object/array values")
 	}
-	// Remove commas if allowed.
-	if cfg.AllowComma {
-		s = strings.ReplaceAll(s, ",", "")
-	}
+
+	// should be a regular number-ish value.
 
 	// Parse the float.
-	n, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
+	n, err := strconv.ParseFloat(strings.TrimSpace(string(data)), 64)
 	if err != nil {
 		return fmt.Errorf("dirty.Number: cannot parse number: %w", err)
 	}
-
-	// we can't know about AllowFloatishIntegers here, as we don't know the destination clean type
-	// (and we probably won't never know it here. so it will be at a later stage)
-
 	*v = Number(n)
 	return nil
 }
@@ -109,19 +147,15 @@ func (v *String) UnmarshalJSON(data []byte) error {
 
 	var s string
 	if data[0] != '"' {
-		return fmt.Errorf("dirty.String cant be parsed from: %s", s)
+		return fmt.Errorf("dirty.String can't be parsed from: %s", s)
 	}
-	if len(data) < 2 {
-		return errors.New("dirty.String missing closing quote")
-	}
-	if data[len(data)-1] != '"' {
+	if len(data) < 2 || data[len(data)-1] != '"' {
 		return errors.New("dirty.String missing closing quote")
 	}
 
 	s = string(data[1 : len(data)-1])
 	*v = String(s)
 	return nil
-
 }
 
 // UnmarshalJSON converts []byte into a Bool.
@@ -130,73 +164,116 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Bool: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Get().Bool
+	cfg := config.Global().Bool
 
-	var s string
+	var (
+		boolFromNumber = func(n float64) option.Bool {
+
+			var b option.Bool
+			if parser, ok := parsersBoolFromNum[cfg.FromNumbers.CustomParseFunc]; ok {
+				b = parser(n)
+			} else {
+				// TRICKY THING. CORRUPTED CONFIG IS HERE. We should not just silenty exit
+				// Let's log or something similar (TODO: handle this carefully)
+				return option.NoneBool()
+			}
+
+			if b.Some() {
+				return b
+			}
+
+			if cfg.FromNumbers.FallbackValue.Some() {
+				return cfg.FromNumbers.FallbackValue
+			}
+
+			return option.NoneBool()
+		}
+
+		boolFromString = func(s string) option.Bool {
+			// Check against the configured true strings.
+			for _, ts := range cfg.FromStrings.CustomListForTrue {
+				if s == strings.ToLower(ts) {
+					return option.True()
+				}
+			}
+			// Check against the configured false strings.
+			for _, fs := range cfg.FromStrings.CustomListForFalse {
+				if s == strings.ToLower(fs) {
+					return option.True()
+				}
+			}
+
+			if cfg.FromStrings.RespectFromNumbersLogic {
+				if v, err := strconv.ParseFloat(s, 64); err == nil {
+					return boolFromNumber(v)
+				}
+			}
+
+			return cfg.FromStrings.FallbackValue
+		}
+	)
+
 	// Check if the incoming value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.AllowString {
+		if !cfg.FromStrings.Allowed {
 			return fmt.Errorf("dirty.Bool: string input not allowed")
 		}
+
+		// Valid strings are considered to be quoted from both sides
 		if len(data) < 2 || data[len(data)-1] != '"' {
-			return errors.New("dirty.Bool: invalid string value")
+			return errors.New("dirty.Bool: corrupt string value")
 		}
-		s = string(data[1 : len(data)-1])
-	} else {
-		// Otherwise, treat it as a raw token (number or boolean).
-		s = string(data)
-	}
+		s := string(data[1 : len(data)-1])
+		s = strings.TrimSpace(strings.ToLower(s)) // normalized content of the string
 
-	// Normalize the string.
-	s = strings.TrimSpace(strings.ToLower(s))
-
-	// If the input was a string (or we are allowing string interpretation)
-	if cfg.AllowString {
-		// Check against the configured true strings.
-		for _, ts := range cfg.TrueStrings {
-			if s == strings.ToLower(ts) {
-				*v = true
-				return nil
-			}
-		}
-		// Check against the configured false strings.
-		for _, fs := range cfg.FalseStrings {
-			if s == strings.ToLower(fs) {
-				*v = false
-				return nil
-			}
-		}
-		// If no match was found in string mode...
-		if cfg.FallbackFromStringToRed {
-			return fmt.Errorf("dirty.Bool: unrecognized string value %q", s)
-		}
-		*v = Bool(cfg.FallbackStringValue)
-		return nil
-	}
-
-	// If string input is not allowed but number input is allowed.
-	if cfg.AllowNumber {
-		// Attempt to parse it as a float.
-		n, err := strconv.ParseFloat(s, 64)
-		if err != nil {
-			return fmt.Errorf("dirty.Bool: cannot parse numeric value %q: %w", s, err)
-		}
-		if cfg.TrueNumbers(n) {
-			*v = true
-			return nil
-		}
-		if cfg.FalseNumbers(n) {
+		if s == "" && cfg.FromStrings.FalseForEmptyString {
 			*v = false
 			return nil
 		}
-		if cfg.FallbackFromNumberToRed {
-			return fmt.Errorf("dirty.Bool: unrecognized numeric value %v", n)
+
+		if b := boolFromString(s); b.Some() {
+			*v = Bool(b.Unwrap())
+			return nil
 		}
-		*v = Bool(cfg.FallbackNumberValue)
+
+		return fmt.Errorf("dirty.Bool: cannot parse string (%q) as bool", limitedStr(s, 50))
+	}
+
+	// Raw token (can be number, boolean, or anything else)
+
+	s := string(data)
+
+	// As we consider it a valid JSON, if first letter is `t` or `f` then it definetely true/false
+	if s[0] == 't' {
+		*v = true
+		return nil
+	} else if s[0] == 'f' {
+		*v = false
+		return nil
+	} else if s[0] == 'n' /* null  */ {
+		if cfg.FromNull.Allowed {
+			*v = Bool(cfg.FromNull.Inverse) // if Inverse: we'll return true, otherwise: false
+		}
+
+		return errors.New("dirty.Bool: cannot parse bool from null")
+	}
+
+	if s[0] == '{' || s[0] == '[' {
+		return errors.New("dirty.Bool: can't parse bools from object/array values")
+	}
+
+	// Should be a number then
+	n, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return fmt.Errorf("dirty.Bool: cannot parse as bool (%q): %w", limitedStr(s, 50), err)
+	}
+
+	if b := boolFromNumber(n); b.Some() {
+		*v = Bool(b.Unwrap())
 		return nil
 	}
 
-	return fmt.Errorf("dirty.Bool: unsupported value %q", s)
+	return fmt.Errorf("dirty.Bool: unrecognized value for bool (%q)", limitedStr(s, 50))
 }
 
 // UnmarshalJSON converts []byte into an Array.
@@ -253,4 +330,12 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 	}
 	*v = obj
 	return nil
+}
+
+func limitedStr(s string, limit int) string {
+	if len(s) > limit {
+		return s[0:limit] + "…"
+	}
+
+	return s
 }

@@ -1,143 +1,232 @@
 package config
 
 import (
+	"encoding/json"
 	"sync"
+
+	"github.com/d3rty/json/internal/option"
 )
 
-// BoolConfig defines how dirty the dirty.Bool is decoded.
-type BoolConfig struct {
-	// AllowString allows boolean to be decoded from a string.
-	// By default it only supports "true" and "false".
-	AllowString bool // allows "true" and "false"
+type BoolFromNumberParser string
 
-	// TrueStrings specifies list of string values that are considered true.
-	// When no specified, but AllowString:true, the TrueStrings is considered as ["true"].
-	// Note: values here are case-insensitive.
-	TrueStrings []string // e.g. ["true", "yes", "on"]
+const (
+	// BoolFromNumberParserBinary is the "1/0" parser. 1 is true, 0 is false.
+	// Other numbers are considerd "non parsed" (fallback value or Red result).
+	BoolFromNumberBinary BoolFromNumberParser = "binary"
 
-	// FalseStrings specifies list of string values that are considered false.
-	// When no specified, but AllowString:true, the FalseStrings is considered as ["false"].
-	// Note: values here are case-insensitive.
-	FalseStrings []string // e.g. ["false", "no", "off"]
+	// BoolFromNumberParserPositiveNegative is the "<=0 vs >0" parser.
+	// Positive numbers are true. Negative numbers And zero are false.
+	BoolFromNumberPositiveNegative BoolFromNumberParser = "positive_negative"
 
-	// FallbackStringValue is the bool result for string values not specified in TrueStrings or FalseStrings.
-	// By default it's false.
-	FallbackStringValue bool
-
-	// FallbackFromStringToRed makes the result "Red" for string values not specified in TrueStrings or FalseStrings.
-	// This means the current bool is undefined, and we lose it.
-	FallbackFromStringToRed bool
-
-	// AllowNumber allows boolean to be decoded from an integer.
-	// By default it only supports 1 and 0.
-	AllowNumber bool // allows 1 and 0
-
-	// TrueNumbers specifies list of number values that are considered true.
-	// When no specified, but AllowNumber:true, the TrueNumbers is considered as func(f float64) bool{f == 1}.
-	// Note: values here can be both integers and floats. 1.0 and 1 are treated as the same.
-	TrueNumbers func(float64) bool // e.g. func (f float64) bool { return f > 0 }
-
-	// FalseNumbers specifies list of number values that are considered false.
-	// When no specified, but AllowNumber:true, the FalseNumbers is considered as func(f float64) bool{f == 0}.
-	// Note: values here can be both integers and floats. 1.0 and 1 are treated as the same.
-	FalseNumbers func(float64) bool // e.g. func (f float64) bool { return f <= 0 }
-
-	// FallbackNumberValue is the bool result for number values not specified in TrueNumbers or FalseNumbers..
-	// By default it's false.
-	// Note: FallbackNumberValue's behavior depends on how you declare TrueNumbers and FalseNumbers.
-	//       If TrueNumbers/FalseNumbers are covering all numbers (so one of them is always true), so fallback never happens.
-	FallbackNumberValue bool
-
-	// FallbackFromNumberToRed makes the result "Red" for number values not specified in TrueNumbers or FalseNumbers.
-	// This means the current bool is undefined, and we lose it.
-	FallbackFromNumberToRed bool
-}
-
-// NumberConfig defines how dirty numbers are decoded.
-type NumberConfig struct {
-	// AllowString indicates whether numeric values provided as strings should be accepted.
-	// Default is true.
-	AllowString bool
-
-	// AllowSpacing indicates whether numeric values with spacing should be accepted.
-	// Note: "1 000 000" is considered as a valid 1000000 in this case.
-	// Default is true.
-	AllowSpacing bool
-
-	// AllowExponent indicates whether numeric values with exponent should be accepted.
-	// Note: "1e6" is considered as a valid 1000000 in this case.
-	// Default is true.
-	AllowExponent bool
-
-	// AllowComma indicates whether numeric values with comma should be accepted.
-	// Note: "1,000,000" is considered as a valid 1000000 in this case.
-	// Default is true.
-	AllowComma bool
-
-	// AllowFloatishIntegers indicates whether 1.0 is considered a valid integer accepted in
-	// integer-based type in the clean mode.
-	// Note: this means that having `V int64 `json:"v"` in your clean (strict) model,
-	//       and `V dirty.Number `json:"v"` in your dirty model,
-	//       it will successfully forgive the  5.0 for 5 (resulting as Yellow),
-	//       but will end up Red and lose the value in case of 5.1.
-	// Default is true.
-	AllowFloatishIntegers bool
-}
+	// BoolFromNumberParserSignOfOne is the "-1/1" parser.
+	// -1 means false, 1 means true. Other numbers are considerd "non parsed" (fallback value or Red result).
+	BoolFromNumberSignOfOne BoolFromNumberParser = "sign_of_one"
+)
 
 // Config holds global settings for dirty unmarshalling.
 type Config struct {
 	// Bool is the configuration for dirty.Bool.
-	Bool BoolConfig
+	Bool struct {
+		FromStrings struct {
+			// FromStrings.Allowed allows boolean to be decoded from a string.
+			// By default it will only decode bools from "true" and "false" strings.
+			//
+			// Default: true
+			Allowed bool
+
+			// CustomListForTrue specifies list of string values that are considered true.
+			// It's ignored if FromStrings.Allowed is false.
+			// Values here are case-insensitive.
+			//
+			// Default: ["true"]
+			// Example: ["true", "yes", "on"]
+			CustomListForTrue []string
+
+			// CustomListForFalse specifies list of string values that are considered false.
+			// It's ignored if FromStrings.Allowed is false.
+			// Values here are case-insensitive.
+			//
+			// Default: ["false"]
+			// Example: ["false", "no", "off"]
+			CustomListForFalse []string
+
+			// FalseForEmptryString specifies that "" should be considered as false
+			// This config option is actually a shortcut for adding a `""` in the CustomListForFalse
+			//
+			// Default: true
+			FalseForEmptyString bool
+
+			// RespectFromNumbersLogic allows to parse stringified number value
+			// as a regular number values (corresponding to the FromNumbers config)
+			RespectFromNumbersLogic bool
+
+			// FallbackValue is the bool result for string values
+			// After not falling into one of the CustomListForTrue/CustomListForFalse lists.
+			//
+			// Default: options.Some(false) // considered as real false value
+			// Example: option.Some(true) 	// will default to true when unmarshalled value
+			// 			option.None() 		// can cause red result when unmarshalled value
+			FallbackValue option.Bool
+		}
+
+		FromNumbers struct {
+			// Allowed allows boolean to be decoded from an integer.
+			// By default it will only decode bools from 1 or 0 numbers.
+			//
+			// Default: true
+			Allowed bool
+
+			// CustomParseFunc specifies how to parse numbers to bool.
+			// Is ignored if FromNumbers.Allowed is false.
+			//
+			// Default: BoolFromNumberParserBinary (1 is true, 0 is false)
+			CustomParseFunc BoolFromNumberParser
+
+			// FallbackValue is the bool result for number values
+			// After resulting in option.None result from CustomParseFunc.
+			//
+			// Default: options.Some(false) // considered as real false value
+			// Example: option.Some(true) 	// will default to true when unmarshalled value
+			// 			option.None() 		// can cause red result when unmarshalled value
+			FallbackValue option.Bool
+		}
+
+		FromNull struct {
+			// Allowed allows boolean to be decoded from a null.
+			// By default it will decode null as false.
+			//
+			// Default: true
+			Allowed bool
+
+			// Inverse means inversing the FromNull logic.
+			// If inverse:true nulls will be considered `true` rather than `false` as by default.
+			//
+			// Default: false
+			Inverse bool
+		}
+	}
 
 	// Number is the configuration for dirty.Number.
-	Number NumberConfig
+	Number struct {
+		FromStrings struct {
+			// FromStrings.Allowed indicates whether numeric values provided as strings should be accepted.
+			//
+			// Default: true.
+			Allowed bool
+
+			// SpacingAllowed indicates whether the spacing should be trimed in the stringified numbers.
+			// Example: "1 000 000" is considered as a valid 1000000 in this case.
+			//
+			// Default: true.
+			SpacingAllowed bool
+
+			// ExponentNotationAllowed specifies whether numeric values with exponent should be accepted.
+			// Example: "1e6" is considered as a valid 1000000 in this case.
+			//
+			// Default: true.
+			ExponentNotationAllowed bool
+
+			// CommasAllowed indicates whether numeric values with comma should be accepted.
+			// Example: "1,000,000" is considered as a valid 1000000 in this case.
+			//
+			// Default is true.
+			CommasAllowed bool
+
+			// FloatishAllowed indicates whether 1.0 is considered a valid integer accepted in
+			// integer-based type in the clean mode.
+			// Note: this means that having `V int64 `json:"v"` in your clean (strict) model,
+			//       and `V dirty.Number `json:"v"` in your dirty model,
+			//       it will successfully forgive the  5.0 for 5 (resulting as Yellow),
+			//       but will end up Red and lose the value in case of 5.1.
+			//
+			// Default is true.
+			FloatishAllowed bool
+		}
+
+		FromBools struct {
+			// Allowed allows number to be decoded from a Bool.
+			// By default true is decoded as 1.0 and false as 0.0
+			//
+			// Default: true
+			Allowed bool
+
+			// TODO: maybe custom logic config is needed here?
+		}
+
+		FromNull struct {
+			// Allowed allows number to be decoded from a null.
+			// By default it will decode number as zero.
+			//
+			// Default: true
+			Allowed bool
+		}
+	}
+}
+
+// defaultConfig is the source-of-truth for the default configuration.
+func defaultConfig() *Config {
+	var cfg Config
+
+	cfg.Bool.FromStrings.Allowed = true
+	cfg.Bool.FromStrings.CustomListForTrue = []string{"true", "yes", "on", "1"}
+	cfg.Bool.FromStrings.CustomListForFalse = []string{"false", "no", "off", "0"}
+	cfg.Bool.FromStrings.FalseForEmptyString = true
+	cfg.Bool.FromStrings.FallbackValue = option.Some(false)
+	cfg.Bool.FromStrings.RespectFromNumbersLogic = true
+
+	cfg.Bool.FromNumbers.Allowed = true
+	cfg.Bool.FromNumbers.CustomParseFunc = BoolFromNumberBinary
+	cfg.Bool.FromNumbers.FallbackValue = option.Some(false)
+
+	cfg.Bool.FromNull.Allowed = true
+	cfg.Bool.FromNull.Inverse = false
+
+	cfg.Number.FromStrings.Allowed = true
+	cfg.Number.FromStrings.SpacingAllowed = true
+	cfg.Number.FromStrings.ExponentNotationAllowed = true
+	cfg.Number.FromStrings.CommasAllowed = true
+	cfg.Number.FromStrings.FloatishAllowed = true
+	cfg.Number.FromBools.Allowed = true
+	cfg.Number.FromNull.Allowed = true
+
+	return &cfg
 }
 
 // globalConfig is the package-level variable storing the config.
 var (
 	globalConfig *Config
-	once         sync.Once
 	mu           sync.RWMutex
 )
 
-func initConfig() {
-	globalConfig = &Config{
-		Bool: BoolConfig{
-			AllowString:             true,
-			TrueStrings:             []string{"true", "yes", "on", "1"},
-			FalseStrings:            []string{"false", "no", "off", "0"},
-			FallbackStringValue:     false,
-			FallbackFromStringToRed: false,
-			AllowNumber:             true,
-			TrueNumbers:             func(f float64) bool { return f == 0 },
-			FalseNumbers:            func(f float64) bool { return f != 0 },
-			FallbackNumberValue:     false,
-			FallbackFromNumberToRed: false,
-		},
-		Number: NumberConfig{
-			AllowString:           true,
-			AllowSpacing:          true,
-			AllowExponent:         true,
-			AllowComma:            true,
-			AllowFloatishIntegers: true,
-		},
-	}
+func init() {
+	globalConfig = defaultConfig()
 }
 
-// Get returns a copy of the global configuration.
-func Get() Config {
-	once.Do(initConfig) // ensure it's initialized only once
+// Global returns a copy of the global configuration.
+// Returned copy is a clone. It's modifying doesn't affect the original config.
+func Global() *Config {
 	mu.RLock()
 	defer mu.RUnlock()
-	// Return a copy to avoid race conditions if the caller modifies it.
-	return *globalConfig
+
+	return clone(globalConfig)
 }
 
 // Set updates the global configuration.
 // It's often a good idea to validate new values before setting them.
-func Set(newConfig Config) {
-	once.Do(initConfig) // ensure it's initialized if not already
+func UpdateGlobal(updateFn func(config *Config)) *Config {
 	mu.Lock()
+	updateFn(globalConfig)
 	defer mu.Unlock()
-	*globalConfig = newConfig
+
+	return clone(globalConfig)
+}
+
+// clone via json round-trip. It's a simple (but not the most efficient) way to clone the config.
+// Config is safe for marshalling (that's by design): It will never contain functions, etc.
+// We can live with this solution until we need increase performance.
+func clone(cfg *Config) *Config {
+	marshalled, _ := json.Marshal(cfg)
+	var cloned Config
+	_ = json.Unmarshal(marshalled, &cloned)
+	return &cloned
 }
