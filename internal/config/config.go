@@ -32,7 +32,6 @@ type Config struct {
 
 			// CustomListForTrue specifies list of string values that are considered true.
 			// It's ignored if FromStrings.Allowed is false.
-			// Values here are case-insensitive.
 			//
 			// Default: ["true"]
 			// Example: ["true", "yes", "on"]
@@ -40,11 +39,16 @@ type Config struct {
 
 			// CustomListForFalse specifies list of string values that are considered false.
 			// It's ignored if FromStrings.Allowed is false.
-			// Values here are case-insensitive.
 			//
 			// Default: ["false"]
 			// Example: ["false", "no", "off"]
 			CustomListForFalse []string
+
+			// CaseInsensitive specifies where the strings from CustomListForTrue/CustomListForFalse
+			// are considered to be case-insensitive.
+			//
+			// Default: true
+			CaseInsensitive bool
 
 			// FalseForEmptryString specifies that "" should be considered as false
 			// This config option is actually a shortcut for adding a `""` in the CustomListForFalse
@@ -224,6 +228,7 @@ func defaultConfig() *Config {
 	cfg.Bool.FromStrings.Allowed = true
 	cfg.Bool.FromStrings.CustomListForTrue = []string{"true", "yes", "on", "1"}
 	cfg.Bool.FromStrings.CustomListForFalse = []string{"false", "no", "off", "0"}
+	cfg.Bool.FromStrings.CaseInsensitive = true
 	cfg.Bool.FromStrings.RespectFromNumbersLogic = true
 	cfg.Bool.FromStrings.FalseForEmptyString = true
 	cfg.Bool.FromStrings.FallbackValue = option.Some(false)

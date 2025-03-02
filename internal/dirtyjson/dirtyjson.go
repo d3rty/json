@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -201,15 +202,24 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		}
 
 		boolFromString = func(s string) option.Bool {
-			// Check against the configured true strings.
-			for _, ts := range cfg.FromStrings.CustomListForTrue {
-				if s == strings.ToLower(ts) {
+			sLower := strings.ToLower(s)
+
+			if cfg.FromStrings.CaseInsensitive {
+				for _, ts := range cfg.FromStrings.CustomListForTrue {
+					if sLower == strings.ToLower(ts) {
+						return option.True()
+					}
+				}
+				for _, fs := range cfg.FromStrings.CustomListForFalse {
+					if sLower == strings.ToLower(fs) {
+						return option.False()
+					}
+				}
+			} else {
+				if slices.Contains(cfg.FromStrings.CustomListForTrue, s) {
 					return option.True()
 				}
-			}
-			// Check against the configured false strings.
-			for _, fs := range cfg.FromStrings.CustomListForFalse {
-				if s == strings.ToLower(fs) {
+				if slices.Contains(cfg.FromStrings.CustomListForFalse, s) {
 					return option.False()
 				}
 			}
@@ -235,7 +245,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			return errors.New("dirty.Bool: corrupt string value")
 		}
 		s := string(data[1 : len(data)-1])
-		s = strings.TrimSpace(strings.ToLower(s)) // normalized content of the string
+		s = strings.TrimSpace(s) // normalized content of the string
 
 		if s == "" && cfg.FromStrings.FalseForEmptyString {
 			*v = false
