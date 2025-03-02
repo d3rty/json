@@ -24,7 +24,7 @@ lint: lint-install
 
 
 test:
-	go test -v ./...
+	go test ./...
 
 # Phony targets
 .PHONY: all tidy lint-install lint test

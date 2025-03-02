@@ -6,13 +6,13 @@ import (
 
 	dirty "github.com/d3rty/json"
 	"github.com/d3rty/json/internal/config"
-	"github.com/d3rty/json/tests/models"
+	testmodels "github.com/d3rty/json/tests/models"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSample1_Clean(t *testing.T) {
 
-	contents := ReadSampleFile(t, "1.clean")
+	contents := ReadSampleFile(t, "static/1.clean")
 
 	// Ensure std unmarshal works for the read file
 	var stdResult testmodels.Item
@@ -39,7 +39,7 @@ func TestSample1_Clean(t *testing.T) {
 }
 
 func TestSample1_Dirty_Yellow(t *testing.T) {
-	contents := ReadSampleFile(t, "1.dirty-yellow")
+	contents := ReadSampleFile(t, "static/1.dirty-yellow")
 
 	// std should fail as types don't match
 	var stdResult testmodels.Item
@@ -85,7 +85,7 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 }
 
 func TestSample1_Dirty_YellowChameleon(t *testing.T) {
-	contents := ReadSampleFile(t, "1.dirty-yellow.keys")
+	contents := ReadSampleFile(t, "static/1.dirty-yellow.keys")
 
 	// std should fail as types don't match
 	var stdResult testmodels.Item

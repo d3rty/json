@@ -6,13 +6,13 @@ import (
 
 	dirty "github.com/d3rty/json"
 	"github.com/d3rty/json/internal/config"
-	"github.com/d3rty/json/tests/models"
+	testmodels "github.com/d3rty/json/tests/models"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSample2_Clean(t *testing.T) {
 
-	contents := ReadSampleFile(t, "2.clean")
+	contents := ReadSampleFile(t, "static/2.clean")
 
 	// Ensure std unmarshal works for the read file
 	var stdResult testmodels.Document
