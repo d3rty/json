@@ -1,0 +1,20 @@
+{
+  "id": 1,
+  "name": "Item 1",
+  "isActive": "true",
+  "details": {
+    "description": "Description for item 1",
+    "score": "9.5",
+    "was-verified": "false",
+    "INFO": {
+      "CATegory": "Category A",
+      "rating": "4",
+      "features": ["fast", "reliable"],
+      "options": [
+        { "KEY": "priority", "VALUE": "high" },
+        { "key": "limit", "value": 10 }
+      ]
+    }
+  },
+  "tags": ["alpha", "beta"]
+}

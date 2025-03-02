@@ -10,6 +10,9 @@ import (
 // TODO: FromNull behavior should be done via Option
 // So, if dirty model has the Option type, then FromNull should respect the option type.
 
+// TODO: allow read single json into array (so just first item is filled)
+// and probably opposite (showing in red how much data was lost, but first was set)
+
 // Config holds global settings for dirty unmarshalling.
 type Config struct {
 	// Bool is the configuration for dirty.Bool.
@@ -281,11 +284,26 @@ func Clean() *Config {
 	return cleanConfig()
 }
 
+// Reset resets given config to a "Clean" config
+func Reset(cfg *Config) {
+	cfg.ResetToClean()
+}
+
+func Default(cfg *Config) {
+	*cfg = *defaultConfig()
+}
+
 // UpdateGlobal updates the global configuration.
 // It's often a good idea to validate new values before setting them.
-func UpdateGlobal(updateFn func(config *Config)) {
+func UpdateGlobal(updateFns ...func(config *Config)) {
+	if len(updateFns) == 0 {
+		return
+	}
+
 	mu.Lock()
-	updateFn(globalConfig)
+	for _, updateFn := range updateFns {
+		updateFn(globalConfig)
+	}
 	defer mu.Unlock()
 }
 

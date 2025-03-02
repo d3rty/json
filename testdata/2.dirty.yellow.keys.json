@@ -1,0 +1,322 @@
+[
+  {
+    "ID": "1",
+    "name": "Item 1",
+    "isActive": "true",
+    "details": {
+      "description": "Description for item 1",
+      "score": "9.5",
+      "was-verified": 0,
+      "info": {
+        "category": "Category A",
+        "rating": "4",
+        "features": [
+          "fast",
+          "reliable"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "high"
+          },
+          {
+            "key": "limit",
+            "value": 10
+          }
+        ]
+      }
+    },
+    "tags": [
+      "alpha",
+      "beta"
+    ]
+  },
+  {
+    "id": "2",
+    "Name": "Item 2",
+    "isActive": 0,
+    "details": {
+      "description": "Description for item 2",
+      "score": "7.0",
+      "was-verified": "true",
+      "info": {
+        "category": "Category B",
+        "rating": "3",
+        "features": [
+          "scalable",
+          "secure"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "medium"
+          },
+          {
+            "key": "limit",
+            "value": 5
+          }
+        ]
+      }
+    },
+    "tags": [
+      "gamma",
+      "delta"
+    ]
+  },
+  {
+    "id": "3",
+    "name": "Item 3",
+    "IsActive": "true",
+    "details": {
+      "description": "Description for item 3",
+      "score": "8.2",
+      "was-verified": 0,
+      "info": {
+        "category": "Category A",
+        "rating": "5",
+        "features": [
+          "innovative",
+          "efficient"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "high"
+          },
+          {
+            "key": "limit",
+            "value": 10
+          }
+        ]
+      }
+    },
+    "tags": [
+      "epsilon",
+      "zeta"
+    ]
+  },
+  {
+    "id": "4",
+    "name": "Item 4",
+    "isActive": 0,
+    "details": {
+      "description": "Description for item 4",
+      "score": "6.8",
+      "was-verified": "true",
+      "info": {
+        "category": "Category C",
+        "rating": "2",
+        "features": [
+          "user-friendly",
+          "lightweight"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "low"
+          },
+          {
+            "key": "limit",
+            "value": 2
+          }
+        ]
+      }
+    },
+    "tags": [
+      "eta",
+      "theta"
+    ]
+  },
+  {
+    "ID": "5",
+    "Name": "Item 5",
+    "is-active": "true",
+    "details": {
+      "description": "Description for item 5",
+      "score": "9.0",
+      "was-verified": 0,
+      "info": {
+        "category": "Category B",
+        "rating": "4",
+        "features": [
+          "robust",
+          "stable"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "medium"
+          },
+          {
+            "key": "limit",
+            "value": 5
+          }
+        ]
+      }
+    },
+    "tags": [
+      "iota",
+      "kappa"
+    ]
+  },
+  {
+    "id": "6",
+    "name": "Item 6",
+    "IsActive": 0,
+    "details": {
+      "description": "Description for item 6",
+      "score": "5.5",
+      "was-verified": "true",
+      "info": {
+        "category": "Category C",
+        "rating": "3",
+        "features": [
+          "versatile",
+          "modular"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "low"
+          },
+          {
+            "key": "limit",
+            "value": 2
+          }
+        ]
+      }
+    },
+    "tags": [
+      "lambda",
+      "mu"
+    ]
+  },
+  {
+    "id": "7",
+    "name": "Item 7",
+    "is_active": "true",
+    "details": {
+      "description": "Description for item 7",
+      "score": "8.8",
+      "wasVerified": 0,
+      "info": {
+        "category": "Category A",
+        "rating": "5",
+        "features": [
+          "powerful",
+          "intuitive"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "high"
+          },
+          {
+            "key": "limit",
+            "value": 10
+          }
+        ]
+      }
+    },
+    "tags": [
+      "nu",
+      "xi"
+    ]
+  },
+  {
+    "ID": "8",
+    "name": "Item 8",
+    "isActive": 0,
+    "details": {
+      "description": "Description for item 8",
+      "score": "7.3",
+      "was_verified": "true",
+      "info": {
+        "category": "Category B",
+        "rating": "3",
+        "features": [
+          "flexible",
+          "integrated"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "medium"
+          },
+          {
+            "key": "limit",
+            "value": 5
+          }
+        ]
+      }
+    },
+    "tags": [
+      "omicron",
+      "pi"
+    ]
+  },
+  {
+    "id": "9",
+    "Name": "Item 9",
+    "isActive": "true",
+    "details": {
+      "description": "Description for item 9",
+      "score": "6.4",
+      "was-verified": 0,
+      "info": {
+        "category": "Category C",
+        "rating": "2",
+        "features": [
+          "economical",
+          "compact"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "low"
+          },
+          {
+            "key": "limit",
+            "value": 2
+          }
+        ]
+      }
+    },
+    "tags": [
+      "rho",
+      "sigma"
+    ]
+  },
+  {
+    "id": "10",
+    "name": "Item 10",
+    "IsActive": 0,
+    "details": {
+      "description": "Description for item 10",
+      "score": "8.0",
+      "was-verified": "true",
+      "info": {
+        "category": "Category A",
+        "rating": "4",
+        "features": [
+          "scalable",
+          "reliable"
+        ],
+        "options": [
+          {
+            "key": "priority",
+            "value": "high"
+          },
+          {
+            "key": "limit",
+            "value": 10
+          }
+        ]
+      }
+    },
+    "tags": [
+      "tau",
+      "upsilon"
+    ]
+  }
+]

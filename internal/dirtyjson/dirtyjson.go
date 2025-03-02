@@ -71,7 +71,7 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		cfg.FromNull.Allowed = false
 	}
 
-	var s string
+	//var s string
 	// If the value is a quoted string.
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
@@ -80,7 +80,7 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.Number: invalid string value")
 		}
-		s = string(data[1 : len(data)-1])
+		s := string(data[1 : len(data)-1])
 		s = strings.TrimSpace(s)
 
 		// Remove spaces if allowed.
@@ -109,6 +109,7 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 	}
 
 	// Raw token (can be number, boolean, null, objet, array)
+	s := strings.TrimSpace(string(data))
 
 	if s[0] == 'n' /* null  */ {
 		if cfg.FromNull.Allowed {
@@ -209,7 +210,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			// Check against the configured false strings.
 			for _, fs := range cfg.FromStrings.CustomListForFalse {
 				if s == strings.ToLower(fs) {
-					return option.True()
+					return option.False()
 				}
 			}
 
