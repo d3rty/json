@@ -4,16 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"slices"
 	"time"
 
 	"github.com/d3rty/json/internal/config"
 	"github.com/d3rty/json/internal/option"
 )
 
+func newRng() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
 // RandomConfig returns a randomly generated *Config.
 func RandomConfig(r *rand.Rand) *config.Config {
 	if r == nil {
-		r = rand.New(rand.NewSource(time.Now().UnixNano()))
+		r = newRng()
 	}
 
 	cfg := new(config.Config)
@@ -38,11 +43,7 @@ func RandomConfig(r *rand.Rand) *config.Config {
 		// FromNumbers
 		cfg.Bool.FromNumbers.Allowed = r.Intn(2) == 0
 		if cfg.Bool.FromNumbers.Allowed {
-			choices := []config.BoolFromNumberParser{
-				config.BoolFromNumberBinary,
-				config.BoolFromNumberPositiveNegative,
-				config.BoolFromNumberSignOfOne,
-			}
+			choices := config.AvailableBoolFromNumberParsers()
 			cfg.Bool.FromNumbers.CustomParseFunc = choices[r.Intn(len(choices))]
 			cfg.Bool.FromNumbers.FallbackValue = option.Some(r.Intn(2) == 0)
 		}
@@ -98,7 +99,9 @@ func GenerateDirtyJSON(model any, cleanJSON []byte, ratio float64, allowRedArg .
 		return nil, fmt.Errorf("failed to unmarshal clean JSON: %w", err)
 	}
 
-	mixedData := NewMixer(ratio).Mix(structToMap(model))
+	rng := newRng()
+
+	mixedData := NewDirtyfier(ratio, RandomConfig(rng), rng).Dirtify(structToMap(model))
 
 	// Marshal back to JSON.
 	dirtyJSON, err := json.Marshal(mixedData)
@@ -106,4 +109,26 @@ func GenerateDirtyJSON(model any, cleanJSON []byte, ratio float64, allowRedArg .
 		return nil, fmt.Errorf("failed to marshal dirty JSON: %w", err)
 	}
 	return dirtyJSON, nil
+}
+
+var dictTrues = []string{"true", "yes", "on", "1", "ok", "yep"}
+var dictFalses = []string{"false", "no", "off", "0", "nah", "nope"}
+
+// generateRandomPreset selects a random subset (of size between min and max)
+// from the provided master list.
+func generateRandomPreset(dict []string, min, max int, r *rand.Rand) []string {
+	// Determine the number of elements to pick.
+	count := r.Intn(max-min+1) + min
+	if len(dict) < count {
+		count = len(dict)
+	}
+
+	// Shuffle the master copy.
+	shuffled := slices.Clone(dict)
+	r.Shuffle(len(shuffled), func(i, j int) {
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+	})
+
+	// Return the first count elements.
+	return shuffled[:count]
 }

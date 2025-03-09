@@ -1,6 +1,9 @@
 package dirtytesting
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"math/rand"
+)
 
 // structToMap converts any struct to a map[string]any via JSON round-trip.
 func structToMap(s any) map[string]any {
@@ -13,4 +16,15 @@ func structToMap(s any) map[string]any {
 		panic("structToMap: failed to unmarshal struct " + err.Error())
 	}
 	return m
+}
+
+// feelingLucky returns random item from the given slice
+func feelingLucky[T comparable](rng *rand.Rand, s []T) T {
+	if len(s) == 0 {
+		var zero T
+		return zero
+	}
+
+	idx := rng.Intn(len(s))
+	return s[idx]
 }

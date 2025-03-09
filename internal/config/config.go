@@ -220,6 +220,12 @@ const (
 	BoolFromNumberSignOfOne BoolFromNumberParser = "sign_of_one"
 )
 
+func AvailableBoolFromNumberParsers() []BoolFromNumberParser {
+	return []BoolFromNumberParser{
+		BoolFromNumberBinary, BoolFromNumberPositiveNegative, BoolFromNumberSignOfOne,
+	}
+}
+
 // defaultConfig is the source-of-truth for the default configuration.
 func defaultConfig() *Config {
 	var cfg Config

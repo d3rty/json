@@ -11,7 +11,7 @@ import (
 // Unmarshal parses the JSON-encoded data, allowing schema to be dirty,
 // and stores the result in the value pointed to by v.
 // It's the main part of public API, it's considered to be used instead of json.Unmarshal.
-func Unmarshal(data []byte, v interface{}) error {
+func Unmarshal(data []byte, v any) error {
 	r := bytes.NewReader(data)
 
 	return dirtyjson.NewDecoder(r).Decode(v)
