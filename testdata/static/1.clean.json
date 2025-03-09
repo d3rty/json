@@ -10,10 +10,7 @@
       "category": "Category A",
       "rating": 4,
       "features": ["fast", "reliable"],
-      "options": [
-        { "key": "priority", "value": "high" },
-        { "key": "limit", "value": 10 }
-      ]
+      "options": [{ "key": "priority", "value": "high" }]
     }
   },
   "tags": ["alpha", "beta"]

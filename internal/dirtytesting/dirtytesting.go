@@ -84,27 +84,52 @@ func RandomConfig(r *rand.Rand) *config.Config {
 	return cfg
 }
 
-func GenerateDirtyJSON(model any, cleanJSON []byte, ratio float64, allowRedArg ...bool) ([]byte, error) {
-	// Allow red (lossy transformations) if requested.
-	var allowRed bool
-	if len(allowRedArg) > 0 {
-		allowRed = allowRedArg[0]
+type DirtifyCfg struct {
+	rng      *rand.Rand
+	cfg      *config.Config
+	ratio    float64
+	allowRed bool
+}
+
+type drtfOpt func(*DirtifyCfg)
+
+func (dcfg *DirtifyCfg) Config() *config.Config { return dcfg.cfg }
+
+func WithConfig(cfg *config.Config) drtfOpt { return func(dcfg *DirtifyCfg) { dcfg.cfg = cfg } }
+func WithRng(rng *rand.Rand) drtfOpt        { return func(dcfg *DirtifyCfg) { dcfg.rng = rng } }
+func WithRatio(r float64) drtfOpt           { return func(dcfg *DirtifyCfg) { dcfg.ratio = r } }
+func WithAllowedRed(b bool) drtfOpt         { return func(dcfg *DirtifyCfg) { dcfg.allowRed = b } }
+
+// Dirtify makes a dirty version of JSON
+func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...drtfOpt) ([]byte, error) {
+	if dcfg == nil {
+		if len(opts) == 0 {
+			panic("def something wrong. if using default random, you must know it back. pass empty dcfg then")
+		}
+
+		dcfg = &DirtifyCfg{}
 	}
-	if allowRed {
-		panic("not implemented")
+	dcfg.rng = newRng()
+	dcfg.cfg = RandomConfig(dcfg.rng)
+	dcfg.ratio = 0.7
+
+	// override dirtify config
+	for _, opt := range opts {
+		opt(dcfg)
 	}
 
 	// Unmarshal clean JSON into the provided model.
-	if err := json.Unmarshal(cleanJSON, model); err != nil {
+	var cleanModel T
+	if err := json.Unmarshal(cleanJSON, &cleanModel); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal clean JSON: %w", err)
 	}
 
-	rng := newRng()
-
-	mixedData := NewDirtyfier(ratio, RandomConfig(rng), rng).Dirtify(structToMap(model))
+	dirtyModel := NewDirtyfier(dcfg.ratio, dcfg.cfg, dcfg.rng).Dirtify(
+		structToMap(cleanModel),
+	)
 
 	// Marshal back to JSON.
-	dirtyJSON, err := json.Marshal(mixedData)
+	dirtyJSON, err := json.Marshal(dirtyModel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal dirty JSON: %w", err)
 	}

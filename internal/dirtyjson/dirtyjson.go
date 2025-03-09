@@ -54,6 +54,16 @@ type (
 	// Object for now is just for now is json's object.
 	Object map[string]any
 
+	// SmartScalar means that it respects the type of given value
+	// So, for strings:
+	// 		if it's numerish string - it will be float64
+	//     	if it's boolish string - it will be a Bool
+	//     	otherwise it's a stirng
+	// 	   for bools and floats: it remains bool or float64
+	SmartScalar struct {
+		scalar any
+	}
+
 	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringifed.
 	// TODO: Time, Date, DateTime, etc.
 	// TODO: Integer / Float
@@ -351,6 +361,60 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 	}
 	*v = obj
 	return nil
+}
+
+// UnmarshalJSON converts []byte into a smart scalar
+func (v *SmartScalar) UnmarshalJSON(data []byte) error {
+	if len(data) == 4 {
+		if data[0] == 'n' /* null */ {
+			v.scalar = nil
+			return nil
+		}
+		if data[0] == 't' /* true */ {
+			v.scalar = true
+			return nil
+		}
+	}
+	if len(data) == 5 {
+		if data[0] == 'f' /* false */ {
+			v.scalar = false
+			return nil
+		}
+	}
+
+	// Try unmarshalling as a float64
+	var f float64
+	if err := json.Unmarshal(data, &f); err == nil {
+		v.scalar = f
+		return nil
+	}
+
+	// At this point, we assume the data is a JSON string.
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("SmartScalar: unable to unmarshal data: %s", err)
+	}
+
+	// If the string is "true" or "false", interpret as bool.
+	if s == "true" || s == "false" {
+		v.scalar = (s == "true")
+		return nil
+	}
+
+	// If the string can be parsed as a number, interpret as float64.
+	if num, err := strconv.ParseFloat(s, 64); err == nil {
+		v.scalar = num
+		return nil
+	}
+
+	// Otherwise, leave it as a string.
+	v.scalar = s
+	return nil
+}
+
+// MarshalJSON unwraps the underlying value and marshals it.
+func (s SmartScalar) MarshalJSON() ([]byte, error) {
+	return json.Marshal(s.scalar)
 }
 
 func limitedStr(s string, limit int) string {

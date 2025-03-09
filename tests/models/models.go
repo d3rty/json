@@ -59,7 +59,11 @@ func (i Item) Dirty() any {
 			Score       dirty.Number `json:"score"`
 			WasVerified dirty.Bool   `json:"was_verified"`
 			Info        struct {
-				Rating dirty.Number `json:"rating"`
+				Rating  dirty.Number `json:"rating"`
+				Options []struct {
+					Key   string            `json:"key"`
+					Value dirty.SmartScalar `json:"value"`
+				} `json:"options"`
 			} `json:"info"`
 		} `json:"details"`
 	}{}

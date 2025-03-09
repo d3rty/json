@@ -43,6 +43,10 @@ type Array = dirtyjson.Array
 // Anything except actual JSON objects will be rejected.
 type Object = dirtyjson.Object
 
+// SmartScalar is a custom type that can be bool|float64|string
+// guessing in a reasonable manner by its value.
+type SmartScalar = dirtyjson.SmartScalar
+
 // Enabled is an atom struct that enables dirty unmarshalling
 // for a given clean model. It MUST be embedded into any clean model.
 // The clean model also MUST implement Dirtyable interface.

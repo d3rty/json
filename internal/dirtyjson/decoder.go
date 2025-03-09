@@ -57,6 +57,7 @@ func (dec *Decoder) cleanDecode(val any) error {
 func (dec *Decoder) decode(val reflect.Value) error {
 	switch val.Kind() {
 	case reflect.Struct:
+		// TODO possible bug here when struct is actually a SmartScalar
 		if !val.CanAddr() {
 			return dec.decodeStruct(val)
 		}

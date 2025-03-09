@@ -1,4 +1,4 @@
-package dirtytesting_test
+package dirtytesting
 
 import (
 	"encoding/json"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	dirty "github.com/d3rty/json"
-	"github.com/d3rty/json/internal/dirtytesting"
+	"github.com/d3rty/json/internal/config"
 	testmodels "github.com/d3rty/json/tests/models"
 	"github.com/stretchr/testify/require"
 )
@@ -18,17 +18,40 @@ func TestGenerateDirtyJSON(t *testing.T) {
 	cleanJsonPath := "../../testdata/static/1.clean.json"
 	cleanContents, err := os.ReadFile(cleanJsonPath)
 	require.NoError(t, err)
+	cleanContents = minifyJSON(t, cleanContents)
 
 	var cleanData testmodels.Item
 	err = json.Unmarshal(cleanContents, &cleanData)
 	require.NoError(t, err)
 
-	dirtyContents, err := dirtytesting.GenerateDirtyJSON(&testmodels.Item{}, cleanContents, 0.7)
+	var dcfg DirtifyCfg
+	dirtyContents, err := Dirtify[testmodels.Item](cleanContents, &dcfg)
 	fmt.Println(err)
 	fmt.Println(string(dirtyContents))
+	fmt.Println(dcfg.Config())
 
-	var recovered testmodels.Item
-	err = dirty.Unmarshal(dirtyContents, &recovered)
+	config.UpdateGlobal(func(cfg *config.Config) {
+		*cfg = *dcfg.Config()
+	})
+
+	var recoveredData testmodels.Item
+	err = dirty.Unmarshal(dirtyContents, &recoveredData)
+	require.NoError(t, err, "failed with config "+dcfg.Config().String()+" on "+string(dirtyContents))
+
+	cleanMap := structToMap(cleanData)
+	recoveredMap := structToMap(recoveredData)
+
+	require.Equal(t, cleanMap, recoveredMap, "failed with config "+dcfg.Config().String()+" on "+string(dirtyContents))
+}
+
+func minifyJSON(t *testing.T, raw []byte) []byte {
+	// minify JSON via marshalling round trip
+	// here we assume json is valid but just in case we assert errors
+	var d map[string]any
+	err := json.Unmarshal(raw, &d)
 	require.NoError(t, err)
-	require.Equal(t, cleanData, recovered)
+
+	result, err := json.Marshal(d)
+	require.NoError(t, err)
+	return result
 }

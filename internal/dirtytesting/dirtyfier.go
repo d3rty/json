@@ -3,6 +3,7 @@ package dirtytesting
 import (
 	"fmt"
 	"math/rand"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -70,7 +71,7 @@ func (d *Dirtyfier) randomCase(s string) string {
 	return string(runes)
 }
 
-// Dirtify mixes values applying random transformations.
+// Dirtify makes dirty values applying random dirtify-transformations.
 func (d *Dirtyfier) Dirtify(val any) any {
 	switch v := val.(type) {
 	case map[string]any:
@@ -280,6 +281,18 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 
 	// Randomly choose one conversion flow.
 	switch feelingLucky(d.rng, flows) {
+	case "bool":
+		// number from bool is possible only for 0, 1 values
+		if v == 0 || v == 1 {
+			return d.maybeNumberNilify(v, v != 0)
+		}
+		// if we only have `bool` flow, then for other number we just keep it clean
+		if !slices.Contains(flows, "string") {
+			return v
+		}
+		// otherwise: fallback to from-string logic
+		fallthrough
+
 	case "string":
 		// TODO: support more configs
 		_ = cfg.FromStrings.SpacingAllowed
@@ -291,9 +304,6 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 		// Optionally, if the config allowed spacing, commas, or exponent notation,
 		// you could inject or remove them here.
 		return d.maybeNumberNilify(v, fmt.Sprintf("%v", v))
-	case "bool":
-
-		return d.maybeNumberNilify(v, v != 0)
 	default:
 		panic("unreachable")
 	}

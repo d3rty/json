@@ -193,6 +193,11 @@ type Config struct {
 	}
 }
 
+func (cfg *Config) String() string {
+	j, _ := json.Marshal(cfg)
+	return string(j)
+}
+
 // ResetToClean resets config so it's clean
 func (cfg *Config) ResetToClean() *Config {
 	cfg.FlexKeys.Allowed = false
@@ -316,6 +321,16 @@ func UpdateGlobal(updateFns ...func(config *Config)) {
 		updateFn(globalConfig)
 	}
 	defer mu.Unlock()
+}
+
+// FromBytes returns a parsed config from a given []byte contents
+func FromBytes(contents []byte) *Config {
+	var cfg Config
+	if err := json.Unmarshal(contents, &cfg); err != nil {
+		panic("invalid config")
+	}
+
+	return &cfg
 }
 
 // clone via json round-trip. It's a simple (but not the most efficient) way to clone the config.
