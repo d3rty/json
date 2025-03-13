@@ -176,7 +176,7 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 
 		// Find the matching struct field.
 		fieldFound := false
-		for i := 0; i < typ.NumField(); i++ {
+		for i := range typ.NumField() {
 			sf := typ.Field(i)
 			// Only consider exported fields.
 			if sf.PkgPath != "" {
@@ -209,7 +209,7 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 		}
 		// Field not found in struct: skip the value.
 		if !fieldFound {
-			var skip interface{}
+			var skip any
 			if err := dec.clean.Decode(&skip); err != nil {
 				return err
 			}
@@ -307,7 +307,7 @@ func (dec *Decoder) decodeArray(val reflect.Value) error {
 	}
 
 	length := val.Len()
-	for i := 0; i < length; i++ {
+	for i := range length {
 		if !dec.clean.More() {
 			return errors.New("not enough elements in JSON array")
 		}
@@ -318,7 +318,7 @@ func (dec *Decoder) decodeArray(val reflect.Value) error {
 	}
 	// If there are extra elements, skip them.
 	for dec.clean.More() {
-		var skip interface{}
+		var skip any
 		if err := dec.clean.Decode(&skip); err != nil {
 			return err
 		}
@@ -373,7 +373,7 @@ func (dec *Decoder) decodeMap(val reflect.Value) error {
 		} else {
 			// For other key types, decode from a JSON string.
 			keyPtr := reflect.New(keyType)
-			if err := json.Unmarshal([]byte(fmt.Sprintf("%q", keyStr)), keyPtr.Interface()); err != nil {
+			if err := json.Unmarshal(fmt.Appendf(nil, "%q", keyStr), keyPtr.Interface()); err != nil {
 				return fmt.Errorf("error converting map key: %w", err)
 			}
 			key = keyPtr.Elem()
