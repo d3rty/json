@@ -12,7 +12,7 @@ import (
 	"github.com/d3rty/json/internal/config"
 )
 
-// Token is needed for `CleanDecoder` interface
+// Token is needed for `CleanDecoder` interface.
 type Token = json.Token
 
 // CleanDecoder is an interface that stands for the part of `*json.Decoder` that is required in dirty decoding.
@@ -23,12 +23,12 @@ type CleanDecoder interface {
 	Decode(v any) error
 }
 
-// Decoder is the dirty decoder, it wraps the "clean" decoder
+// Decoder is the dirty decoder, it wraps the "clean" decoder.
 type Decoder struct {
 	clean CleanDecoder
 }
 
-// NewDecoder creates a new dirty decoder
+// NewDecoder creates a new dirty decoder.
 func NewDecoder(r io.Reader) *Decoder {
 	return &Decoder{clean: json.NewDecoder(r)}
 }
@@ -46,7 +46,7 @@ func (dec *Decoder) Decode(val any) error {
 	return dec.decode(rv.Elem()) // decode into dereferenced value
 }
 
-// cleanDecode is just a wrapper for dec.clean.Decode
+// cleanDecode is just a wrapper for dec.clean.Decode.
 func (dec *Decoder) cleanDecode(val any) error {
 	return dec.clean.Decode(val)
 }
@@ -55,6 +55,7 @@ func (dec *Decoder) cleanDecode(val any) error {
 // it does a regular decode routine for all types recursively, until it reaches the structs.
 // on structs it tries to decodeDirty if possible.
 func (dec *Decoder) decode(val reflect.Value) error {
+	//nolint:exhaustive // todo check how to disable it for reflect kind switches
 	switch val.Kind() {
 	case reflect.Struct:
 		// TODO possible bug here when struct is actually a SmartScalar
@@ -121,7 +122,7 @@ func (dec *Decoder) decodeDirty(v Dirtyable) error {
 	// If clean decoding fails, initialize dirty schema.
 	container, ok := v.(d3rtyContainer)
 	if !ok {
-		return fmt.Errorf("expected dirty container")
+		return errors.New("expected dirty container")
 	}
 
 	container.init(scheme)
@@ -165,11 +166,11 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 	// Loop over all fields in the JSON object.
 	for dec.clean.More() {
 		// Field name (as string).
-		t, err := dec.clean.Token()
+		t, err := dec.clean.Token() //nolint:govet // wtf?
 		if err != nil {
 			return err
 		}
-		fieldName, ok := t.(string)
+		fieldName, ok := t.(string) //nolint:govet // wtf?
 		if !ok {
 			return errors.New("expected field name to be a string")
 		}
@@ -228,7 +229,7 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 	return nil
 }
 
-// keyMatch matches json keys (input json vs model) corresponding to the given config
+// keyMatch matches json keys (input json vs model) corresponding to the given config.
 func keyMatch(jsonKey, modelKey string, cfg *config.Config) bool {
 	if jsonKey == modelKey {
 		return true
@@ -245,15 +246,15 @@ func keyMatch(jsonKey, modelKey string, cfg *config.Config) bool {
 	//
 	// ChameleonCase (for now slow implementation is OK. TODO: make it faster)
 	//
-	normalizedJsonKey := strings.ToLower(jsonKey)
-	normalizedJsonKey = strings.ReplaceAll(normalizedJsonKey, "_", "")
-	normalizedJsonKey = strings.ReplaceAll(normalizedJsonKey, "-", "")
+	normalizedJSONKey := strings.ToLower(jsonKey)
+	normalizedJSONKey = strings.ReplaceAll(normalizedJSONKey, "_", "")
+	normalizedJSONKey = strings.ReplaceAll(normalizedJSONKey, "-", "")
 
 	normalizedModelKey := strings.ToLower(modelKey)
 	normalizedModelKey = strings.ReplaceAll(normalizedModelKey, "_", "")
 	normalizedModelKey = strings.ReplaceAll(normalizedModelKey, "-", "")
 
-	return normalizedJsonKey == normalizedModelKey
+	return normalizedJSONKey == normalizedModelKey
 }
 
 // decodeSlice decodes a JSON array into a slice value.
@@ -275,7 +276,7 @@ func (dec *Decoder) decodeSlice(val reflect.Value) error {
 	for dec.clean.More() {
 		// Create a new element value.
 		elem := reflect.New(elemType).Elem()
-		if err := dec.decode(elem); err != nil {
+		if err := dec.decode(elem); err != nil { //nolint:govet // wtf?
 			return fmt.Errorf("error decoding slice element: %w", err)
 		}
 		sliceVal = reflect.Append(sliceVal, elem)
@@ -312,14 +313,14 @@ func (dec *Decoder) decodeArray(val reflect.Value) error {
 			return errors.New("not enough elements in JSON array")
 		}
 		elem := val.Index(i)
-		if err := dec.decode(elem); err != nil {
+		if err := dec.decode(elem); err != nil { //nolint:govet // wtf?
 			return fmt.Errorf("error decoding array element %d: %w", i, err)
 		}
 	}
 	// If there are extra elements, skip them.
 	for dec.clean.More() {
 		var skip any
-		if err := dec.clean.Decode(&skip); err != nil {
+		if err := dec.clean.Decode(&skip); err != nil { //nolint:govet // wtf?
 			return err
 		}
 	}
@@ -357,11 +358,11 @@ func (dec *Decoder) decodeMap(val reflect.Value) error {
 	elemType := val.Type().Elem()
 	for dec.clean.More() {
 		// Map keys are provided as tokens (usually strings).
-		t, err := dec.clean.Token()
+		t, err := dec.clean.Token() //nolint:govet // wtf?
 		if err != nil {
 			return err
 		}
-		keyStr, ok := t.(string)
+		keyStr, ok := t.(string) //nolint:govet // wtf?
 		if !ok {
 			return errors.New("expected map key to be a string")
 		}

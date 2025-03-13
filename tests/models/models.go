@@ -42,7 +42,7 @@ type Item struct {
 	Tags     []string `json:"tags"`
 }
 
-// String returns json representation of the Item (Clean JSON)
+// String returns json representation of the Item (Clean JSON).
 func (i Item) String() string {
 	jj, _ := json.Marshal(i)
 	return string(jj)

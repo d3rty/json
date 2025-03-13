@@ -29,7 +29,10 @@ func TestIsPascalCase(t *testing.T) {
 	assert.False(t, cases.Is("pascalcase", cases.Pascal), `"pascalcase" should not be PascalCase`)
 	assert.False(t, cases.Is("pascalCase", cases.Pascal), `"pascalCase" should not be PascalCase`)
 	assert.False(t, cases.Is("Pascal_Case", cases.Pascal), `"Pascal_Case" should not be PascalCase`)
-	assert.False(t, cases.Is("Pascalcase", cases.Pascal), `"Pascalcase" should not be PascalCase (missing internal uppercase)`)
+	assert.False(t, cases.Is(
+		"Pascalcase", cases.Pascal),
+		`"Pascalcase" should not be PascalCase (missing internal uppercase)`,
+	)
 }
 
 func TestIsSnakeCase(t *testing.T) {
@@ -54,10 +57,22 @@ func TestIsTitleSnakeCase(t *testing.T) {
 	assert.True(t, cases.Is("A_B_C", cases.TitleSnake), "Expected Title Snake Case with single letters")
 
 	// Invalid cases.
-	assert.False(t, cases.Is("NotTitleSnakeCase", cases.TitleSnake), "Missing underscore should return false")
-	assert.False(t, cases.Is("something_That_Ive_Never_met", cases.TitleSnake), "First segment starts with lowercase should return false")
-	assert.False(t, cases.Is("Something_THat_Ive_Never_met", cases.TitleSnake), "Segment with wrong casing should return false")
-	assert.False(t, cases.Is("Something__That_Ive_Never_met", cases.TitleSnake), "Empty segment due to consecutive underscores should return false")
+	assert.False(t,
+		cases.Is("NotTitleSnakeCase", cases.TitleSnake),
+		"Missing underscore should return false",
+	)
+	assert.False(t,
+		cases.Is("something_That_Ive_Never_met", cases.TitleSnake),
+		"First segment starts with lowercase should return false",
+	)
+	assert.False(t,
+		cases.Is("Something_THat_Ive_Never_met", cases.TitleSnake),
+		"Segment with wrong casing should return false",
+	)
+	assert.False(t,
+		cases.Is("Something__That_Ive_Never_met", cases.TitleSnake),
+		"Empty segment due to consecutive underscores should return false",
+	)
 }
 
 func TestIsKebabCase(t *testing.T) {
@@ -95,12 +110,18 @@ func TestIsComplexCase(t *testing.T) {
 	assert.True(t, cases.IsComplexCase("kebab-case"), "kebab-case should be recognized as complex")
 	assert.True(t, cases.IsComplexCase("X-Header-Name"), "X-Header-Name should be recognized as complex")
 	assert.True(t, cases.IsComplexCase("Content-Type"), "Content-Type should be recognized as complex")
-	assert.True(t, cases.IsComplexCase("Mixed-Case_with-mixed_separators"), "Mixed-Case_with-mixed_separators should not be recognized as complex")
+	assert.True(t,
+		cases.IsComplexCase("Mixed-Case_with-mixed_separators"),
+		"Mixed-Case_with-mixed_separators should not be recognized as complex",
+	)
 
 	// Strings that do not follow any of the naming conventions should return false.
 	assert.False(t, cases.IsComplexCase(""), "Empty string should not be recognized as complex")
 	assert.False(t, cases.IsComplexCase("Title"), "Title should not be recognized as complex")
-	assert.False(t, cases.IsComplexCase("lowercase"), "lowercase should not be recognized as complex (missing internal uppercase for camel)")
+	assert.False(t,
+		cases.IsComplexCase("lowercase"),
+		"lowercase should not be recognized as complex (missing internal uppercase for camel)",
+	)
 
 	assert.False(t, cases.IsComplexCase("UPPERCASE"), "UPPERCASE should not be recognized as complex")
 }
@@ -120,7 +141,7 @@ func TestTransformToHybridCase_NilRNG(t *testing.T) {
 	input := "helloWorldTestFoo_BarBazOne_Two-three-Four-FiveSix"
 
 	for range 100 {
-		output := cases.TransformToHybridCase(input, 0.7)
+		output := cases.TransformToHybridCase(input)
 
 		// We cannot predict the exact output here, but we can verify some properties:
 		// - The output should be non-empty.
@@ -151,49 +172,49 @@ type SplitWordsSuite struct {
 // TestEmptyString tests that an empty input returns nil.
 func (s *SplitWordsSuite) TestEmptyString() {
 	result := cases.SplitWords("")
-	assert.Nil(s.T(), result, "Expected nil for empty input")
+	s.Nil(result, "Expected nil for empty input")
 }
 
 // TestCamelCase tests splitting a camelCase string.
 func (s *SplitWordsSuite) TestCamelCase() {
 	result := cases.SplitWords("helloWorld")
 	expected := []string{"hello", "World"}
-	assert.Equal(s.T(), expected, result, "Should split camelCase words correctly")
+	s.Equal(expected, result, "Should split camelCase words correctly")
 }
 
 // TestPascalCase tests splitting a PascalCase string.
 func (s *SplitWordsSuite) TestPascalCase() {
 	result := cases.SplitWords("HelloWorld")
 	expected := []string{"Hello", "World"}
-	assert.Equal(s.T(), expected, result, "Should split PascalCase words correctly")
+	s.Equal(expected, result, "Should split PascalCase words correctly")
 }
 
 // TestWithUnderscores tests splitting a string with underscores.
 func (s *SplitWordsSuite) TestWithUnderscores() {
 	result := cases.SplitWords("hello_world_test")
 	expected := []string{"hello", "world", "test"}
-	assert.Equal(s.T(), expected, result, "Should split underscore-delimited words correctly")
+	s.Equal(expected, result, "Should split underscore-delimited words correctly")
 }
 
 // TestWithHyphens tests splitting a string with hyphens.
 func (s *SplitWordsSuite) TestWithHyphens() {
 	result := cases.SplitWords("hello-world-test")
 	expected := []string{"hello", "world", "test"}
-	assert.Equal(s.T(), expected, result, "Should split hyphen-delimited words correctly")
+	s.Equal(expected, result, "Should split hyphen-delimited words correctly")
 }
 
 // TestHybridCase tests a hybrid case with delimiters and camel case.
 func (s *SplitWordsSuite) TestHybridCase() {
 	result := cases.SplitWords("hello_World-TestExample")
 	expected := []string{"hello", "World", "Test", "Example"}
-	assert.Equal(s.T(), expected, result, "Should correctly handle hybrid cases")
+	s.Equal(expected, result, "Should correctly handle hybrid cases")
 }
 
 // TestMultipleDelimiters tests handling of multiple consecutive delimiters.
 func (s *SplitWordsSuite) TestMultipleDelimiters() {
 	result := cases.SplitWords("hello__world--Test")
 	expected := []string{"hello", "world", "Test"}
-	assert.Equal(s.T(), expected, result, "Should ignore empty parts between consecutive delimiters")
+	s.Equal(expected, result, "Should ignore empty parts between consecutive delimiters")
 }
 
 // In order for 'go test' to run this suite, we need a Test function.

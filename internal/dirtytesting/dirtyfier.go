@@ -10,6 +10,7 @@ import (
 
 	"github.com/d3rty/json/internal/cases"
 	"github.com/d3rty/json/internal/config"
+	"github.com/d3rty/json/internal/flipping"
 )
 
 // Dirtyfier makes dirty JSONs from clean ones.
@@ -19,25 +20,18 @@ type Dirtyfier struct {
 	//      0.0 means that 0% of possible fields will be dirtified (so result will remain clean).
 	threshold float64
 
-	// rng is the random generator that returns value [0-1) that is compared to the threshold.
+	// coin is a wrapper around the random generator
 	// it allows to make random decision for each field to be diritifed
-	rng *rand.Rand
+	coin *flipping.Coin
 
 	// cfg stands for dirty Config: how specifically we do dirty.
 	cfg *config.Config
 }
 
-// NewDirtyfiers creates a new dirtyfier
-func NewDirtyfier(threshold float64, cfg *config.Config, rngArg ...*rand.Rand) *Dirtyfier {
-	var rng *rand.Rand
-	if len(rngArg) > 0 {
-		rng = rngArg[0]
-	} else {
-		rng = newRng()
-	}
-
+// NewDirtyfiers creates a new dirtyfier.
+func NewDirtyfier(threshold float64, cfg *config.Config, coinArg ...*flipping.Coin) *Dirtyfier {
 	return &Dirtyfier{
-		rng:       rng,
+		coin:      flipping.MaybeNewCoin(coinArg...),
 		cfg:       cfg,
 		threshold: threshold,
 	}
@@ -45,14 +39,7 @@ func NewDirtyfier(threshold float64, cfg *config.Config, rngArg ...*rand.Rand) *
 
 // keepItClean returns true/false depending on current rand generation and the threshold
 // keepItClean returns true if we should omit dirtyfing, and false if we should do dirtyfing.
-func (d *Dirtyfier) keepItClean() bool {
-	return d.rng.Float64() >= d.threshold
-}
-
-// flipTheCount returns true or false with 50% chance
-func (d *Dirtyfier) flipTheCoin() bool {
-	return d.rng.Float64() >= 0.5
-}
+func (d *Dirtyfier) keepItClean() bool { return d.coin.Chance(d.threshold) }
 
 func (d *Dirtyfier) randomCase(s string) string {
 	// Optionally, seed the random number generator once in your main function or init block.
@@ -62,7 +49,7 @@ func (d *Dirtyfier) randomCase(s string) string {
 	runes := []rune(s)
 	for i, r := range runes {
 		// With 50% chance convert to lower case, else upper case.
-		if d.flipTheCoin() {
+		if d.coin.Flip() {
 			runes[i] = unicode.ToLower(r)
 		} else {
 			runes[i] = unicode.ToUpper(r)
@@ -102,7 +89,7 @@ func (d *Dirtyfier) Dirtify(val any) any {
 	}
 }
 
-// makeDirtyKey makes a dirty key from given clean key
+// makeDirtyKey makes a dirty key from given clean key.
 func (d *Dirtyfier) makeDirtyKey(key string) string {
 	if !d.cfg.FlexKeys.Allowed || !d.cfg.FlexKeys.CaseInsensitive && !d.cfg.FlexKeys.ChameleonCase {
 		return key
@@ -111,7 +98,7 @@ func (d *Dirtyfier) makeDirtyKey(key string) string {
 		return key
 	}
 
-	if cases.IsComplexCase(key) && d.cfg.FlexKeys.ChameleonCase && d.flipTheCoin() {
+	if cases.IsComplexCase(key) && d.cfg.FlexKeys.ChameleonCase && d.coin.Flip() {
 		// TODO: it would be great to exclude current case (so e.g. cases.MatchCase(key))
 		allCases := []cases.Case{
 			cases.Camel,
@@ -123,15 +110,15 @@ func (d *Dirtyfier) makeDirtyKey(key string) string {
 			cases.Hybrid,
 		}
 
-		convertTo := allCases[rand.Intn(len(allCases))]
+		convertTo := flipping.FeelingLucky(allCases, d.coin)
 		if convertTo == cases.Hybrid {
-			return cases.TransformToHybridCase(key, d.threshold)
+			return cases.TransformToHybridCase(key, d.coin)
 		}
 
 		return cases.TransformTo(key, convertTo)
 	}
 
-	if d.cfg.FlexKeys.CaseInsensitive && d.flipTheCoin() {
+	if d.cfg.FlexKeys.CaseInsensitive && d.coin.Flip() {
 		// Let's mix the case (make it upper/lower/title/etc)
 
 		// We have to shuffle and try them until we get first transformation that makes sense
@@ -159,8 +146,8 @@ func (d *Dirtyfier) makeDirtyKey(key string) string {
 	return key
 }
 
-// makeDirtyBool makes a dirty bool from given clean bool
-func (d *Dirtyfier) makeDirtyBool(v bool) (result any) {
+// makeDirtyBool makes a dirty bool from given clean bool.
+func (d *Dirtyfier) makeDirtyBool(v bool) any {
 	if !d.cfg.Bool.Allowed || d.keepItClean() {
 		return v
 	}
@@ -186,7 +173,7 @@ func (d *Dirtyfier) makeDirtyBool(v bool) (result any) {
 
 	// Randomly choose one conversion flow.
 	var numberToBeStringified bool
-	switch feelingLucky(d.rng, flows) {
+	switch flipping.FeelingLucky(flows, d.coin) {
 	case "string":
 		cfg := d.cfg.Bool.FromStrings
 
@@ -198,22 +185,22 @@ func (d *Dirtyfier) makeDirtyBool(v bool) (result any) {
 			customStringsDisabled := (!v && len(cfg.CustomListForFalse) == 0 ||
 				v && len(cfg.CustomListForTrue) == 0)
 
-			if d.flipTheCoin() || customStringsDisabled {
+			if d.coin.Flip() || customStringsDisabled {
 				numberToBeStringified = true
 			}
 		}
 
 		if !numberToBeStringified {
 			if v {
-				sTrue := feelingLucky(d.rng, cfg.CustomListForTrue)
-				if cfg.CaseInsensitive && d.flipTheCoin() {
+				sTrue := flipping.FeelingLucky(cfg.CustomListForTrue, d.coin)
+				if cfg.CaseInsensitive && d.coin.Flip() {
 					sTrue = d.randomCase(sTrue)
 				}
 				return d.maybeBoolNilify(v, sTrue)
 			}
 
-			sFalse := feelingLucky(d.rng, cfg.CustomListForFalse)
-			if cfg.CaseInsensitive && d.flipTheCoin() {
+			sFalse := flipping.FeelingLucky(cfg.CustomListForFalse, d.coin)
+			if cfg.CaseInsensitive && d.coin.Flip() {
 				sFalse = d.randomCase(sFalse)
 			}
 			return d.maybeBoolNilify(v, sFalse)
@@ -233,10 +220,11 @@ func (d *Dirtyfier) makeDirtyBool(v bool) (result any) {
 				intBoolResult = 0 // explicitly setting anyway for clarity
 			}
 		case config.BoolFromNumberPositiveNegative:
+			const k = 1000
 			if v {
-				intBoolResult = d.rng.Intn(1000) + 1
+				intBoolResult = d.coin.Rng().Intn(k) + 1
 			} else {
-				intBoolResult = -d.rng.Intn(1000)
+				intBoolResult = -d.coin.Rng().Intn(k)
 			}
 		case config.BoolFromNumberSignOfOne:
 			if v {
@@ -255,7 +243,7 @@ func (d *Dirtyfier) makeDirtyBool(v bool) (result any) {
 	}
 }
 
-// makeDirtyNumber makes a dirty number from given clean number
+// makeDirtyNumber makes a dirty number from given clean number.
 func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 	if !d.cfg.Number.Allowed || d.keepItClean() {
 		return v
@@ -280,7 +268,7 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 	}
 
 	// Randomly choose one conversion flow.
-	switch feelingLucky(d.rng, flows) {
+	switch flipping.FeelingLucky(flows, d.coin) {
 	case "bool":
 		// number from bool is possible only for 0, 1 values
 		if v == 0 || v == 1 {
@@ -309,7 +297,7 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 	}
 }
 
-// maybeBoolNilify makes a nil instead of bool respecting the Bool.FromNull config
+// maybeBoolNilify makes a nil instead of bool respecting the Bool.FromNull config.
 func (d *Dirtyfier) maybeBoolNilify(v bool, actual any) any {
 	if !d.cfg.Bool.FromNull.Allowed || d.keepItClean() {
 		return actual
@@ -317,7 +305,7 @@ func (d *Dirtyfier) maybeBoolNilify(v bool, actual any) any {
 
 	// let's make nilify logic even rare-er
 	// As it's a very specific, rare, edge-casy logic.
-	if d.flipTheCoin() {
+	if d.coin.Flip() {
 		return actual
 	}
 
@@ -327,7 +315,7 @@ func (d *Dirtyfier) maybeBoolNilify(v bool, actual any) any {
 	return actual
 }
 
-// maybeNumberNilify makes a nil instead of number respecting the Number.FromNull config
+// maybeNumberNilify makes a nil instead of number respecting the Number.FromNull config.
 func (d *Dirtyfier) maybeNumberNilify(v float64, actual any) any {
 	if !d.cfg.Bool.FromNull.Allowed || d.keepItClean() {
 		return actual
@@ -335,7 +323,7 @@ func (d *Dirtyfier) maybeNumberNilify(v float64, actual any) any {
 
 	// let's make nilify logic even rare-er
 	// As it's a very specific, rare, edge-casy logic.
-	if d.flipTheCoin() {
+	if d.coin.Flip() {
 		return actual
 	}
 

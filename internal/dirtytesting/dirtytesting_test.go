@@ -1,13 +1,13 @@
-package dirtytesting
+package dirtytesting_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
 	dirty "github.com/d3rty/json"
 	"github.com/d3rty/json/internal/config"
+	. "github.com/d3rty/json/internal/dirtytesting" //nolint: revive // here we need dotimport
 	testmodels "github.com/d3rty/json/tests/models"
 	"github.com/stretchr/testify/require"
 )
@@ -15,8 +15,8 @@ import (
 // TODO: make a real test (at least smoke) with its own data, but not with testmodels
 // WIP: now we go, and we can debug things
 func TestGenerateDirtyJSON(t *testing.T) {
-	cleanJsonPath := "../../testdata/static/1.clean.json"
-	cleanContents, err := os.ReadFile(cleanJsonPath)
+	cleanJSONPath := "../../testdata/static/1.clean.json"
+	cleanContents, err := os.ReadFile(cleanJSONPath)
 	require.NoError(t, err)
 	cleanContents = minifyJSON(t, cleanContents)
 
@@ -26,9 +26,7 @@ func TestGenerateDirtyJSON(t *testing.T) {
 
 	var dcfg DirtifyCfg
 	dirtyContents, err := Dirtify[testmodels.Item](cleanContents, &dcfg)
-	fmt.Println(err)
-	fmt.Println(string(dirtyContents))
-	fmt.Println(dcfg.Config())
+	require.NoError(t, err)
 
 	config.UpdateGlobal(func(cfg *config.Config) {
 		*cfg = *dcfg.Config()
@@ -38,8 +36,8 @@ func TestGenerateDirtyJSON(t *testing.T) {
 	err = dirty.Unmarshal(dirtyContents, &recoveredData)
 	require.NoError(t, err, "failed with config "+dcfg.Config().String()+" on "+string(dirtyContents))
 
-	cleanMap := structToMap(cleanData)
-	recoveredMap := structToMap(recoveredData)
+	cleanMap := StructToMap(cleanData)
+	recoveredMap := StructToMap(recoveredData)
 
 	require.Equal(t, cleanMap, recoveredMap, "failed with config "+dcfg.Config().String()+" on "+string(dirtyContents))
 }

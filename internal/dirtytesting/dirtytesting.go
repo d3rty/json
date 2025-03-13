@@ -3,105 +3,99 @@ package dirtytesting
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"slices"
-	"time"
 
 	"github.com/d3rty/json/internal/config"
+	"github.com/d3rty/json/internal/flipping"
 	"github.com/d3rty/json/internal/option"
 )
 
-func newRng() *rand.Rand {
-	return rand.New(rand.NewSource(time.Now().UnixNano()))
-}
-
 // RandomConfig returns a randomly generated *Config.
-func RandomConfig(r *rand.Rand) *config.Config {
-	if r == nil {
-		r = newRng()
-	}
+func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
+	coin := flipping.MaybeNewCoin(coinArg...)
 
 	cfg := new(config.Config)
 
 	// --- Bool Configuration ---
 	// Randomly decide if dirty bool is allowed.
-	cfg.Bool.Allowed = r.Intn(2) == 0
+	cfg.Bool.Allowed = coin.Flip()
 	if cfg.Bool.Allowed {
 		// FromStrings
-		cfg.Bool.FromStrings.Allowed = r.Intn(2) == 0
+		cfg.Bool.FromStrings.Allowed = coin.Flip()
 		if cfg.Bool.FromStrings.Allowed {
-			// Generate a random preset for "true" values (between 4 and 6 values)
-			cfg.Bool.FromStrings.CustomListForTrue = generateRandomPreset(dictTrues, 4, 6, r)
-			// Generate a random preset for "false" values (between 4 and 6 values)
-			cfg.Bool.FromStrings.CustomListForFalse = generateRandomPreset(dictFalses, 4, 6, r)
-			cfg.Bool.FromStrings.FalseForEmptyString = r.Intn(2) == 0
-			cfg.Bool.FromStrings.RespectFromNumbersLogic = r.Intn(2) == 0
+			dictMinSize, dictMaxSize := 3, 6
+			// Generate a random preset for "true" values (between 3 and 6 values)
+			cfg.Bool.FromStrings.CustomListForTrue = generateRandomPreset(dictTrues, dictMinSize, dictMaxSize, coin)
+			// Generate a random preset for "false" values (between 3 and 6 values)
+			cfg.Bool.FromStrings.CustomListForFalse = generateRandomPreset(dictFalses, dictMinSize, dictMaxSize, coin)
+			cfg.Bool.FromStrings.FalseForEmptyString = coin.Flip()
+			cfg.Bool.FromStrings.RespectFromNumbersLogic = coin.Flip()
 			// Fallback value as a random boolean.
-			cfg.Bool.FromStrings.FallbackValue = option.Some(r.Intn(2) == 0)
+			cfg.Bool.FromStrings.FallbackValue = option.Some(coin.Flip())
 		}
 
 		// FromNumbers
-		cfg.Bool.FromNumbers.Allowed = r.Intn(2) == 0
+		cfg.Bool.FromNumbers.Allowed = coin.Flip()
 		if cfg.Bool.FromNumbers.Allowed {
 			choices := config.AvailableBoolFromNumberParsers()
-			cfg.Bool.FromNumbers.CustomParseFunc = choices[r.Intn(len(choices))]
-			cfg.Bool.FromNumbers.FallbackValue = option.Some(r.Intn(2) == 0)
+			cfg.Bool.FromNumbers.CustomParseFunc = flipping.FeelingLucky(choices, coin)
+			cfg.Bool.FromNumbers.FallbackValue = option.Some(coin.Flip())
 		}
 
 		// FromNull
-		cfg.Bool.FromNull.Allowed = r.Intn(2) == 0
+		cfg.Bool.FromNull.Allowed = coin.Flip()
 		if cfg.Bool.FromNull.Allowed {
-			cfg.Bool.FromNull.Inverse = r.Intn(2) == 0
+			cfg.Bool.FromNull.Inverse = coin.Flip()
 		}
 	}
 
 	// --- Number Configuration ---
-	cfg.Number.Allowed = r.Intn(2) == 0
+	cfg.Number.Allowed = coin.Flip()
 	if cfg.Number.Allowed {
 		// FromStrings
-		cfg.Number.FromStrings.Allowed = r.Intn(2) == 0
+		cfg.Number.FromStrings.Allowed = coin.Flip()
 		if cfg.Number.FromStrings.Allowed {
-			cfg.Number.FromStrings.SpacingAllowed = r.Intn(2) == 0
-			cfg.Number.FromStrings.ExponentNotationAllowed = r.Intn(2) == 0
-			cfg.Number.FromStrings.CommasAllowed = r.Intn(2) == 0
-			cfg.Number.FromStrings.FloatishAllowed = r.Intn(2) == 0
+			cfg.Number.FromStrings.SpacingAllowed = coin.Flip()
+			cfg.Number.FromStrings.ExponentNotationAllowed = coin.Flip()
+			cfg.Number.FromStrings.CommasAllowed = coin.Flip()
+			cfg.Number.FromStrings.FloatishAllowed = coin.Flip()
 		}
 
 		// FromBools
-		cfg.Number.FromBools.Allowed = r.Intn(2) == 0
+		cfg.Number.FromBools.Allowed = coin.Flip()
 
 		// FromNull
-		cfg.Number.FromNull.Allowed = r.Intn(2) == 0
+		cfg.Number.FromNull.Allowed = coin.Flip()
 	}
 
 	// --- FlexKeys Configuration ---
-	cfg.FlexKeys.Allowed = r.Intn(2) == 0
+	cfg.FlexKeys.Allowed = coin.Flip()
 	if cfg.FlexKeys.Allowed {
-		cfg.FlexKeys.CaseInsensitive = r.Intn(2) == 0
-		cfg.FlexKeys.ChameleonCase = r.Intn(2) == 0
+		cfg.FlexKeys.CaseInsensitive = coin.Flip()
+		cfg.FlexKeys.ChameleonCase = coin.Flip()
 	}
 
 	return cfg
 }
 
 type DirtifyCfg struct {
-	rng      *rand.Rand
+	coin     *flipping.Coin
 	cfg      *config.Config
 	ratio    float64
 	allowRed bool
 }
 
-type drtfOpt func(*DirtifyCfg)
+type Opt func(*DirtifyCfg)
 
 func (dcfg *DirtifyCfg) Config() *config.Config { return dcfg.cfg }
 
-func WithConfig(cfg *config.Config) drtfOpt { return func(dcfg *DirtifyCfg) { dcfg.cfg = cfg } }
-func WithRng(rng *rand.Rand) drtfOpt        { return func(dcfg *DirtifyCfg) { dcfg.rng = rng } }
-func WithRatio(r float64) drtfOpt           { return func(dcfg *DirtifyCfg) { dcfg.ratio = r } }
-func WithAllowedRed(b bool) drtfOpt         { return func(dcfg *DirtifyCfg) { dcfg.allowRed = b } }
+func WithConfig(cfg *config.Config) Opt { return func(dcfg *DirtifyCfg) { dcfg.cfg = cfg } }
+func WithCoin(coin *flipping.Coin) Opt  { return func(dcfg *DirtifyCfg) { dcfg.coin = coin } }
+func WithRatio(r float64) Opt           { return func(dcfg *DirtifyCfg) { dcfg.ratio = r } }
+func WithAllowedRed(b bool) Opt         { return func(dcfg *DirtifyCfg) { dcfg.allowRed = b } }
 
-// Dirtify makes a dirty version of JSON
-func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...drtfOpt) ([]byte, error) {
+// Dirtify makes a dirty version of JSON.
+func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...Opt) ([]byte, error) {
 	if dcfg == nil {
 		if len(opts) == 0 {
 			panic("def something wrong. if using default random, you must know it back. pass empty dcfg then")
@@ -109,8 +103,8 @@ func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...drtfOpt) ([]byte
 
 		dcfg = &DirtifyCfg{}
 	}
-	dcfg.rng = newRng()
-	dcfg.cfg = RandomConfig(dcfg.rng)
+	dcfg.coin = flipping.NewCoin()
+	dcfg.cfg = RandomConfig(dcfg.coin)
 	dcfg.ratio = 0.7
 
 	// override dirtify config
@@ -124,8 +118,8 @@ func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...drtfOpt) ([]byte
 		return nil, fmt.Errorf("failed to unmarshal clean JSON: %w", err)
 	}
 
-	dirtyModel := NewDirtyfier(dcfg.ratio, dcfg.cfg, dcfg.rng).Dirtify(
-		structToMap(cleanModel),
+	dirtyModel := NewDirtyfier(dcfg.ratio, dcfg.cfg, dcfg.coin).Dirtify(
+		StructToMap(cleanModel),
 	)
 
 	// Marshal back to JSON.
@@ -136,21 +130,30 @@ func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...drtfOpt) ([]byte
 	return dirtyJSON, nil
 }
 
+// dictTrues is a dictionary for string values of True
+//
+//nolint:gochecknoglobals // because we can
 var dictTrues = []string{"true", "yes", "on", "1", "ok", "yep"}
+
+// dictFalses is a dictionary for string values of False
+//
+//nolint:gochecknoglobals // because we can
 var dictFalses = []string{"false", "no", "off", "0", "nah", "nope"}
 
 // generateRandomPreset selects a random subset (of size between min and max)
 // from the provided master list.
-func generateRandomPreset(dict []string, min, max int, r *rand.Rand) []string {
+func generateRandomPreset(dict []string, from, to int, coinArg ...*flipping.Coin) []string {
+	coin := flipping.MaybeNewCoin(coinArg...)
+
 	// Determine the number of elements to pick.
-	count := r.Intn(max-min+1) + min
-	if len(dict) < count {
-		count = len(dict)
-	}
+	count := min(
+		coin.Rng().Intn(to-from+1)+from,
+		len(dict),
+	)
 
 	// Shuffle the master copy.
 	shuffled := slices.Clone(dict)
-	r.Shuffle(len(shuffled), func(i, j int) {
+	coin.Rng().Shuffle(len(shuffled), func(i, j int) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
 	})
 

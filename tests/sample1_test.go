@@ -1,3 +1,4 @@
+//nolint:testpackage // it's ok to simply call it `tests
 package tests
 
 import (
@@ -11,7 +12,6 @@ import (
 )
 
 func TestSample1_Clean(t *testing.T) {
-
 	contents := ReadSampleFile(t, "static/1.clean")
 
 	// Ensure std unmarshal works for the read file
@@ -63,7 +63,6 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 	)
 
 	require.JSONEq(t,
-		dirt2yResult.String(),
 		`{
 			"id":1,
 			"name":"Item 1",
@@ -80,7 +79,7 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 				}
 			},
 			"tags":["alpha","beta"]
-		}`,
+		}`, dirt2yResult.String(),
 	)
 }
 
@@ -114,7 +113,6 @@ func TestSample1_Dirty_YellowChameleon(t *testing.T) {
 	)
 
 	require.JSONEq(t,
-		dirt2yResult.String(),
 		`{
 			"id":1,
 			"name":"Item 1",
@@ -131,6 +129,6 @@ func TestSample1_Dirty_YellowChameleon(t *testing.T) {
 				}
 			},
 			"tags":["alpha","beta"]
-		}`,
+		}`, dirt2yResult.String(),
 	)
 }

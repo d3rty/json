@@ -1,6 +1,6 @@
 package dirtyjson
 
-// Color means the color of dirty unmarshalling
+// Color means the color of dirty unmarshalling.
 type Color int
 
 const (
@@ -29,18 +29,12 @@ func (r *Result[D]) Color() Color    { return r.color }
 func (r *Result[D]) Warnings() []any { return nil }
 func (r *Result[D]) Errors() []any   { return nil }
 
-// ExtractResult extracts the result information after model being unmarshalled.
-//
-// Example:
-//
-// var e Event // Dirty version exists as EventDirty
-// _ = dirty.Unmarshal([]byte(`{"id":"123"}`), &e)
-// result := dirty.ExtractResult[EventDirty](&e)
-func ExtractResult[D any](v d3rtyContainer) *Result[D] {
-	res := &Result[D]{
-		color: ColorYellow, // TODO: it should be something like v.color(),
-		dirty: v.result().(*D),
-	}
+// result := dirty.ExtractResult[EventDirty](&e).
+// func ExtractResult[D any](v d3rtyContainer) *Result[D] {
+// 	res := &Result[D]{
+// 		color: ColorYellow, // TODO: it should be something like v.color(),
+// 		dirty: v.result().(*D),
+// 	}
 
-	return res
-}
+// 	return res
+// }

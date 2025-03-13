@@ -30,7 +30,7 @@ type Envelope struct {
 	Events []Event `json:"data"`
 }
 
-// Dirty links Event to EventDirty // Step 2: Linking dirty model
+// Dirty links Event to EventDirty // Step 2: Linking dirty model.
 func (e *Event) Dirty() any {
 	return &EventDirty{}
 }
@@ -45,7 +45,7 @@ func TestUnmarshal_Green(t *testing.T) {
 	require.NoError(t, dirty.Unmarshal([]byte(`{"id":123, "is_active":true}`), &e))
 
 	assert.Equal(t, 123, e.ID)
-	assert.Equal(t, true, e.IsActive)
+	assert.True(t, e.IsActive)
 }
 
 func TestUnmarshal_Yellow(t *testing.T) {
@@ -55,7 +55,7 @@ func TestUnmarshal_Yellow(t *testing.T) {
 	)
 	assert.Equal(t, 123, e.ID)
 	assert.Equal(t, "foobar", e.Name)
-	assert.Equal(t, true, e.IsActive)
+	assert.True(t, e.IsActive)
 
 	// result := dirty.ExtractResult[EventDirty](&e)
 
@@ -78,8 +78,8 @@ func TestUnmarshal_Envelope(t *testing.T) {
 	evt := e.Events[0]
 	assert.Equal(t, 123, evt.ID)
 	assert.Equal(t, "foobar", evt.Name)
-	assert.Equal(t, true, evt.IsActive)
-	assert.Equal(t, false, evt.MustBool) // as it wasn't parsed as bool
+	assert.True(t, evt.IsActive)
+	assert.False(t, evt.MustBool) // as it wasn't parsed as bool
 }
 
 func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
@@ -105,6 +105,6 @@ func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
 	evt := e.Events[0]
 	assert.Equal(t, 123, evt.ID)
 	assert.Equal(t, "foobar", evt.Name)
-	assert.Equal(t, true, evt.IsActive)
-	assert.Equal(t, false, evt.MustBool) // as it wasn't parsed as bool
+	assert.True(t, evt.IsActive)
+	assert.False(t, evt.MustBool) // as it wasn't parsed as bool
 }

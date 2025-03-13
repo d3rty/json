@@ -1,7 +1,7 @@
+//nolint:testpackage // it's ok to simply call it `tests
 package tests
 
 import (
-	"fmt"
 	"testing"
 
 	dirty "github.com/d3rty/json"
@@ -11,7 +11,6 @@ import (
 )
 
 func TestSampleSandbox(t *testing.T) {
-
 	contents := []byte(`{
     "ID": true,
     "TAGS": ["alpha", "beta"],
@@ -75,6 +74,7 @@ func TestSampleSandbox(t *testing.T) {
 		dirty.Unmarshal(contents, &dirtyResult),
 	)
 
-	fmt.Println("=> ", dirtyResult)
-
+	// TODO
+	_ = dirtyResult
+	// fmt.Println("=> ", dirtyResult)
 }

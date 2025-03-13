@@ -5,13 +5,15 @@ import (
 	"github.com/d3rty/json/internal/option"
 )
 
-// boolFromNum is a parser func to parse a bool from a number (float64)
+// boolFromNum is a parser func to parse a bool from a number (float64).
 type boolFromNum = func(i float64) option.Bool
 
-// parsersBoolFromNum stores all registered boolFromNumber parsers.
-// We're OK without mutex for now
+// We're OK without mutex for now.
+//
+//nolint:gochecknoglobals // we're ok with it as well
 var parsersBoolFromNum map[config.BoolFromNumberParser]boolFromNum
 
+//nolint:gochecknoinits // todo decide if we need this linter?
 func init() {
 	parsersBoolFromNum = make(map[config.BoolFromNumberParser]boolFromNum)
 

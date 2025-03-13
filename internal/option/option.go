@@ -10,7 +10,7 @@ type Option[T comparable] struct {
 	ok    bool
 }
 
-// Bool is just a shortcut for Option[bool]
+// Bool is just a shortcut for Option[bool].
 type Bool = Option[bool]
 
 // None returns true if the Option does not contain a valid value.

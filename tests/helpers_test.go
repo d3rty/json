@@ -1,3 +1,4 @@
+//nolint:testpackage // it's ok to simply call it `tests
 package tests
 
 import (

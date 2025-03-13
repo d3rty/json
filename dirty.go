@@ -22,16 +22,17 @@ func Unmarshal(data []byte, v any) error {
 // Config
 //
 
+//nolint:gochecknoglobals // we're fine with these globals
 var (
-	// ConfigReset is the config preset for having completely empty config
+	// ConfigReset is the config preset for having completely empty config.
 	ConfigReset = config.Reset
 
-	// ConfigGetClean returns a fresh copy of a clean config
+	// ConfigGetClean returns a fresh copy of a clean config.
 	ConfigGetClean = config.Clean
-	// ConfigGetDefault returns a fresh copy of a default config
+	// ConfigGetDefault returns a fresh copy of a default config.
 	ConfigGetDefault = config.Default
 
-	// ConfigUpdateGlobal allows us to update the global config
+	// ConfigUpdateGlobal allows us to update the global config.
 	ConfigUpdateGlobal = config.UpdateGlobal
 )
 

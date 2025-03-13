@@ -1,11 +1,11 @@
 package cases
 
 import (
-	"math/rand"
 	"slices"
 	"strings"
-	"time"
 	"unicode"
+
+	"github.com/d3rty/json/internal/flipping"
 )
 
 // Case defines the target naming convention.
@@ -62,9 +62,7 @@ func isCamelCase(s string) bool {
 	}
 
 	// Must contain at least one uppercase letter beyond the first character.
-	return slices.ContainsFunc(runes[1:], func(r rune) bool {
-		return unicode.IsUpper(r)
-	})
+	return slices.ContainsFunc(runes[1:], unicode.IsUpper)
 }
 
 // isPascalCase returns true if s is PascalCase.
@@ -184,7 +182,7 @@ func isTitleSnakeCase(s string) bool {
 	return true
 }
 
-// Is returns true if s is in target case
+// Is returns true if s is in target case.
 func Is(s string, target Case) bool {
 	switch target {
 	case TitleSnake:
@@ -266,9 +264,7 @@ func IsHybridCase(s string) bool {
 	return hasUpper && hasLower
 }
 
-// TransformTo transforms the input string s (which can be in any case)
-// into the target naming case specified by target.
-// It supports determined cases (not Hybrid. For Hybrid use TransformToHybrid)
+// It supports determined cases (not Hybrid. For Hybrid use TransformToHybrid).
 func TransformTo(s string, target Case) string {
 	words := SplitWords(s)
 	switch target {
@@ -295,42 +291,35 @@ func TransformTo(s string, target Case) string {
 	}
 }
 
+// separatorRunes are list of runes used for separation in hybrid case
+// '\x00' represents the empty rune. E.g. It's used for `camelCase` separation.
+const separatorRunes = "-_ \x00"
+
 // TransformToHybridCase transforms the input string s into a hybrid case string.
 // It uses randomness to decide, for each gap between words, whether to insert an underscore ("_"),
 // a hyphen ("-"), or no separator at all. When no separator is chosen,
 // if the last character of the previous word and the first character of the next word are both lowercase
-// (which might merge the words indistinguishably), then the empty separator is overridden with either a hyphen or underscore.
+// (which might merge the words indistinguishably),
+// then the empty separator is overridden with either a hyphen or underscore.
 // The forced choice uses hyphenRatio: with probability hyphenRatio a hyphen is used, otherwise an underscore.
 // The function accepts an optional RNG argument (variadic); if none is provided, a default RNG is used.
-func TransformToHybridCase(s string, hyphenRatio float64, rngArg ...*rand.Rand) string {
-	// Use provided RNG or fallback to default.
-	var rng *rand.Rand
-	if len(rngArg) > 0 && rngArg[0] != nil {
-		rng = rngArg[0]
-	} else {
-		rng = rand.New(rand.NewSource(time.Now().UnixNano()))
-	}
-
+//
+// todo update comment about hyphen ratio.
+func TransformToHybridCase(s string, coinArg ...*flipping.Coin) string {
 	words := SplitWords(s)
 	if len(words) == 0 {
 		return s
 	}
 
+	coin := flipping.MaybeNewCoin(coinArg...)
+
 	// Start with the first word as-is.
 	result := words[0]
 	for i := 1; i < len(words); i++ {
-		var sep string
-		r := rng.Float64()
-		if r < 0.33 {
-			sep = "_"
-		} else if r < 0.66 {
-			sep = "-"
-		} else {
-			sep = ""
-		}
+		sep := flipping.FeelingLucky([]rune(separatorRunes), coin)
 
 		// If no separator was chosen, check if joining the words would merge them indistinguishably.
-		if sep == "" {
+		if sep == '\x00' {
 			prevRunes := []rune(result)
 			nextRunes := []rune(words[i])
 			if len(prevRunes) > 0 && len(nextRunes) > 0 {
@@ -338,16 +327,12 @@ func TransformToHybridCase(s string, hyphenRatio float64, rngArg ...*rand.Rand) 
 				firstRune := nextRunes[0]
 				// If both are lowercase, force a separator.
 				if unicode.IsLower(lastRune) && unicode.IsLower(firstRune) {
-					if rng.Float64() < hyphenRatio {
-						sep = "-"
-					} else {
-						sep = "_"
-					}
+					sep = rune(separatorRunes[coin.Rng().Intn(2)]) //nolint: mnd // first two runes are -/_
 				}
 			}
 		}
 
-		result += sep + words[i]
+		result += string(sep) + words[i]
 	}
 	return result
 }

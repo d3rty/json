@@ -240,11 +240,12 @@ type Config struct {
 }
 
 func (cfg *Config) String() string {
+	//nolint:musttag // it's ok to not be annotated here
 	j, _ := json.Marshal(cfg)
 	return string(j)
 }
 
-// ResetToClean resets config so it's clean
+// ResetToClean resets config so it's clean.
 func (cfg *Config) ResetToClean() *Config {
 	cfg.FlexKeys.Allowed = false
 	cfg.Bool.Allowed = false
@@ -338,7 +339,7 @@ func defaultConfig() *Config {
 	return &cfg
 }
 
-// cleanConfig returns config that behaves like clean (strint) json.Unmarshal
+// cleanConfig returns config that behaves like clean (strint) json.Unmarshal.
 func cleanConfig() *Config {
 	var cfg Config
 	// everything false by default makes it clean :)
@@ -347,10 +348,13 @@ func cleanConfig() *Config {
 
 // globalConfig is the package-level variable storing the config.
 var (
+	//nolint:gochecknoglobals // decide if we need this linter?
 	globalConfig *Config
-	mu           sync.RWMutex
+	//nolint:gochecknoglobals // decide if we need this linter?
+	mu sync.RWMutex
 )
 
+//nolint:gochecknoinits // decide if we need this linter?
 func init() {
 	globalConfig = defaultConfig()
 }
@@ -370,7 +374,7 @@ func Clean() *Config {
 	return cleanConfig()
 }
 
-// Reset resets given config to a "Clean" config
+// Reset resets given config to a "Clean" config.
 func Reset(cfg *Config) {
 	cfg.ResetToClean()
 }
@@ -393,9 +397,10 @@ func UpdateGlobal(updateFns ...func(config *Config)) {
 	defer mu.Unlock()
 }
 
-// FromBytes returns a parsed config from a given []byte contents
+// FromBytes returns a parsed config from a given []byte contents.
 func FromBytes(contents []byte) *Config {
 	var cfg Config
+	//nolint:musttag // we're ok not having tags here
 	if err := json.Unmarshal(contents, &cfg); err != nil {
 		panic("invalid config")
 	}
@@ -406,9 +411,4 @@ func FromBytes(contents []byte) *Config {
 // clone via json round-trip. It's a simple (but not the most efficient) way to clone the config.
 // Config is safe for marshalling (that's by design): It will never contain functions, etc.
 // We can live with this solution until we need increase performance.
-func clone(cfg *Config) *Config {
-	marshalled, _ := json.Marshal(cfg)
-	var cloned Config
-	_ = json.Unmarshal(marshalled, &cloned)
-	return &cloned
-}
+func clone(cfg *Config) *Config { return FromBytes([]byte(cfg.String())) }

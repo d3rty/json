@@ -15,15 +15,13 @@ import (
 	"github.com/amberpixels/years"
 )
 
-// d3rtyContainer is an internal interface
-// that allow us to init and retrieve dirty data
+// that allow us to init and retrieve dirty data.
 type d3rtyContainer interface {
 	init(any)
 	result() any
 }
 
-// Dirtyable is a clean model that has dirty model attached
-// It's used as a way to link clean model with dirty model
+// It's used as a way to link clean model with dirty model.
 type Dirtyable interface {
 	Dirty() any
 }
@@ -97,11 +95,12 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		cfg.FromNull.Allowed = false
 	}
 
-	//var s string
+	// var s string
 	// If the value is a quoted string.
+	//nolint:nestif // we're ok
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
-			return fmt.Errorf("dirty.Number: string input not allowed")
+			return errors.New("dirty.Number: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.Number: invalid string value")
@@ -137,26 +136,27 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 	// Raw token (can be number, boolean, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	if s[0] == 'n' /* null  */ {
+	switch {
+	case s[0] == 'n': /* null  */
 		if cfg.FromNull.Allowed {
 			*v = Number(0.0)
 			return nil
 		}
 
 		return errors.New("dirty.Number: numbers from nulls are not allowed")
-	} else if s[0] == 't' {
+	case s[0] == 't':
 		if cfg.FromBools.Allowed {
 			*v = Number(1.0)
 			return nil
 		}
 		return errors.New("dirty.Number: numbers from bools are not allowed")
-	} else if s[0] == 'f' {
+	case s[0] == 'f':
 		if cfg.FromBools.Allowed {
 			*v = Number(0.0)
 			return nil
 		}
 		return errors.New("dirty.Number: numbers from bools are not allowed")
-	} else if s[0] == '[' || s[0] == '{' {
+	case s[0] == '[' || s[0] == '{':
 		return errors.New("dirty.Number: can't parse bools from object/array values")
 	}
 
@@ -191,6 +191,8 @@ func (v *String) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalJSON converts []byte into a Bool.
+//
+//nolint:funlen // we're OK
 func (v *Bool) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.Bool: UnmarshalJSON on nil pointer")
@@ -205,7 +207,6 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 
 	var (
 		boolFromNumber = func(n float64) option.Bool {
-
 			var b option.Bool
 			if parser, ok := parsersBoolFromNum[cfg.FromNumbers.CustomParseFunc]; ok {
 				b = parser(n)
@@ -229,6 +230,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		boolFromString = func(s string) option.Bool {
 			sLower := strings.ToLower(s)
 
+			//nolint:nestif // todo
 			if cfg.FromStrings.CaseInsensitive {
 				for _, ts := range cfg.FromStrings.CustomListForTrue {
 					if sLower == strings.ToLower(ts) {
@@ -262,7 +264,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 	// Check if the incoming value is a quoted string.
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
-			return fmt.Errorf("dirty.Bool: string input not allowed")
+			return errors.New("dirty.Bool: string input not allowed")
 		}
 
 		// Valid strings are considered to be quoted from both sides
@@ -282,7 +284,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			return nil
 		}
 
-		return fmt.Errorf("dirty.Bool: cannot parse string (%q) as bool", limitedStr(s, 50))
+		return fmt.Errorf("dirty.Bool: cannot parse string (%q) as bool", limitedStr(s, maxMessageLength))
 	}
 
 	// Raw token (can be number, boolean, or anything else)
@@ -290,13 +292,14 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 	s := string(data)
 
 	// As we consider it a valid JSON, if first letter is `t` or `f` then it definetely true/false
-	if s[0] == 't' {
+	switch {
+	case s[0] == 't':
 		*v = true
 		return nil
-	} else if s[0] == 'f' {
+	case s[0] == 'f':
 		*v = false
 		return nil
-	} else if s[0] == 'n' /* null  */ {
+	case s[0] == 'n': /* null  */
 		if cfg.FromNull.Allowed {
 			*v = Bool(cfg.FromNull.Inverse) // if Inverse: we'll return true, otherwise: false
 		}
@@ -311,7 +314,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 	// Should be a number then
 	n, err := strconv.ParseFloat(s, 64)
 	if err != nil {
-		return fmt.Errorf("dirty.Bool: cannot parse as bool (%q): %w", limitedStr(s, 50), err)
+		return fmt.Errorf("dirty.Bool: cannot parse as bool (%q): %w", limitedStr(s, maxMessageLength), err)
 	}
 
 	if b := boolFromNumber(n); b.Some() {
@@ -319,7 +322,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	return fmt.Errorf("dirty.Bool: unrecognized value for bool (%q)", limitedStr(s, 50))
+	return fmt.Errorf("dirty.Bool: unrecognized value for bool (%q)", limitedStr(s, maxMessageLength))
 }
 
 // UnmarshalJSON converts []byte into an Array.
@@ -335,7 +338,7 @@ func (v *Array) UnmarshalJSON(data []byte) error {
 		}
 		return fmt.Errorf("dirty.Array cant be parsed from: %s", s)
 	}
-	if len(data) < 2 {
+	if len(data) < 2 { //nolint:mnd // at least 2 quotes are needed
 		return errors.New("dirty.Array missing closing quote")
 	}
 	if data[len(data)-1] != ']' {
@@ -363,7 +366,7 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 		}
 		return fmt.Errorf("dirty.Object cant be parsed from: %s", s)
 	}
-	if len(data) < 2 {
+	if len(data) < 2 { //nolint:mnd // at least 2 quotes are needed
 		return errors.New("dirty.Object missing closing quote")
 	}
 	if data[len(data)-1] != '}' {
@@ -392,9 +395,10 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 	}
 
 	// If the value is a quoted string.
+	//nolint:nestif // todo
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
-			return fmt.Errorf("dirty.Integer: string input not allowed")
+			return errors.New("dirty.Integer: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.Integer: invalid string value")
@@ -430,26 +434,27 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 	// Raw token (can be number, boolean, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	if s[0] == 'n' /* null  */ {
+	switch {
+	case s[0] == 'n': /* null  */
 		if cfg.FromNull.Allowed {
 			*v = Integer(0)
 			return nil
 		}
 
 		return errors.New("dirty.Integer: numbers from nulls are not allowed")
-	} else if s[0] == 't' {
+	case s[0] == 't':
 		if cfg.FromBools.Allowed {
 			*v = Integer(1)
 			return nil
 		}
 		return errors.New("dirty.Integer: numbers from bools are not allowed")
-	} else if s[0] == 'f' {
+	case s[0] == 'f':
 		if cfg.FromBools.Allowed {
 			*v = Integer(0)
 			return nil
 		}
 		return errors.New("dirty.Integer: numbers from bools are not allowed")
-	} else if s[0] == '[' || s[0] == '{' {
+	case s[0] == '[' || s[0] == '{':
 		return errors.New("dirty.Integer: can't parse bools from object/array values")
 	}
 
@@ -466,6 +471,8 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalJSON converts []byte into an Date.
+//
+//nolint:dupl // it's not a real dupl TODO can we reuse the code here?
 func (v *Date) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.Date: UnmarshalJSON on nil pointer")
@@ -481,7 +488,7 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 	// If the value is a quoted string.
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
-			return fmt.Errorf("dirty.Date: string input not allowed")
+			return errors.New("dirty.Date: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.Date: invalid string value")
@@ -501,15 +508,16 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 	// Raw token (can be number, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	if s[0] == 'n' /* null  */ {
+	switch {
+	case s[0] == 'n': /* null  */
 		if cfg.FromNull.Allowed {
 			*v = Date(time.Time{}) // only zero time for now
 			return nil
 		}
 		return errors.New("dirty.Date: dates from nulls are not allowed")
-	} else if s[0] == 't' || s[0] == 'f' {
+	case s[0] == 't' || s[0] == 'f':
 		return errors.New("dirty.Date: can't parse dates from boolean values")
-	} else if s[0] == '[' || s[0] == '{' {
+	case s[0] == '[' || s[0] == '{':
 		return errors.New("dirty.Date: can't parse dates from object/array values")
 	}
 
@@ -528,6 +536,8 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalJSON converts []byte into an Date.
+//
+//nolint:dupl // it's not a real dupl TODO can we reuse the code here?
 func (v *DateTime) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.DateTime: UnmarshalJSON on nil pointer")
@@ -543,7 +553,7 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 	// If the value is a quoted string.
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
-			return fmt.Errorf("dirty.DateTime: string input not allowed")
+			return errors.New("dirty.DateTime: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.DateTime: invalid string value")
@@ -563,15 +573,16 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 	// Raw token (can be number, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	if s[0] == 'n' /* null  */ {
+	switch {
+	case s[0] == 'n': /* null  */
 		if cfg.FromNull.Allowed {
 			*v = DateTime(time.Time{}) // only zero time for now
 			return nil
 		}
 		return errors.New("dirty.DateTime: dates from nulls are not allowed")
-	} else if s[0] == 't' || s[0] == 'f' {
+	case s[0] == 't' || s[0] == 'f':
 		return errors.New("dirty.DateTime: can't parse dates from boolean values")
-	} else if s[0] == '[' || s[0] == '{' {
+	case s[0] == '[' || s[0] == '{':
 		return errors.New("dirty.DateTime: can't parse dates from object/array values")
 	}
 
@@ -589,9 +600,9 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// UnmarshalJSON converts []byte into a smart scalar
+// UnmarshalJSON converts []byte into a smart scalar.
 func (v *SmartScalar) UnmarshalJSON(data []byte) error {
-	if len(data) == 4 {
+	if len(data) == 4 { //nolint:mnd // 4 for length of null/true
 		if data[0] == 'n' /* null */ {
 			v.scalar = nil
 			return nil
@@ -601,7 +612,7 @@ func (v *SmartScalar) UnmarshalJSON(data []byte) error {
 			return nil
 		}
 	}
-	if len(data) == 5 {
+	if len(data) == 5 { //nolint: mnd // 5 for length(false)
 		if data[0] == 'f' /* false */ {
 			v.scalar = false
 			return nil
@@ -618,7 +629,7 @@ func (v *SmartScalar) UnmarshalJSON(data []byte) error {
 	// At this point, we assume the data is a JSON string.
 	var s string
 	if err := json.Unmarshal(data, &s); err != nil {
-		return fmt.Errorf("SmartScalar: unable to unmarshal data: %s", err)
+		return fmt.Errorf("SmartScalar: unable to unmarshal data: %w", err)
 	}
 
 	// If the string is "true" or "false", interpret as bool.
@@ -639,9 +650,13 @@ func (v *SmartScalar) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON unwraps the underlying value and marshals it.
-func (s SmartScalar) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.scalar)
+func (v SmartScalar) MarshalJSON() ([]byte, error) {
+	return json.Marshal(v.scalar)
 }
+
+const (
+	maxMessageLength = 50
+)
 
 func limitedStr(s string, limit int) string {
 	if len(s) > limit {

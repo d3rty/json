@@ -1,3 +1,4 @@
+//nolint:testpackage // it's ok to simply call it `tests
 package tests
 
 import (
@@ -11,7 +12,6 @@ import (
 )
 
 func TestSample2_Clean(t *testing.T) {
-
 	contents := ReadSampleFile(t, "static/2.clean")
 
 	// Ensure std unmarshal works for the read file
