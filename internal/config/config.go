@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"sync"
+	"time"
 
 	"github.com/d3rty/json/internal/option"
 )
@@ -109,7 +110,7 @@ type Config struct {
 	// Number is the configuration for dirty.Number.
 	Number struct {
 		// Number.Allowed allows booleans to be decoded in a dirty way.
-		// When false, everything inside Bool.* is ignored.
+		// When false, everything inside Number.* is ignored.
 		//
 		// Default: true
 		Allowed bool
@@ -162,6 +163,51 @@ type Config struct {
 		FromNull struct {
 			// Allowed allows number to be decoded from a null.
 			// By default it will decode number as zero.
+			//
+			// Default: true
+			Allowed bool
+		}
+	}
+
+	// Date is the configuration for dirty.Date
+	Date struct {
+		// Date.Allowed allows dates to be decoded in a dirty way.
+		// When false, everything inside Date.* is ignored.
+		//
+		// Default: true
+		Allowed bool
+
+		FromNumbers struct {
+			Allowed bool
+
+			UnixTimestamp      bool
+			UnixMilliTimestamp bool
+		}
+
+		FromStrings struct {
+			Allowed bool
+
+			Layouts struct {
+				Time     []string
+				Date     []string
+				DateTime []string
+			}
+
+			Aliases []string
+
+			// If relative aliases are included we have to get the Timezone
+			// Either specify the field where timezone is set
+			// Or manually set up the timezone here
+			Timezone string
+
+			// RespectFromNumbersLogic allows to parse stringified number value
+			// as a regular number values (corresponding to the FromNumbers config)
+			RespectFromNumbersLogic bool
+		}
+
+		FromNull struct {
+			// Allowed allows datetime to be decoded from a null.
+			// By default it will decode number as zero time
 			//
 			// Default: true
 			Allowed bool
@@ -259,6 +305,30 @@ func defaultConfig() *Config {
 	cfg.Number.FromStrings.FloatishAllowed = true
 	cfg.Number.FromBools.Allowed = true
 	cfg.Number.FromNull.Allowed = true
+
+	cfg.Date.Allowed = true
+	cfg.Date.FromNumbers.UnixTimestamp = true
+	cfg.Date.FromNumbers.UnixMilliTimestamp = true
+
+	// TODO layouts moar?
+	cfg.Date.FromStrings.Layouts.Date = []string{
+		time.DateOnly,
+	}
+	cfg.Date.FromStrings.Layouts.Time = []string{
+		time.TimeOnly,
+	}
+	cfg.Date.FromStrings.Layouts.Time = []string{
+		time.DateOnly, time.TimeOnly, time.DateTime,
+		time.RFC3339, time.RFC3339Nano,
+	}
+
+	cfg.Date.FromStrings.Aliases = []string{
+		"today", "yesterday", "tomorrow",
+		"this-{week|month|year}",
+		"last-{week|month|year}",
+	}
+	cfg.Date.FromStrings.Timezone = "UTC"
+	cfg.Date.FromStrings.RespectFromNumbersLogic = true
 
 	// FlexKeys are disabled by default.
 	cfg.FlexKeys.Allowed = false

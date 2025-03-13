@@ -7,9 +7,12 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/d3rty/json/internal/config"
 	"github.com/d3rty/json/internal/option"
+
+	"github.com/amberpixels/years"
 )
 
 // d3rtyContainer is an internal interface
@@ -43,30 +46,42 @@ func (*Disabled) init(_ any)  {}
 func (*Disabled) isDisabled() {} // isDisabled disabled dirtying (keeping all interfaces working)
 
 type (
-	// Number can marshall anything (that is possible) into float64.
+	// Number means any number (Integer, Float, Scientific, etc.)
 	Number float64
-	// String is just a string.
+	// String means simply a string.
 	String string
-	// Bool can marshall anything (that is possible) into bool.
+	// Bool meansns a boolean value.
 	Bool bool
-	// Array for now is just for now is json's array.
+	// Array means array of anything.
 	Array []any
-	// Object for now is just for now is json's object.
+	// Object is a JSON-like map (string->any).
 	Object map[string]any
 
+	// Integer means an Integer number.
+	Integer int64
+
+	// Date means a date (time pointing to a specific day).
+	Date time.Time
+
+	// DateTime means a time (time pointing to a specific moment).
+	DateTime time.Time
+
 	// SmartScalar means that it respects the type of given value
-	// So, for strings:
+	// For Bools and Floats: it remains bool or float64.
+	// For Null: it remains nil.
+	// For String:
 	// 		if it's numerish string - it will be float64
-	//     	if it's boolish string - it will be a Bool
-	//     	otherwise it's a stirng
-	// 	   for bools and floats: it remains bool or float64
+	//     	if it's boolish ("true"/"false") string - it will be a Bool
+	//     	otherwise it's a string
+	//
+	// For non-scalar value - it can't be parsed.
+	//
+	// TODO: allow config to setup how flexible the numerish/boolish strings are.
 	SmartScalar struct {
 		scalar any
 	}
 
 	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringifed.
-	// TODO: Time, Date, DateTime, etc.
-	// TODO: Integer / Float
 )
 
 // UnmarshalJSON converts []byte into a Number.
@@ -360,6 +375,217 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("dirty.Object cant be parsed from json content: %w", err)
 	}
 	*v = obj
+	return nil
+}
+
+// UnmarshalJSON converts []byte into an Integer.
+func (v *Integer) UnmarshalJSON(data []byte) error {
+	if v == nil {
+		return errors.New("dirty.Integer: UnmarshalJSON on nil pointer")
+	}
+
+	cfg := config.Global().Number
+	if !cfg.Allowed { // TODO: that's bad. do it better
+		cfg.FromNull.Allowed = false
+		cfg.FromStrings.Allowed = false
+		cfg.FromNull.Allowed = false
+	}
+
+	// If the value is a quoted string.
+	if data[0] == '"' {
+		if !cfg.FromStrings.Allowed {
+			return fmt.Errorf("dirty.Integer: string input not allowed")
+		}
+		if len(data) < 2 || data[len(data)-1] != '"' {
+			return errors.New("dirty.Integer: invalid string value")
+		}
+		s := string(data[1 : len(data)-1])
+		s = strings.TrimSpace(s)
+
+		// Remove spaces if allowed.
+		if cfg.FromStrings.SpacingAllowed {
+			s = strings.ReplaceAll(s, " ", "")
+		}
+		// Remove commas if allowed.
+		if cfg.FromStrings.CommasAllowed {
+			s = strings.ReplaceAll(s, ",", "")
+		}
+
+		// TODO: ensure cfg.FromStrings.ExponentNotationAllowed is respected
+
+		// Parse the float.
+		n, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
+		if err != nil {
+			return fmt.Errorf("dirty.Number: cannot parse number: %w", err)
+		}
+
+		// TODO: handle cfg.FromStrings.FloatishAllowed
+		// we can't know about it here, as we don't know the destination clean type
+		// (and we probably won't never know it here. so it will be at a later stage)
+
+		*v = Integer(n)
+		return nil
+	}
+
+	// Raw token (can be number, boolean, null, objet, array)
+	s := strings.TrimSpace(string(data))
+
+	if s[0] == 'n' /* null  */ {
+		if cfg.FromNull.Allowed {
+			*v = Integer(0)
+			return nil
+		}
+
+		return errors.New("dirty.Integer: numbers from nulls are not allowed")
+	} else if s[0] == 't' {
+		if cfg.FromBools.Allowed {
+			*v = Integer(1)
+			return nil
+		}
+		return errors.New("dirty.Integer: numbers from bools are not allowed")
+	} else if s[0] == 'f' {
+		if cfg.FromBools.Allowed {
+			*v = Integer(0)
+			return nil
+		}
+		return errors.New("dirty.Integer: numbers from bools are not allowed")
+	} else if s[0] == '[' || s[0] == '{' {
+		return errors.New("dirty.Integer: can't parse bools from object/array values")
+	}
+
+	// should be a regular integer value.
+
+	// Parse the float.
+	// TODO: configurable: if we allow to "round" floats??
+	n, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
+	if err != nil {
+		return fmt.Errorf("dirty.Integer: cannot parse number: %w", err)
+	}
+	*v = Integer(n)
+	return nil
+}
+
+// UnmarshalJSON converts []byte into an Date.
+func (v *Date) UnmarshalJSON(data []byte) error {
+	if v == nil {
+		return errors.New("dirty.Date: UnmarshalJSON on nil pointer")
+	}
+
+	cfg := config.Global().Date
+	if !cfg.Allowed { // TODO: that's bad. do it better
+		cfg.FromNumbers.Allowed = false
+		cfg.FromStrings.Allowed = false
+		cfg.FromNull.Allowed = false
+	}
+
+	// If the value is a quoted string.
+	if data[0] == '"' {
+		if !cfg.FromStrings.Allowed {
+			return fmt.Errorf("dirty.Date: string input not allowed")
+		}
+		if len(data) < 2 || data[len(data)-1] != '"' {
+			return errors.New("dirty.Date: invalid string value")
+		}
+		s := string(data[1 : len(data)-1])
+		s = strings.TrimSpace(s)
+
+		parsed, err := years.JustParse(s)
+		if err != nil {
+			return errors.New("dirty.Date: couldn't parse datetime value")
+		}
+
+		*v = Date(parsed)
+		return nil
+	}
+
+	// Raw token (can be number, null, objet, array)
+	s := strings.TrimSpace(string(data))
+
+	if s[0] == 'n' /* null  */ {
+		if cfg.FromNull.Allowed {
+			*v = Date(time.Time{}) // only zero time for now
+			return nil
+		}
+		return errors.New("dirty.Date: dates from nulls are not allowed")
+	} else if s[0] == 't' || s[0] == 'f' {
+		return errors.New("dirty.Date: can't parse dates from boolean values")
+	} else if s[0] == '[' || s[0] == '{' {
+		return errors.New("dirty.Date: can't parse dates from object/array values")
+	}
+
+	// should be a regular integer value.
+	if !cfg.FromNumbers.Allowed {
+		return errors.New("dirty.Date: dates from numbers are not allowed")
+	}
+
+	// TODO: respect config
+	parsed, err := years.JustParse(strings.TrimSpace(string(data)))
+	if err != nil {
+		return fmt.Errorf("dirty.Date: cannot parse numeric date: %w", err)
+	}
+	*v = Date(parsed)
+	return nil
+}
+
+// UnmarshalJSON converts []byte into an Date.
+func (v *DateTime) UnmarshalJSON(data []byte) error {
+	if v == nil {
+		return errors.New("dirty.DateTime: UnmarshalJSON on nil pointer")
+	}
+
+	cfg := config.Global().Date
+	if !cfg.Allowed { // TODO: that's bad. do it better
+		cfg.FromNumbers.Allowed = false
+		cfg.FromStrings.Allowed = false
+		cfg.FromNull.Allowed = false
+	}
+
+	// If the value is a quoted string.
+	if data[0] == '"' {
+		if !cfg.FromStrings.Allowed {
+			return fmt.Errorf("dirty.DateTime: string input not allowed")
+		}
+		if len(data) < 2 || data[len(data)-1] != '"' {
+			return errors.New("dirty.DateTime: invalid string value")
+		}
+		s := string(data[1 : len(data)-1])
+		s = strings.TrimSpace(s)
+
+		parsed, err := years.JustParse(s)
+		if err != nil {
+			return errors.New("dirty.DateTime: couldn't parse datetime value")
+		}
+
+		*v = DateTime(parsed)
+		return nil
+	}
+
+	// Raw token (can be number, null, objet, array)
+	s := strings.TrimSpace(string(data))
+
+	if s[0] == 'n' /* null  */ {
+		if cfg.FromNull.Allowed {
+			*v = DateTime(time.Time{}) // only zero time for now
+			return nil
+		}
+		return errors.New("dirty.DateTime: dates from nulls are not allowed")
+	} else if s[0] == 't' || s[0] == 'f' {
+		return errors.New("dirty.DateTime: can't parse dates from boolean values")
+	} else if s[0] == '[' || s[0] == '{' {
+		return errors.New("dirty.DateTime: can't parse dates from object/array values")
+	}
+
+	// should be a regular integer value.
+	if !cfg.FromNumbers.Allowed {
+		return errors.New("dirty.DateTime: dates from numbers are not allowed")
+	}
+
+	// TODO: respect config
+	parsed, err := years.JustParse(strings.TrimSpace(string(data)))
+	if err != nil {
+		return fmt.Errorf("dirty.DateTime: cannot parse numeric date: %w", err)
+	}
+	*v = DateTime(parsed)
 	return nil
 }
 
