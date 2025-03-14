@@ -55,7 +55,6 @@ func (dec *Decoder) cleanDecode(val any) error {
 // it does a regular decode routine for all types recursively, until it reaches the structs.
 // on structs it tries to decodeDirty if possible.
 func (dec *Decoder) decode(val reflect.Value) error {
-	//nolint:exhaustive // todo check how to disable it for reflect kind switches
 	switch val.Kind() {
 	case reflect.Struct:
 		// TODO possible bug here when struct is actually a SmartScalar

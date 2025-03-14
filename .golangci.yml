@@ -63,6 +63,7 @@ linters-settings:
     check:
       - switch
       - map
+    ignore-enum-types: "reflect.Kind"
 
   exhaustruct:
     # List of regular expressions to exclude struct packages and their names from checks.
