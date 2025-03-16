@@ -147,6 +147,8 @@ func (d *Dirtyfier) makeDirtyKey(key string) string {
 }
 
 // makeDirtyBool makes a dirty bool from given clean bool.
+//
+//nolint:funlen // it's ok
 func (d *Dirtyfier) makeDirtyBool(v bool) any {
 	if !d.cfg.Bool.Allowed || d.keepItClean() {
 		return v
@@ -232,6 +234,10 @@ func (d *Dirtyfier) makeDirtyBool(v bool) any {
 			} else {
 				intBoolResult = -1
 			}
+		case config.BoolFromNumberUndefined:
+			fallthrough
+		default:
+			panic("something really bad")
 		}
 
 		if numberToBeStringified {
@@ -286,7 +292,7 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 		_ = cfg.FromStrings.SpacingAllowed
 		_ = cfg.FromStrings.ExponentNotationAllowed
 		_ = cfg.FromStrings.CommasAllowed
-		_ = cfg.FromStrings.FloatishAllowed
+		_ = cfg.FromStrings.RoundingAlgorithm
 
 		// Convert number to its string representation.
 		// Optionally, if the config allowed spacing, commas, or exponent notation,

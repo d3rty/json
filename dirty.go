@@ -22,19 +22,13 @@ func Unmarshal(data []byte, v any) error {
 // Config
 //
 
-//nolint:gochecknoglobals // we're fine with these globals
+//nolint:gochecknoglobals // we're fine with these global aliases
 var (
-	// ConfigReset is the config preset for having completely empty config.
-	ConfigReset = config.Reset
-
-	// ConfigGetClean returns a fresh copy of a clean config.
-	ConfigGetClean = config.Clean
-	// ConfigGetDefault returns a fresh copy of a default config.
-	ConfigGetDefault = config.Default
-
-	// ConfigUpdateGlobal allows us to update the global config.
-	ConfigUpdateGlobal = config.UpdateGlobal
+	// ConfigSetGlobal allows us to update the global config.
+	ConfigSetGlobal = config.SetGlobal
 )
+
+type Config = config.Config
 
 // Number is a custom type for unmarshalling numbers.
 // Numbers can be parsed from strings or actual JSON numbers.

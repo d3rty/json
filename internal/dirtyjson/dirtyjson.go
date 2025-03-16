@@ -220,11 +220,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 				return b
 			}
 
-			if cfg.FromNumbers.FallbackValue.Some() {
-				return cfg.FromNumbers.FallbackValue
-			}
-
-			return option.NoneBool()
+			return cfg.FallbackValue
 		}
 
 		boolFromString = func(s string) option.Bool {
@@ -257,7 +253,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 				}
 			}
 
-			return cfg.FromStrings.FallbackValue
+			return cfg.FallbackValue
 		}
 	)
 

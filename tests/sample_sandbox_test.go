@@ -1,5 +1,4 @@
-//nolint:testpackage // it's ok to simply call it `tests
-package tests
+package dirtytests //nolint:testpackage // it's ok
 
 import (
 	"testing"
@@ -29,7 +28,7 @@ func TestSampleSandbox(t *testing.T) {
     "name": "Item 1"
   }`)
 
-	config.UpdateGlobal(func(cfg *config.Config) {
+	config.SetGlobal(func(cfg *config.Config) {
 		*cfg = *config.FromBytes([]byte(`{
     "Bool": {
       "Allowed": false,

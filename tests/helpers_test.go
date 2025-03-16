@@ -1,5 +1,4 @@
-//nolint:testpackage // it's ok to simply call it `tests
-package tests
+package dirtytests //nolint:testpackage // it's ok
 
 import (
 	"fmt"

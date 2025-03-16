@@ -11,11 +11,11 @@ type boolFromNum = func(i float64) option.Bool
 // We're OK without mutex for now.
 //
 //nolint:gochecknoglobals // we're ok with it as well
-var parsersBoolFromNum map[config.BoolFromNumberParser]boolFromNum
+var parsersBoolFromNum map[config.BoolFromNumberAlg]boolFromNum
 
 //nolint:gochecknoinits // todo decide if we need this linter?
 func init() {
-	parsersBoolFromNum = make(map[config.BoolFromNumberParser]boolFromNum)
+	parsersBoolFromNum = make(map[config.BoolFromNumberAlg]boolFromNum)
 
 	parsersBoolFromNum[config.BoolFromNumberBinary] = func(i float64) option.Bool {
 		if i == 0 {

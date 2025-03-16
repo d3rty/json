@@ -4,6 +4,7 @@ go 1.24
 
 require (
 	github.com/amberpixels/years v0.0.2-0.20250313182556-36bdadd14d9a // latest
+	github.com/hashicorp/hcl v1.0.0
 	github.com/stretchr/testify v1.10.0
 )
 

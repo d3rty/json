@@ -20,6 +20,8 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 	// Randomly decide if dirty bool is allowed.
 	cfg.Bool.Allowed = coin.Flip()
 	if cfg.Bool.Allowed {
+		cfg.Bool.FallbackValue = option.Some(coin.Flip())
+
 		// FromStrings
 		cfg.Bool.FromStrings.Allowed = coin.Flip()
 		if cfg.Bool.FromStrings.Allowed {
@@ -31,15 +33,15 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 			cfg.Bool.FromStrings.FalseForEmptyString = coin.Flip()
 			cfg.Bool.FromStrings.RespectFromNumbersLogic = coin.Flip()
 			// Fallback value as a random boolean.
-			cfg.Bool.FromStrings.FallbackValue = option.Some(coin.Flip())
 		}
 
 		// FromNumbers
 		cfg.Bool.FromNumbers.Allowed = coin.Flip()
 		if cfg.Bool.FromNumbers.Allowed {
-			choices := config.AvailableBoolFromNumberParsers()
-			cfg.Bool.FromNumbers.CustomParseFunc = flipping.FeelingLucky(choices, coin)
-			cfg.Bool.FromNumbers.FallbackValue = option.Some(coin.Flip())
+			cfg.Bool.FromNumbers.CustomParseFunc = flipping.FeelingLucky(
+				config.ListAvailableBoolFromNumberAlgs(),
+				coin,
+			)
 		}
 
 		// FromNull
@@ -58,7 +60,11 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 			cfg.Number.FromStrings.SpacingAllowed = coin.Flip()
 			cfg.Number.FromStrings.ExponentNotationAllowed = coin.Flip()
 			cfg.Number.FromStrings.CommasAllowed = coin.Flip()
-			cfg.Number.FromStrings.FloatishAllowed = coin.Flip()
+
+			cfg.Number.FromStrings.RoundingAlgorithm = flipping.FeelingLucky(
+				config.ListAvailableRoundingAlgs(),
+				coin,
+			)
 		}
 
 		// FromBools

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	dirty "github.com/d3rty/json"
-	"github.com/d3rty/json/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -83,8 +82,8 @@ func TestUnmarshal_Envelope(t *testing.T) {
 }
 
 func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
-	config.UpdateGlobal(func(cfg *config.Config) {
-		cfg.ResetToClean()
+	dirty.ConfigSetGlobal(func(cfg *dirty.Config) {
+		cfg.ResetToEmpty()
 		// only enable things we need here
 		cfg.FlexKeys.Allowed = true
 		cfg.FlexKeys.ChameleonCase = true

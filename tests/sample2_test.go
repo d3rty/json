@@ -1,12 +1,10 @@
-//nolint:testpackage // it's ok to simply call it `tests
-package tests
+package dirtytests //nolint:testpackage // it's ok
 
 import (
 	"encoding/json"
 	"testing"
 
 	dirty "github.com/d3rty/json"
-	"github.com/d3rty/json/internal/config"
 	testmodels "github.com/d3rty/json/tests/models"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +19,9 @@ func TestSample2_Clean(t *testing.T) {
 	)
 
 	// 1. Set config to minimal (reset)
-	config.UpdateGlobal(config.Reset)
+	dirty.ConfigSetGlobal(func(cfg *dirty.Config) {
+		cfg.ResetToEmpty()
+	})
 	var clean1Result testmodels.Document
 	require.NoError(t,
 		dirty.Unmarshal(contents, &clean1Result),
@@ -29,7 +29,9 @@ func TestSample2_Clean(t *testing.T) {
 	require.Equal(t, stdResult, clean1Result)
 
 	// 2. Set default (dirty) config
-	config.UpdateGlobal(config.Default)
+	dirty.ConfigSetGlobal(func(cfg *dirty.Config) {
+		cfg.ResetToDefault()
+	})
 	var clean2Result testmodels.Document
 	require.NoError(t,
 		dirty.Unmarshal(contents, &clean2Result),

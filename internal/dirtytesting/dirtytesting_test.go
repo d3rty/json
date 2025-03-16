@@ -28,7 +28,7 @@ func TestGenerateDirtyJSON(t *testing.T) {
 	dirtyContents, err := Dirtify[testmodels.Item](cleanContents, &dcfg)
 	require.NoError(t, err)
 
-	config.UpdateGlobal(func(cfg *config.Config) {
+	config.SetGlobal(func(cfg *config.Config) {
 		*cfg = *dcfg.Config()
 	})
 
