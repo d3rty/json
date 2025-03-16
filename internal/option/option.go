@@ -1,6 +1,11 @@
 package option
 
-import "encoding/json"
+import (
+	"encoding"
+	"encoding/json"
+	"fmt"
+	"strings"
+)
 
 // Option is a safe alternative to a pointer to a value of type T.
 // It represents a value that can either be present (Some) or absent (None).
@@ -83,4 +88,47 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 	o.value = v
 	o.ok = true
 	return nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface.
+// It interprets empty strings or "null" (case-insensitive) as a None value.
+// Otherwise, it attempts to convert the text into type T.
+func (o *Option[T]) UnmarshalText(text []byte) error {
+	s := strings.TrimSpace(string(text))
+	if s == "" || strings.EqualFold(s, "null") {
+		*o = None[T]()
+		return nil
+	}
+
+	var v T
+	// If T implements encoding.TextUnmarshaler, use it
+	if tm, ok := any(&v).(encoding.TextUnmarshaler); ok {
+		if err := tm.UnmarshalText(text); err != nil {
+			return err
+		}
+		*o = Some(v)
+		return nil
+	}
+
+	var isScalar bool
+	switch any(v).(type) {
+	case float64:
+		isScalar = true
+	case string:
+		isScalar = true
+	case bool:
+		isScalar = true
+	}
+
+	// for scalar we can re-use json.Unmarshal handler
+	if isScalar {
+		var scalar T
+		if err := json.Unmarshal(text, &scalar); err != nil {
+			return err
+		}
+		*o = Some(scalar)
+		return nil
+	}
+
+	return fmt.Errorf("type %T does not implement encoding.TextUnmarshaler and no fallback conversion is defined", v)
 }

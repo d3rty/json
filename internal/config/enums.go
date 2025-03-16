@@ -1,5 +1,13 @@
 package config
 
+import (
+	"fmt"
+	"strings"
+)
+
+// undefined is a constant string used for undefined values of any enum.
+const undefined = "undefined"
+
 // BoolFromNumberAlg specifies the algorithm of how parsing Number->Bool is done.
 type BoolFromNumberAlg uint8
 
@@ -20,53 +28,55 @@ const (
 	BoolFromNumberSignOfOne // 4 (100)
 )
 
-// String stringifies value of BoolFromNumberAlg.
-func (b BoolFromNumberAlg) String() string {
-	switch b {
-	case BoolFromNumberBinary:
-		return "binary"
-	case BoolFromNumberPositiveNegative:
-		return "positive_negative"
-	case BoolFromNumberSignOfOne:
-		return "sign_of_one"
-	case BoolFromNumberUndefined:
-		fallthrough
-	default:
-		return "undefined"
+// enumBoolFromNumberAlgs stores the enum string -> Value.
+//
+//nolint:gochecknoglobals // we're OK with it
+var enumBoolFromNumberAlgs = map[string]BoolFromNumberAlg{
+	"binary":            BoolFromNumberBinary,
+	"positive_negative": BoolFromNumberPositiveNegative,
+	"sign_of_one":       BoolFromNumberSignOfOne,
+	"undefined":         BoolFromNumberUndefined,
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface for BoolFromNumberAlg.
+// It converts a string (e.g., "sign_of_one") into the corresponding enum value.
+func (b *BoolFromNumberAlg) UnmarshalText(text []byte) error {
+	s := strings.ToLower(strings.TrimSpace(string(text)))
+	if v, ok := enumBoolFromNumberAlgs[s]; ok {
+		*b = v
+		return nil
 	}
+
+	return fmt.Errorf("unknown BoolFromNumberAlg value: %q", s)
+}
+
+// String stringifies value of BoolFromNumberAlg.
+func (b *BoolFromNumberAlg) String() string {
+	if b == nil {
+		return ""
+	}
+	for s, v := range enumBoolFromNumberAlgs {
+		if v == *b {
+			return s
+		}
+	}
+
+	return undefined
 }
 
 // ListAvailableBoolFromNumberAlgs lists all available values of BoolFromNumberAlg.
 func ListAvailableBoolFromNumberAlgs() []BoolFromNumberAlg {
-	all := []BoolFromNumberAlg{
-		BoolFromNumberBinary, BoolFromNumberPositiveNegative, BoolFromNumberSignOfOne,
-	}
+	algs := make([]BoolFromNumberAlg, 0, len(enumBoolFromNumberAlgs)-1)
 
-	// Switch here is specifically for exhaustive linter
-	// So, whenever new BoolFromnumberAlg is added the switch must be updated.
-	var check BoolFromNumberAlg
-	for i, alg := range all {
-		switch alg {
-		case BoolFromNumberBinary:
-			check |= alg
-		case BoolFromNumberPositiveNegative:
-			check |= alg
-		case BoolFromNumberSignOfOne:
-			check |= alg
-		case BoolFromNumberUndefined:
-			fallthrough
-		default:
+	for _, alg := range enumBoolFromNumberAlgs {
+		if alg == BoolFromNumberUndefined {
+			continue
 		}
 
-		if i == 0 {
-			break
-		}
-	}
-	if check != BoolFromNumberAlg(111) { //
-		panic("please update AvailableBoolFromNumberAlgs")
+		algs = append(algs, alg)
 	}
 
-	return all
+	return algs
 }
 
 // RoundingAlg specifies the algorithm of how parsing Number->Bool is done.
@@ -86,53 +96,54 @@ const (
 	RoundingAlgRound // 4 (100)
 )
 
-// String stringifies value of RoundingAlg.
-func (b RoundingAlg) String() string {
-	switch b {
-	case RoundingAlgNone:
-		return "none"
-	case RoundingAlgFloor:
-		return "floor"
-	case RoundingAlgRound:
-		return "round"
-	case RoundingAlgUndefined:
-		fallthrough
-	default:
-		return "undefined"
+// enumRoundingAlgs stores the enum string -> Value.
+//
+//nolint:gochecknoglobals // we're OK with it
+var enumRoundingAlgs = map[string]RoundingAlg{
+	"none":      RoundingAlgNone,
+	"floor":     RoundingAlgFloor,
+	"round":     RoundingAlgRound,
+	"undefined": RoundingAlgUndefined,
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface for RoundingAlg.
+// It converts a string (e.g., "floor") into the corresponding enum value.
+func (b *RoundingAlg) UnmarshalText(text []byte) error {
+	s := strings.ToLower(strings.TrimSpace(string(text)))
+	if v, ok := enumRoundingAlgs[s]; ok {
+		*b = v
+		return nil
 	}
+
+	return fmt.Errorf("unknown enumRoundingAlgs value: %q", s)
+}
+
+// String stringifies value of RoundingAlg.
+func (b *RoundingAlg) String() string {
+	if b == nil {
+		return ""
+	}
+
+	for s, v := range enumRoundingAlgs {
+		if v == *b {
+			return s
+		}
+	}
+
+	return undefined
 }
 
 // ListAvailableRoundingAlgs lists all available values of RoundingAlg.
 func ListAvailableRoundingAlgs() []RoundingAlg {
-	all := []RoundingAlg{
-		RoundingAlgNone, RoundingAlgFloor, RoundingAlgRound,
-	}
+	algs := make([]RoundingAlg, 0, len(enumRoundingAlgs)-1)
 
-	// allRoundingAlg is the compile-time computed bitmask of all known rounding algorithms.
-	const allRoundingAlg = RoundingAlg(111)
-
-	// Switch here is specifically for exhaustive linter
-	// So, whenever new BoolFromnumberAlg is added the switch must be updated.
-	var check RoundingAlg
-	for i, alg := range all {
-		switch alg {
-		case RoundingAlgNone:
-			check |= alg
-		case RoundingAlgFloor:
-			check |= alg
-		case RoundingAlgRound:
-			check |= alg
-		case RoundingAlgUndefined:
-			fallthrough
-		default:
+	for _, alg := range enumRoundingAlgs {
+		if alg == RoundingAlgUndefined {
+			continue
 		}
-		if i == 0 {
-			break
-		}
-	}
-	if check != allRoundingAlg {
-		panic("please update AvailableBoolFromNumberAlgs")
+
+		algs = append(algs, alg)
 	}
 
-	return all
+	return algs
 }

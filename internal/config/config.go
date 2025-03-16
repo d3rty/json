@@ -2,15 +2,13 @@ package config
 
 import (
 	"embed"
-	"encoding/json"
 	"io/fs"
 
 	"github.com/d3rty/json/internal/option"
-
-	"github.com/hashicorp/hcl"
+	"github.com/pelletier/go-toml/v2"
 )
 
-//go:embed default.hcl
+//go:embed default.toml
 var embeddedConfig embed.FS
 
 // TODO: FromNull behavior should be done via Option
@@ -95,30 +93,29 @@ type Config struct {
 // FromBytes read config from given raw []byte.
 func FromBytes(data []byte) *Config {
 	var cfg Config
-	if err := hcl.Unmarshal(data, &cfg); err != nil {
+	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil
 	}
 	return &cfg
 }
 
 // String shows string represenatation of the config. It used primarily for debug purposes or verbose mode
-// We use `json` representation for now.
+// We use `toml` representation here.
 func (cfg *Config) String() string {
-	//nolint:musttag // it's ok to not be annotated here
-	j, _ := json.Marshal(cfg)
+	j, _ := toml.Marshal(cfg)
 	return string(j)
 }
 
 // TODO precache in variable.
 func defaultConfig() *Config {
-	data, err := fs.ReadFile(embeddedConfig, "default.hcl")
+	data, err := fs.ReadFile(embeddedConfig, "default.toml")
 	if err != nil {
 		panic("failed to read embedded default config " + err.Error())
 	}
 
 	var cfg Config
-	if err := hcl.Unmarshal(data, &cfg); err != nil {
-		panic("failed to unmarshal default.hcl config: " + err.Error())
+	if err := toml.Unmarshal(data, &cfg); err != nil {
+		panic("failed to unmarshal default.toml config: " + err.Error())
 	}
 
 	return &cfg
@@ -137,14 +134,12 @@ func (cfg *Config) ResetToEmpty() { *cfg = *cleanConfig() }
 // ResetToDefault resets config to the default state.
 func (cfg *Config) ResetToDefault() { *cfg = *defaultConfig() }
 
-// clone via json round-trip. It's a simple (but not the most efficient) way to clone the config.
+// clone via toml round-trip. It's a simple (but not the most efficient) way to clone the config.
 // Config is safe for marshalling (that's by design): It will never contain functions, etc.
 // We can live with this solution until we need increase performance.
-//
-//nolint:musttag // we're ok not having tags here
 func clone(cfg *Config) *Config {
-	contents, _ := json.Marshal(cfg)
+	contents, _ := toml.Marshal(cfg)
 	var clone Config
-	_ = json.Unmarshal(contents, &clone)
+	_ = toml.Unmarshal(contents, &clone)
 	return &clone
 }
