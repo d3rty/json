@@ -347,10 +347,10 @@ func SplitWords(s string) []string {
 
 	// If the string contains underscores or hyphens,
 	// split by these delimiters.
-	if strings.ContainsAny(s, "_-") {
+	if strings.ContainsAny(s, separatorRunes) {
 		// Split on both '_' and '-'
 		parts := strings.FieldsFunc(s, func(r rune) bool {
-			return r == '_' || r == '-'
+			return r == '_' || r == '-' || r == ' ' || r == '\x00'
 		})
 		var words []string
 		// For each part, check if it has mixed case (camel/Pascal style).

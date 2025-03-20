@@ -6,7 +6,7 @@ import (
 )
 
 // undefined is a constant string used for undefined values of any enum.
-const undefined = "undefined"
+const undefined = ""
 
 // BoolFromNumberAlg specifies the algorithm of how parsing Number->Bool is done.
 type BoolFromNumberAlg uint8
@@ -28,6 +28,8 @@ const (
 	BoolFromNumberSignOfOne // 4 (100)
 )
 
+func (BoolFromNumberAlg) DefaultValue() BoolFromNumberAlg { return BoolFromNumberBinary }
+
 // enumBoolFromNumberAlgs stores the enum string -> Value.
 //
 //nolint:gochecknoglobals // we're OK with it
@@ -35,7 +37,7 @@ var enumBoolFromNumberAlgs = map[string]BoolFromNumberAlg{
 	"binary":            BoolFromNumberBinary,
 	"positive_negative": BoolFromNumberPositiveNegative,
 	"sign_of_one":       BoolFromNumberSignOfOne,
-	"undefined":         BoolFromNumberUndefined,
+	undefined:           BoolFromNumberUndefined,
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface for BoolFromNumberAlg.
@@ -57,17 +59,16 @@ func (b *BoolFromNumberAlg) MarshalText() ([]byte, error) {
 		return []byte(s), nil
 	}
 
-	return []byte(""), nil
+	return []byte(undefined), nil
 }
 
 // String stringifies value of BoolFromNumberAlg.
 func (b *BoolFromNumberAlg) String() string {
-	if b == nil {
-		return ""
-	}
-	for s, v := range enumBoolFromNumberAlgs {
-		if v == *b {
-			return s
+	if b != nil {
+		for s, v := range enumBoolFromNumberAlgs {
+			if v == *b {
+				return s
+			}
 		}
 	}
 
@@ -106,14 +107,16 @@ const (
 	RoundingAlgRound // 4 (100)
 )
 
+func (RoundingAlg) DefaultValue() RoundingAlg { return RoundingAlgNone }
+
 // enumRoundingAlgs stores the enum string -> Value.
 //
 //nolint:gochecknoglobals // we're OK with it
 var enumRoundingAlgs = map[string]RoundingAlg{
-	"none":      RoundingAlgNone,
-	"floor":     RoundingAlgFloor,
-	"round":     RoundingAlgRound,
-	"undefined": RoundingAlgUndefined,
+	"none":    RoundingAlgNone,
+	"floor":   RoundingAlgFloor,
+	"round":   RoundingAlgRound,
+	undefined: RoundingAlgUndefined,
 }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface for RoundingAlg.
@@ -135,18 +138,16 @@ func (b *RoundingAlg) MarshalText() ([]byte, error) {
 		return []byte(s), nil
 	}
 
-	return []byte(""), nil
+	return []byte(undefined), nil
 }
 
 // String stringifies value of RoundingAlg.
 func (b *RoundingAlg) String() string {
-	if b == nil {
-		return ""
-	}
-
-	for s, v := range enumRoundingAlgs {
-		if v == *b {
-			return s
+	if b != nil {
+		for s, v := range enumRoundingAlgs {
+			if v == *b {
+				return s
+			}
 		}
 	}
 

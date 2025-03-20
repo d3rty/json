@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	dirty "github.com/d3rty/json"
+	"github.com/d3rty/json/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -82,7 +83,12 @@ func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
 		cfg.FlexKeys.ChameleonCase = true
 		cfg.FlexKeys.CaseInsensitive = true
 		cfg.Number.Allowed = true
+		cfg.Number.FromStrings.Allowed = true
 		cfg.Bool.Allowed = true
+		cfg.Bool.FromStrings.Allowed = true
+		cfg.Bool.FromStrings.RespectFromNumbersLogic = true
+		cfg.Bool.FromNumbers.Allowed = true
+		cfg.Bool.FromNumbers.CustomParseFunc = config.BoolFromNumberBinary
 	})
 
 	var e Envelope

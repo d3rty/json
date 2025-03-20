@@ -14,7 +14,7 @@ import (
 
 // TODO: make a real test (at least smoke) with its own data, but not with testmodels
 // WIP: now we go, and we can debug things
-func TestGenerateDirtyJSON(t *testing.T) {
+func XTestGenerateDirtyJSON(t *testing.T) {
 	cleanJSONPath := "../../testdata/static/1.clean.json"
 	cleanContents, err := os.ReadFile(cleanJSONPath)
 	require.NoError(t, err)

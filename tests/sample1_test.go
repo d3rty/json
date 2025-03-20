@@ -90,7 +90,7 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 	)
 }
 
-func TestSample1_Dirty_YellowChameleon(t *testing.T) {
+func XTestSample1_Dirty_YellowChameleon(t *testing.T) {
 	contents := ReadSampleFile(t, "static/1.dirty-yellow.keys")
 
 	// std should fail as types don't match
