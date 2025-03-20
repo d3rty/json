@@ -55,13 +55,6 @@ func TestUnmarshal_Yellow(t *testing.T) {
 	assert.Equal(t, 123, e.ID)
 	assert.Equal(t, "foobar", e.Name)
 	assert.True(t, e.IsActive)
-
-	// result := dirty.ExtractResult[EventDirty](&e)
-
-	// assert.Equal(t, dirty.ColorYellow, result.Color())
-
-	// assert.Empty(t, result.Warnings()) // TODO warnings must be 2
-	// assert.Empty(t, result.Errors())
 }
 
 func TestUnmarshal_Envelope(t *testing.T) {

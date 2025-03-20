@@ -126,6 +126,7 @@ func (dec *Decoder) decodeDirty(v Dirtyable) error {
 
 	container.init(scheme)
 	res := container.result()
+
 	if !config.Global().FlexKeys.Allowed {
 		if err := curDec.cleanDecode(res); err != nil && !errors.Is(err, io.EOF) {
 			return fmt.Errorf("dirty decode failed: %w", err)

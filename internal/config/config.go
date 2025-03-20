@@ -137,9 +137,16 @@ func (cfg *Config) ResetToDefault() { *cfg = *defaultConfig() }
 // clone via toml round-trip. It's a simple (but not the most efficient) way to clone the config.
 // Config is safe for marshalling (that's by design): It will never contain functions, etc.
 // We can live with this solution until we need increase performance.
+// TODO: remove panics for live prod code.
 func clone(cfg *Config) *Config {
-	contents, _ := toml.Marshal(cfg)
+	contents, err := toml.Marshal(cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	var clone Config
-	_ = toml.Unmarshal(contents, &clone)
+	if err := toml.Unmarshal(contents, &clone); err != nil {
+		panic(err)
+	}
 	return &clone
 }

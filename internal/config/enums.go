@@ -50,6 +50,16 @@ func (b *BoolFromNumberAlg) UnmarshalText(text []byte) error {
 	return fmt.Errorf("unknown BoolFromNumberAlg value: %q", s)
 }
 
+// MarshalText implements the encoding.TextMarshaler interface for BoolFromNumberAlg.
+// It converts enum value into its string representation
+func (b *BoolFromNumberAlg) MarshalText() ([]byte, error) {
+	if s := b.String(); s != undefined {
+		return []byte(s), nil
+	}
+
+	return []byte(""), nil
+}
+
 // String stringifies value of BoolFromNumberAlg.
 func (b *BoolFromNumberAlg) String() string {
 	if b == nil {
@@ -116,6 +126,16 @@ func (b *RoundingAlg) UnmarshalText(text []byte) error {
 	}
 
 	return fmt.Errorf("unknown enumRoundingAlgs value: %q", s)
+}
+
+// MarshalText implements the encoding.TextMarshaler interface for RoundingAlg.
+// It converts enum value into its string representation
+func (b *RoundingAlg) MarshalText() ([]byte, error) {
+	if s := b.String(); s != undefined {
+		return []byte(s), nil
+	}
+
+	return []byte(""), nil
 }
 
 // String stringifies value of RoundingAlg.

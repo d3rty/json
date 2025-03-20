@@ -4,10 +4,9 @@ go 1.24
 
 require (
 	github.com/amberpixels/years v0.0.2-0.20250313182556-36bdadd14d9a // latest
+	github.com/pelletier/go-toml/v2 v2.2.3
 	github.com/stretchr/testify v1.10.0
 )
-
-require github.com/pelletier/go-toml/v2 v2.2.3
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
