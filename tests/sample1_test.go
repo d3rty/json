@@ -90,6 +90,7 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 	)
 }
 
+//nolint:revive,stylecheck // we're OK as it's the way to disable the test
 func XTestSample1_Dirty_YellowChameleon(t *testing.T) {
 	contents := ReadSampleFile(t, "static/1.dirty-yellow.keys")
 

@@ -28,8 +28,6 @@ const (
 	BoolFromNumberSignOfOne // 4 (100)
 )
 
-func (BoolFromNumberAlg) DefaultValue() BoolFromNumberAlg { return BoolFromNumberBinary }
-
 // enumBoolFromNumberAlgs stores the enum string -> Value.
 //
 //nolint:gochecknoglobals // we're OK with it
@@ -39,6 +37,8 @@ var enumBoolFromNumberAlgs = map[string]BoolFromNumberAlg{
 	"sign_of_one":       BoolFromNumberSignOfOne,
 	undefined:           BoolFromNumberUndefined,
 }
+
+func (*BoolFromNumberAlg) DefaultValue() BoolFromNumberAlg { return BoolFromNumberBinary }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface for BoolFromNumberAlg.
 // It converts a string (e.g., "sign_of_one") into the corresponding enum value.
@@ -107,8 +107,6 @@ const (
 	RoundingAlgRound // 4 (100)
 )
 
-func (RoundingAlg) DefaultValue() RoundingAlg { return RoundingAlgNone }
-
 // enumRoundingAlgs stores the enum string -> Value.
 //
 //nolint:gochecknoglobals // we're OK with it
@@ -118,6 +116,8 @@ var enumRoundingAlgs = map[string]RoundingAlg{
 	"round":   RoundingAlgRound,
 	undefined: RoundingAlgUndefined,
 }
+
+func (*RoundingAlg) DefaultValue() RoundingAlg { return RoundingAlgNone }
 
 // UnmarshalText implements the encoding.TextUnmarshaler interface for RoundingAlg.
 // It converts a string (e.g., "floor") into the corresponding enum value.
