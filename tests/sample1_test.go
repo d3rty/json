@@ -1,4 +1,4 @@
-package dirtytests //nolint:testpackage // it's ok
+package dirtytests
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestSample1_Clean(t *testing.T) {
-	contents := ReadSampleFile(t, "static/1.clean")
+	contents := ReadSampleFile(t, "1.clean")
 
 	// Ensure std unmarshal works for the read file
 	var stdResult testmodels.Item
@@ -42,7 +42,7 @@ func TestSample1_Clean(t *testing.T) {
 }
 
 func TestSample1_Dirty_Yellow(t *testing.T) {
-	contents := ReadSampleFile(t, "static/1.dirty-yellow")
+	contents := ReadSampleFile(t, "1.dirty-yellow")
 
 	// std should fail as types don't match
 	var stdResult testmodels.Item
@@ -92,7 +92,7 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 
 //nolint:revive,stylecheck // we're OK as it's the way to disable the test
 func XTestSample1_Dirty_YellowChameleon(t *testing.T) {
-	contents := ReadSampleFile(t, "static/1.dirty-yellow.keys")
+	contents := ReadSampleFile(t, "1.dirty-yellow.keys")
 
 	// std should fail as types don't match
 	var stdResult testmodels.Item

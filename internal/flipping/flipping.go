@@ -31,7 +31,6 @@ func NewCoin(rngArg ...*rand.Rand) *Coin {
 }
 
 func (c *Coin) Flip() bool {
-	//nolint: mnd // here we're OK with magic numbers
 	return c.rng.Intn(2) == 1
 }
 

@@ -327,7 +327,7 @@ func TransformToHybridCase(s string, coinArg ...*flipping.Coin) string {
 				firstRune := nextRunes[0]
 				// If both are lowercase, force a separator.
 				if unicode.IsLower(lastRune) && unicode.IsLower(firstRune) {
-					sep = rune(separatorRunes[coin.Rng().Intn(2)]) //nolint: mnd // first two runes are -/_
+					sep = rune(separatorRunes[coin.Rng().Intn(2)])
 				}
 			}
 		}

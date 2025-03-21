@@ -1,4 +1,4 @@
-package dirtytests //nolint:testpackage // it's ok
+package dirtytests
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestSample2_Clean(t *testing.T) {
-	contents := ReadSampleFile(t, "static/2.clean")
+	contents := ReadSampleFile(t, "2.clean")
 
 	// Ensure std unmarshal works for the read file
 	var stdResult testmodels.Document

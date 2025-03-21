@@ -97,7 +97,6 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 
 	// var s string
 	// If the value is a quoted string.
-	//nolint:nestif // we're ok
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
 			return errors.New("dirty.Number: string input not allowed")
@@ -226,7 +225,6 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		boolFromString = func(s string) option.Bool {
 			sLower := strings.ToLower(s)
 
-			//nolint:nestif // todo
 			if cfg.FromStrings.CaseInsensitive {
 				for _, ts := range cfg.FromStrings.CustomListForTrue {
 					if sLower == strings.ToLower(ts) {
@@ -334,7 +332,7 @@ func (v *Array) UnmarshalJSON(data []byte) error {
 		}
 		return fmt.Errorf("dirty.Array cant be parsed from: %s", s)
 	}
-	if len(data) < 2 { //nolint:mnd // at least 2 quotes are needed
+	if len(data) < 2 {
 		return errors.New("dirty.Array missing closing quote")
 	}
 	if data[len(data)-1] != ']' {
@@ -362,7 +360,7 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 		}
 		return fmt.Errorf("dirty.Object cant be parsed from: %s", s)
 	}
-	if len(data) < 2 { //nolint:mnd // at least 2 quotes are needed
+	if len(data) < 2 {
 		return errors.New("dirty.Object missing closing quote")
 	}
 	if data[len(data)-1] != '}' {
@@ -391,7 +389,6 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 	}
 
 	// If the value is a quoted string.
-	//nolint:nestif // todo
 	if data[0] == '"' {
 		if !cfg.FromStrings.Allowed {
 			return errors.New("dirty.Integer: string input not allowed")
@@ -598,7 +595,7 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 
 // UnmarshalJSON converts []byte into a smart scalar.
 func (v *SmartScalar) UnmarshalJSON(data []byte) error {
-	if len(data) == 4 { //nolint:mnd // 4 for length of null/true
+	if len(data) == 4 {
 		if data[0] == 'n' /* null */ {
 			v.scalar = nil
 			return nil
@@ -608,7 +605,7 @@ func (v *SmartScalar) UnmarshalJSON(data []byte) error {
 			return nil
 		}
 	}
-	if len(data) == 5 { //nolint: mnd // 5 for length(false)
+	if len(data) == 5 {
 		if data[0] == 'f' /* false */ {
 			v.scalar = false
 			return nil

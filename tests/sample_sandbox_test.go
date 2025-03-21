@@ -1,4 +1,4 @@
-package dirtytests //nolint:testpackage // it's ok
+package dirtytests
 
 import (
 	"testing"

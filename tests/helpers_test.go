@@ -1,4 +1,4 @@
-package dirtytests //nolint:testpackage // it's ok
+package dirtytests
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 func ReadSampleFile(t *testing.T, fileName string) []byte {
-	contents, err := os.ReadFile(fmt.Sprintf("../testdata/%s.json", fileName))
+	contents, err := os.ReadFile(fmt.Sprintf("./testdata/%s.json", fileName))
 	require.NoError(t, err)
 
 	return contents

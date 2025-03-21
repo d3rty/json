@@ -166,11 +166,11 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 	// Loop over all fields in the JSON object.
 	for dec.clean.More() {
 		// Field name (as string).
-		t, err := dec.clean.Token() //nolint:govet // wtf?
+		t, err := dec.clean.Token()
 		if err != nil {
 			return err
 		}
-		fieldName, ok := t.(string) //nolint:govet // wtf?
+		fieldName, ok := t.(string)
 		if !ok {
 			return errors.New("expected field name to be a string")
 		}
@@ -276,7 +276,7 @@ func (dec *Decoder) decodeSlice(val reflect.Value) error {
 	for dec.clean.More() {
 		// Create a new element value.
 		elem := reflect.New(elemType).Elem()
-		if err := dec.decode(elem); err != nil { //nolint:govet // wtf?
+		if err := dec.decode(elem); err != nil {
 			return fmt.Errorf("error decoding slice element: %w", err)
 		}
 		sliceVal = reflect.Append(sliceVal, elem)
@@ -313,14 +313,14 @@ func (dec *Decoder) decodeArray(val reflect.Value) error {
 			return errors.New("not enough elements in JSON array")
 		}
 		elem := val.Index(i)
-		if err := dec.decode(elem); err != nil { //nolint:govet // wtf?
+		if err := dec.decode(elem); err != nil {
 			return fmt.Errorf("error decoding array element %d: %w", i, err)
 		}
 	}
 	// If there are extra elements, skip them.
 	for dec.clean.More() {
 		var skip any
-		if err := dec.clean.Decode(&skip); err != nil { //nolint:govet // wtf?
+		if err := dec.clean.Decode(&skip); err != nil {
 			return err
 		}
 	}
@@ -358,11 +358,11 @@ func (dec *Decoder) decodeMap(val reflect.Value) error {
 	elemType := val.Type().Elem()
 	for dec.clean.More() {
 		// Map keys are provided as tokens (usually strings).
-		t, err := dec.clean.Token() //nolint:govet // wtf?
+		t, err := dec.clean.Token()
 		if err != nil {
 			return err
 		}
-		keyStr, ok := t.(string) //nolint:govet // wtf?
+		keyStr, ok := t.(string)
 		if !ok {
 			return errors.New("expected map key to be a string")
 		}
