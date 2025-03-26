@@ -19,7 +19,7 @@ type Option[T comparable] struct {
 type Bool = Option[bool]
 
 // None returns true if the Option does not contain a valid value.
-func (o Option[T]) None() bool {
+func (o *Option[T]) None() bool {
 	return !o.ok
 }
 
@@ -29,7 +29,7 @@ func (o Option[T]) None() bool {
 //     and that value is equal to the provided argument.
 //
 // Panics if more than one argument is provided.
-func (o Option[T]) Some(args ...T) bool {
+func (o *Option[T]) Some(args ...T) bool {
 	if len(args) == 0 {
 		return o.ok
 	} else if len(args) == 1 {
@@ -42,7 +42,7 @@ func (o Option[T]) Some(args ...T) bool {
 // Unwrap returns the contained value if present; otherwise, it panics.
 // This mirrors Rust's unwrap, providing a quick way to extract the value
 // when you are certain that it is present.
-func (o Option[T]) Unwrap() T {
+func (o *Option[T]) Unwrap() T {
 	if !o.ok {
 		panic("called Unwrap on a None Option")
 	}
@@ -65,7 +65,7 @@ func NoneBool() Option[bool] { return None[bool]() }
 
 // MarshalJSON implements the json.Marshaler interface.
 // If the Option is None, it marshals to JSON null; otherwise, it marshals to the contained value.
-func (o Option[T]) MarshalJSON() ([]byte, error) {
+func (o *Option[T]) MarshalJSON() ([]byte, error) {
 	if !o.ok {
 		return []byte("null"), nil
 	}
@@ -76,11 +76,10 @@ func (o Option[T]) MarshalJSON() ([]byte, error) {
 // If the JSON value is null, the Option is set to None; otherwise, it unmarshals into the contained value.
 func (o *Option[T]) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
-		o.ok = false
-		var zero T
-		o.value = zero
+		*o = None[T]()
 		return nil
 	}
+
 	var v T
 	if err := json.Unmarshal(data, &v); err != nil {
 		return err
@@ -90,12 +89,21 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// MarshalTOML returns the underlying value if it exists, or nil otherwise.
+func (o *Option[T]) MarshalTOML() ([]byte, error) {
+	if o.ok {
+		return json.Marshal(o.value)
+	}
+
+	return json.Marshal(TomlNone)
+}
+
 // UnmarshalText implements the encoding.TextUnmarshaler interface.
 // It interprets empty strings or "null" (case-insensitive) as a None value.
 // Otherwise, it attempts to convert the text into type T.
 func (o *Option[T]) UnmarshalText(text []byte) error {
 	s := strings.TrimSpace(string(text))
-	if s == "" || strings.EqualFold(s, "null") {
+	if s == "" || strings.EqualFold(s, "null") || strings.EqualFold(s, TomlNone) {
 		*o = None[T]()
 		return nil
 	}

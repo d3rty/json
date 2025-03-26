@@ -18,13 +18,13 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 
 	// --- Bool Configuration ---
 	// Randomly decide if dirty bool is allowed.
-	cfg.Bool.Allowed = coin.Flip()
-	if cfg.Bool.Allowed {
+	cfg.Bool.Disabled = coin.Flip()
+	if cfg.Bool.Disabled {
 		cfg.Bool.FallbackValue = option.Some(coin.Flip())
 
 		// FromStrings
-		cfg.Bool.FromStrings.Allowed = coin.Flip()
-		if cfg.Bool.FromStrings.Allowed {
+		cfg.Bool.FromStrings.Disabled = coin.Flip()
+		if cfg.Bool.FromStrings.Disabled {
 			dictMinSize, dictMaxSize := 3, 6
 			// Generate a random preset for "true" values (between 3 and 6 values)
 			cfg.Bool.FromStrings.CustomListForTrue = generateRandomPreset(dictTrues, dictMinSize, dictMaxSize, coin)
@@ -36,8 +36,8 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 		}
 
 		// FromNumbers
-		cfg.Bool.FromNumbers.Allowed = coin.Flip()
-		if cfg.Bool.FromNumbers.Allowed {
+		cfg.Bool.FromNumbers.Disabled = coin.Flip()
+		if cfg.Bool.FromNumbers.Disabled {
 			cfg.Bool.FromNumbers.CustomParseFunc = flipping.FeelingLucky(
 				config.ListAvailableBoolFromNumberAlgs(),
 				coin,
@@ -45,18 +45,18 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 		}
 
 		// FromNull
-		cfg.Bool.FromNull.Allowed = coin.Flip()
-		if cfg.Bool.FromNull.Allowed {
+		cfg.Bool.FromNull.Disabled = coin.Flip()
+		if cfg.Bool.FromNull.Disabled {
 			cfg.Bool.FromNull.Inverse = coin.Flip()
 		}
 	}
 
 	// --- Number Configuration ---
-	cfg.Number.Allowed = coin.Flip()
-	if cfg.Number.Allowed {
+	cfg.Number.Disabled = coin.Flip()
+	if cfg.Number.Disabled {
 		// FromStrings
-		cfg.Number.FromStrings.Allowed = coin.Flip()
-		if cfg.Number.FromStrings.Allowed {
+		cfg.Number.FromStrings.Disabled = coin.Flip()
+		if cfg.Number.FromStrings.Disabled {
 			cfg.Number.FromStrings.SpacingAllowed = coin.Flip()
 			cfg.Number.FromStrings.ExponentNotationAllowed = coin.Flip()
 			cfg.Number.FromStrings.CommasAllowed = coin.Flip()
@@ -68,15 +68,15 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 		}
 
 		// FromBools
-		cfg.Number.FromBools.Allowed = coin.Flip()
+		cfg.Number.FromBools.Disabled = coin.Flip()
 
 		// FromNull
-		cfg.Number.FromNull.Allowed = coin.Flip()
+		cfg.Number.FromNull.Disabled = coin.Flip()
 	}
 
 	// --- FlexKeys Configuration ---
-	cfg.FlexKeys.Allowed = coin.Flip()
-	if cfg.FlexKeys.Allowed {
+	cfg.FlexKeys.Disabled = coin.Flip()
+	if cfg.FlexKeys.Disabled {
 		cfg.FlexKeys.CaseInsensitive = coin.Flip()
 		cfg.FlexKeys.ChameleonCase = coin.Flip()
 	}

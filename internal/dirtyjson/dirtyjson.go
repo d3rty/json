@@ -1,6 +1,7 @@
 package dirtyjson
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -82,23 +83,36 @@ type (
 	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringifed.
 )
 
+// TODO(?) non-global config.
+func tmpGetConfig(ctx context.Context) *config.Config {
+	_ = ctx
+	return config.Global()
+}
+
 // UnmarshalJSON converts []byte into a Number.
 func (v *Number) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.Number: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Global().Number
-	if !cfg.Allowed { // TODO: that's bad. do it better
-		cfg.FromNull.Allowed = false
-		cfg.FromStrings.Allowed = false
-		cfg.FromNull.Allowed = false
+	fullCfg := tmpGetConfig(context.Background())
+
+	if fullCfg.Number.IsDisabled() { // Dirty number decoding is disabled
+		var clean float64
+		if err := json.Unmarshal(data, &clean); err != nil {
+			return err
+		}
+		*v = Number(clean)
+		return nil
 	}
+
+	// cfg stays for specifically config of Number decoding
+	cfg := fullCfg.Number
 
 	// var s string
 	// If the value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.FromStrings.Allowed {
+		if cfg.FromStrings.IsDisabled() {
 			return errors.New("dirty.Number: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
@@ -107,12 +121,14 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		s := string(data[1 : len(data)-1])
 		s = strings.TrimSpace(s)
 
+		fromStringsCfg := cfg.FromStrings
+
 		// Remove spaces if allowed.
-		if cfg.FromStrings.SpacingAllowed {
+		if fromStringsCfg.SpacingAllowed {
 			s = strings.ReplaceAll(s, " ", "")
 		}
 		// Remove commas if allowed.
-		if cfg.FromStrings.CommasAllowed {
+		if fromStringsCfg.CommasAllowed {
 			s = strings.ReplaceAll(s, ",", "")
 		}
 
@@ -137,24 +153,26 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 
 	switch {
 	case s[0] == 'n': /* null  */
-		if cfg.FromNull.Allowed {
-			*v = Number(0.0)
-			return nil
+		if cfg.FromNull.IsDisabled() {
+			return errors.New("dirty.Number: numbers from nulls are not allowed")
 		}
+		*v = Number(0.0)
+		return nil
 
-		return errors.New("dirty.Number: numbers from nulls are not allowed")
 	case s[0] == 't':
-		if cfg.FromBools.Allowed {
-			*v = Number(1.0)
-			return nil
+		if cfg.FromBools.IsDisabled() {
+			return errors.New("dirty.Number: numbers from bools are not allowed")
 		}
-		return errors.New("dirty.Number: numbers from bools are not allowed")
+		*v = Number(1.0)
+		return nil
+
 	case s[0] == 'f':
-		if cfg.FromBools.Allowed {
-			*v = Number(0.0)
-			return nil
+		if cfg.FromBools.IsDisabled() {
+			return errors.New("dirty.Number: numbers from bools are not allowed")
 		}
-		return errors.New("dirty.Number: numbers from bools are not allowed")
+		*v = Number(0.0)
+		return nil
+
 	case s[0] == '[' || s[0] == '{':
 		return errors.New("dirty.Number: can't parse bools from object/array values")
 	}
@@ -197,17 +215,25 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Bool: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Global().Bool
-	if !cfg.Allowed { // TODO: that's bad. do it better
-		cfg.FromNull.Allowed = false
-		cfg.FromStrings.Allowed = false
-		cfg.FromNull.Allowed = false
+	fullCfg := tmpGetConfig(context.Background())
+
+	if fullCfg.Bool.IsDisabled() { // Dirty bool decoding is disabled
+		var clean bool
+		if err := json.Unmarshal(data, &clean); err != nil {
+			return err
+		}
+		*v = Bool(clean)
+		return nil
 	}
+
+	cfg := fullCfg.Bool
 
 	var (
 		boolFromNumber = func(n float64) option.Bool {
+			// assuming config is enabled
+			fromNumbersCfg := cfg.FromNumbers
 			var b option.Bool
-			if parser, ok := parsersBoolFromNum[cfg.FromNumbers.CustomParseFunc]; ok {
+			if parser, ok := parsersBoolFromNum[fromNumbersCfg.CustomParseFunc]; ok {
 				b = parser(n)
 			} else {
 				// TRICKY THING. CORRUPTED CONFIG IS HERE. We should not just silenty exit
@@ -222,42 +248,42 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			return cfg.FallbackValue
 		}
 
-		boolFromString = func(s string) option.Bool {
+		boolFromString = func(s string, cfg *config.BoolFromStringsConfig) option.Bool {
 			sLower := strings.ToLower(s)
 
-			if cfg.FromStrings.CaseInsensitive {
-				for _, ts := range cfg.FromStrings.CustomListForTrue {
+			if cfg.CaseInsensitive {
+				for _, ts := range cfg.CustomListForTrue {
 					if sLower == strings.ToLower(ts) {
 						return option.True()
 					}
 				}
-				for _, fs := range cfg.FromStrings.CustomListForFalse {
+				for _, fs := range cfg.CustomListForFalse {
 					if sLower == strings.ToLower(fs) {
 						return option.False()
 					}
 				}
 			} else {
-				if slices.Contains(cfg.FromStrings.CustomListForTrue, s) {
+				if slices.Contains(cfg.CustomListForTrue, s) {
 					return option.True()
 				}
-				if slices.Contains(cfg.FromStrings.CustomListForFalse, s) {
+				if slices.Contains(cfg.CustomListForFalse, s) {
 					return option.False()
 				}
 			}
 
-			if cfg.FromStrings.RespectFromNumbersLogic {
+			if cfg.RespectFromNumbersLogic {
 				if v, err := strconv.ParseFloat(s, 64); err == nil {
 					return boolFromNumber(v)
 				}
 			}
 
-			return cfg.FallbackValue
+			return fullCfg.Bool.FallbackValue
 		}
 	)
 
 	// Check if the incoming value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.FromStrings.Allowed {
+		if cfg.FromStrings.IsDisabled() {
 			return errors.New("dirty.Bool: string input not allowed")
 		}
 
@@ -268,12 +294,14 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		s := string(data[1 : len(data)-1])
 		s = strings.TrimSpace(s) // normalized content of the string
 
-		if s == "" && cfg.FromStrings.FalseForEmptyString {
+		cfgFromStrings := cfg.FromStrings
+
+		if s == "" && cfgFromStrings.FalseForEmptyString {
 			*v = false
 			return nil
 		}
 
-		if b := boolFromString(s); b.Some() {
+		if b := boolFromString(s, cfgFromStrings); b.Some() {
 			*v = Bool(b.Unwrap())
 			return nil
 		}
@@ -294,11 +322,11 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 		*v = false
 		return nil
 	case s[0] == 'n': /* null  */
-		if cfg.FromNull.Allowed {
-			*v = Bool(cfg.FromNull.Inverse) // if Inverse: we'll return true, otherwise: false
+		if cfg.FromNull.IsDisabled() {
+			return errors.New("dirty.Bool: cannot parse bool from null")
 		}
-
-		return errors.New("dirty.Bool: cannot parse bool from null")
+		*v = Bool(cfg.FromNull.Inverse) // if Inverse: we'll return true, otherwise: false
+		return nil
 	}
 
 	if s[0] == '{' || s[0] == '[' {
@@ -381,18 +409,27 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Integer: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Global().Number
-	if !cfg.Allowed { // TODO: that's bad. do it better
-		cfg.FromNull.Allowed = false
-		cfg.FromStrings.Allowed = false
-		cfg.FromNull.Allowed = false
+	fullCfg := tmpGetConfig(context.Background())
+
+	if fullCfg.Number.IsDisabled() { // Dirty number decoding is disabled
+		var clean int64
+		if err := json.Unmarshal(data, &clean); err != nil {
+			return err
+		}
+
+		*v = Integer(clean)
+		return nil
 	}
+
+	cfg := fullCfg.Number
 
 	// If the value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.FromStrings.Allowed {
+		if cfg.FromStrings.IsDisabled() {
 			return errors.New("dirty.Integer: string input not allowed")
 		}
+		fromStringsCfg := cfg.FromStrings
+
 		if len(data) < 2 || data[len(data)-1] != '"' {
 			return errors.New("dirty.Integer: invalid string value")
 		}
@@ -400,11 +437,11 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 		s = strings.TrimSpace(s)
 
 		// Remove spaces if allowed.
-		if cfg.FromStrings.SpacingAllowed {
+		if fromStringsCfg.SpacingAllowed {
 			s = strings.ReplaceAll(s, " ", "")
 		}
 		// Remove commas if allowed.
-		if cfg.FromStrings.CommasAllowed {
+		if fromStringsCfg.CommasAllowed {
 			s = strings.ReplaceAll(s, ",", "")
 		}
 
@@ -429,24 +466,26 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 
 	switch {
 	case s[0] == 'n': /* null  */
-		if cfg.FromNull.Allowed {
-			*v = Integer(0)
-			return nil
+		if cfg.FromNull.IsDisabled() {
+			return errors.New("dirty.Integer: numbers from nulls are not allowed")
 		}
+		*v = Integer(0)
+		return nil
 
-		return errors.New("dirty.Integer: numbers from nulls are not allowed")
 	case s[0] == 't':
-		if cfg.FromBools.Allowed {
-			*v = Integer(1)
-			return nil
+		if cfg.FromBools.IsDisabled() {
+			return errors.New("dirty.Integer: numbers from bools are not allowed")
 		}
-		return errors.New("dirty.Integer: numbers from bools are not allowed")
+		*v = Integer(1)
+		return nil
+
 	case s[0] == 'f':
-		if cfg.FromBools.Allowed {
-			*v = Integer(0)
-			return nil
+		if cfg.FromBools.IsDisabled() {
+			return errors.New("dirty.Integer: numbers from bools are not allowed")
 		}
-		return errors.New("dirty.Integer: numbers from bools are not allowed")
+		*v = Integer(0)
+		return nil
+
 	case s[0] == '[' || s[0] == '{':
 		return errors.New("dirty.Integer: can't parse bools from object/array values")
 	}
@@ -471,16 +510,22 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Date: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Global().Date
-	if !cfg.Allowed { // TODO: that's bad. do it better
-		cfg.FromNumbers.Allowed = false
-		cfg.FromStrings.Allowed = false
-		cfg.FromNull.Allowed = false
+	fullCfg := tmpGetConfig(context.Background())
+
+	if fullCfg.Date.IsDisabled() { // Dirty date decoding is disabled
+		var clean time.Time
+		if err := json.Unmarshal(data, &clean); err != nil {
+			return err
+		}
+
+		*v = Date(clean)
+		return nil
 	}
 
+	cfg := fullCfg.Date
 	// If the value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.FromStrings.Allowed {
+		if cfg.FromStrings.IsDisabled() {
 			return errors.New("dirty.Date: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
@@ -503,11 +548,12 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 
 	switch {
 	case s[0] == 'n': /* null  */
-		if cfg.FromNull.Allowed {
-			*v = Date(time.Time{}) // only zero time for now
-			return nil
+		if cfg.FromNull.IsDisabled() {
+			return errors.New("dirty.Date: dates from nulls are not allowed")
 		}
-		return errors.New("dirty.Date: dates from nulls are not allowed")
+
+		*v = Date(time.Time{}) // only zero time for now
+		return nil
 	case s[0] == 't' || s[0] == 'f':
 		return errors.New("dirty.Date: can't parse dates from boolean values")
 	case s[0] == '[' || s[0] == '{':
@@ -515,7 +561,7 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 	}
 
 	// should be a regular integer value.
-	if !cfg.FromNumbers.Allowed {
+	if cfg.FromNumbers.IsDisabled() {
 		return errors.New("dirty.Date: dates from numbers are not allowed")
 	}
 
@@ -536,16 +582,22 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.DateTime: UnmarshalJSON on nil pointer")
 	}
 
-	cfg := config.Global().Date
-	if !cfg.Allowed { // TODO: that's bad. do it better
-		cfg.FromNumbers.Allowed = false
-		cfg.FromStrings.Allowed = false
-		cfg.FromNull.Allowed = false
+	fullCfg := tmpGetConfig(context.Background())
+
+	if fullCfg.Date.IsDisabled() { // Dirty date decoding is disabled
+		var clean time.Time
+		if err := json.Unmarshal(data, &clean); err != nil {
+			return err
+		}
+
+		*v = DateTime(clean)
+		return nil
 	}
+	cfg := fullCfg.Date
 
 	// If the value is a quoted string.
 	if data[0] == '"' {
-		if !cfg.FromStrings.Allowed {
+		if cfg.FromStrings.IsDisabled() {
 			return errors.New("dirty.DateTime: string input not allowed")
 		}
 		if len(data) < 2 || data[len(data)-1] != '"' {
@@ -568,11 +620,11 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 
 	switch {
 	case s[0] == 'n': /* null  */
-		if cfg.FromNull.Allowed {
-			*v = DateTime(time.Time{}) // only zero time for now
-			return nil
+		if cfg.FromNull.IsDisabled() {
+			return errors.New("dirty.DateTime: dates from nulls are not allowed")
 		}
-		return errors.New("dirty.DateTime: dates from nulls are not allowed")
+		*v = DateTime(time.Time{}) // only zero time for now
+		return nil
 	case s[0] == 't' || s[0] == 'f':
 		return errors.New("dirty.DateTime: can't parse dates from boolean values")
 	case s[0] == '[' || s[0] == '{':
@@ -580,7 +632,7 @@ func (v *DateTime) UnmarshalJSON(data []byte) error {
 	}
 
 	// should be a regular integer value.
-	if !cfg.FromNumbers.Allowed {
+	if cfg.FromNumbers.IsDisabled() {
 		return errors.New("dirty.DateTime: dates from numbers are not allowed")
 	}
 
@@ -627,7 +679,7 @@ func (v *SmartScalar) UnmarshalJSON(data []byte) error {
 
 	// If the string is "true" or "false", interpret as bool.
 	if s == "true" || s == "false" {
-		v.scalar = (s == "true")
+		v.scalar = s == "true"
 		return nil
 	}
 

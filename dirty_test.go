@@ -79,15 +79,15 @@ func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
 	dirty.ConfigSetGlobal(func(cfg *dirty.Config) {
 		cfg.ResetToEmpty()
 		// only enable things we need here
-		cfg.FlexKeys.Allowed = true
+		cfg.FlexKeys.Disabled = false
 		cfg.FlexKeys.ChameleonCase = true
 		cfg.FlexKeys.CaseInsensitive = true
-		cfg.Number.Allowed = true
-		cfg.Number.FromStrings.Allowed = true
-		cfg.Bool.Allowed = true
-		cfg.Bool.FromStrings.Allowed = true
+		cfg.Number.Disabled = false
+		cfg.Number.FromStrings.Disabled = false
+		cfg.Bool.Disabled = false
+		cfg.Bool.FromStrings.Disabled = false
 		cfg.Bool.FromStrings.RespectFromNumbersLogic = true
-		cfg.Bool.FromNumbers.Allowed = true
+		cfg.Bool.FromNumbers.Disabled = false
 		cfg.Bool.FromNumbers.CustomParseFunc = config.BoolFromNumberBinary
 	})
 

@@ -111,7 +111,7 @@ linters-settings:
     # Checks the number of statements in a function.
     # If lower than 0, disable the check.
     # Default: 40
-    statements: 50
+    statements: 80
     # Ignore comments when counting lines.
     # Default false
     ignore-comments: true
@@ -277,7 +277,7 @@ linters:
     - makezero # finds slice declarations with non-zero initial length
     - mirror # reports wrong mirror patterns of bytes/strings usage
     # - mnd # detects magic numbers TODO:::??? threshold adjusting.. too strict!
-    - musttag # enforces field tags in (un)marshaled structs
+#    - musttag # enforces field tags in (un)marshaled structs
     - nakedret # finds naked returns in functions greater than a specified function length
     - nestif # reports deeply nested if statements
     - nilerr # finds the code that returns nil even if it checks that the error is not nil

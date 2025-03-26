@@ -113,7 +113,7 @@ func XTestSample1_Dirty_YellowChameleon(t *testing.T) {
 	// Maximum config: Default + FlexKeys
 	dirty.ConfigSetGlobal(func(cfg *dirty.Config) {
 		cfg.ResetToDefault()
-		cfg.FlexKeys.Allowed = true
+		cfg.FlexKeys.Disabled = false
 		cfg.FlexKeys.ChameleonCase = true
 		cfg.FlexKeys.CaseInsensitive = true
 	})

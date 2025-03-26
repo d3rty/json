@@ -127,7 +127,7 @@ func (dec *Decoder) decodeDirty(v Dirtyable) error {
 	container.init(scheme)
 	res := container.result()
 
-	if !config.Global().FlexKeys.Allowed {
+	if config.Global().FlexKeys.IsDisabled() {
 		if err := curDec.cleanDecode(res); err != nil && !errors.Is(err, io.EOF) {
 			return fmt.Errorf("dirty decode failed: %w", err)
 		}
@@ -234,12 +234,16 @@ func keyMatch(jsonKey, modelKey string, cfg *config.Config) bool {
 	if jsonKey == modelKey {
 		return true
 	}
+	if cfg.FlexKeys.IsDisabled() {
+		return false
+	}
+	cfgFlexKeys := cfg.FlexKeys
 
-	if !cfg.FlexKeys.Allowed || (!cfg.FlexKeys.CaseInsensitive && !cfg.FlexKeys.ChameleonCase) {
+	if !cfgFlexKeys.CaseInsensitive && !cfgFlexKeys.ChameleonCase {
 		return false
 	}
 
-	if cfg.FlexKeys.CaseInsensitive && !cfg.FlexKeys.ChameleonCase {
+	if cfgFlexKeys.CaseInsensitive && !cfgFlexKeys.ChameleonCase {
 		return strings.EqualFold(jsonKey, modelKey)
 	}
 

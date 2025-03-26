@@ -1,10 +1,9 @@
 # This file holds the default configuration for dirty unmarshalling.
+# Disabled = false
 
 [Bool]
 # Bool is the configuration for dirty.Bool.
-# Bool.Allowed allows booleans to be decoded in a dirty way.
-# When false, everything inside Bool.* is ignored.
-Allowed = true
+# Disabled = false
 
 # Bool.FallbackValue is the bool value result when unmarshalling fell into unhappy path.
 #
@@ -15,10 +14,7 @@ FallbackValue = false
 
 [Bool.FromStrings]
 # Bool.FromStrings holds the configuration for decoding booleans from strings.
-# Bool.FromStrings.Allowed allows boolean to be decoded from a string.
-# If no specific options given, it will only decode bools from "true" and "false" strings.
-# If Allowed = false, all other FromStrings.* fields are ignored.
-Allowed = true
+# Disabled = false
 
 # Bool.FromStrings.CustomListForTrue specifies list of string values that are considered true.
 CustomListForTrue = ["true", "yes", "on"]
@@ -40,9 +36,7 @@ RespectFromNumbersLogic = true
 
 [Bool.FromNumbers]
 # Bool.FromNumbers holds the configuration for decoding booleans from numbers.
-# Bool.FromNumbers.Allowed allows boolean to be decoded from a number.
-# If Allowed = false, all other FromNumbers.* fields are ignored.
-Allowed = true
+# Disabled = false
 
 # Bool.FromNumbers.CustomParseFunc specifies how to parse numbers to bool.
 # Available values: "binary", "positive_negative", "sign_of_one"
@@ -50,10 +44,7 @@ CustomParseFunc = "binary"
 
 [Bool.FromNull]
 # Bool.FromNull holds the configuration for decoding booleans from null.
-# Bool.FromNull.Allowed allows boolean to be decoded from null.
-# If no specific options given, it will only decode bools from "true" and "false" numbers.
-# If Allowed = false, all other FromNull.* fields are ignored.
-Allowed = true
+# Disabled = flase
 
 # Bool.FromNull.Inverse means inversing the FromNull logic.
 # If inverse:true, nulls will be considered `true` rather than `false` as by default.
@@ -62,15 +53,11 @@ Inverse = false
 
 [Number]
 # Number is the configuration for dirty.Number.
-# Number.Allowed allows numbers to be decoded in a dirty way.
-# When false, everything inside Number.* is ignored.
-Allowed = true
+# Disabled = false
 
 [Number.FromStrings]
 # Number.FromStrings holds the configuration for decoding numbers from strings.
-# Number.FromStrings.Allowed allows number to be decoded from a string.
-# If Allowed = false, all other FromStrings.* fields are ignored.
-Allowed = true
+# Disabled = false
 
 # Number.FromStrings.SpacingAllowed indicates whether the spacing should be trimmed
 # in the stringified numbers.
@@ -99,22 +86,16 @@ RoundingAlgorithm = "floor"
 
 [Number.FromBools]
 # Number.FromBools holds the configuration for decoding numbers from booleans.
-# Number.FromBools.Allowed allows number to be decoded from a Bool.
-# By default, true is decoded as 1.0/0.0 for Floats and 1/0 for Integers.
-Allowed = true
+# Disabled = false
 
 [Number.FromNull]
 # Number.FromNull holds the configuration for decoding numbers from null.
-# Number.FromNull.Allowed allows number to be decoded from a null.
-# It will decode number as zero.
-Allowed = true
+# Disabled = false
 
 
 [Date]
 # Date is the configuration for dirty.Date.
-# Date.Allowed allows dates to be decoded in a dirty way.
-# When false, everything inside Date.* is ignored.
-Allowed = true
+# Disabled = false
 
 [Date.Timezone]
 # Date.Timezone
@@ -128,9 +109,7 @@ ForceConvertingInto = false
 
 [Date.FromNumbers]
 # Date.FromNumbers holds the configuration for decoding dates from numbers.
-# Date.FromNumbers.Allowed allows date to be decoded from a Number.
-# By default, if enabled it will work as UnixTimestamp&UnixMilliTimestamp are both true
-Allowed = true
+# Disabled = false
 
 # Date.FromNumbers.UnixTimestamp enables decoding given number as a second Unix timestamp.
 UnixTimestamp = true
@@ -148,6 +127,19 @@ UnixMilliTimestamp = true
 # By default, true is decoded as 1.0/0.0 for Floats and 1/0 for Integers.
 Allowed = true
 
+# Date.FromStrings.Aliases for relative dates.
+Aliases = [
+    "today",
+    "yesterday",
+    "tomorrow",
+    "this-{week|month|year}",
+    "last-{week|month|year}",
+]
+
+# Date.FromStrings.RespectFromNumbersLogic allows to parse stringified number value
+# as a regular number value (corresponding to the FromNumbers config).
+RespectFromNumbersLogic = true
+
 [Date.FromStrings.Layouts]
 # Date.FromStrings.Layouts for different date/time formats.
 # Date.FromStrings.Layout.Time specific the time-only layouts (e.g. time.TimeOnly)
@@ -158,35 +150,21 @@ Date = ["2006-01-02"]
 
 # Date.FromStrings.DateTime specify the date (generic) layouts (e.g. time.DateTime, RFC3339)
 DateTime = [
-  "2006-01-02T15:04:05",
-  "15:04:05",
-  "2006-01-02T15:04:05Z07:00",
-  "2006-01-02T15:04:05.999999999Z07:00"
+    "2006-01-02T15:04:05",
+    "15:04:05",
+    "2006-01-02T15:04:05Z07:00",
+    "2006-01-02T15:04:05.999999999Z07:00",
 ]
 
-# Date.FromStrings.Aliases for relative dates.
-Aliases = [
-  "today", "yesterday", "tomorrow",
-  "this-{week|month|year}",
-  "last-{week|month|year}"
-]
-
-# Date.FromStrings.RespectFromNumbersLogic allows to parse stringified number value
-# as a regular number value (corresponding to the FromNumbers config).
-RespectFromNumbersLogic = true
 
 [Date.FromNull]
 # Date.FromNull holds the configuration for decoding dates from null.
-# Date.FromNull.Allowed allows datetime to be decoded from a null.
-# By default, it will decode datetime as zero time.
-Allowed = true
+# Disabled = false
 
 
 [FlexKeys]
 # FlexKeys is the configuration for JSON keys flexibility.
-# FlexKeys.Allowed allows keys to be flexible.
-# If false, the whole FlexKeys.* configuration is ignored.
-Allowed = false
+Disabled = true
 
 # FlexKeys.CaseInsensitive specifies whether keys are allowed to be case-insensitive.
 # Note: can cause a Yellow/Red result when a struct meets multiple keys that are considered the same.

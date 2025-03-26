@@ -2,10 +2,11 @@ package config
 
 import (
 	"embed"
+	"fmt"
 	"io/fs"
 
+	"github.com/BurntSushi/toml"
 	"github.com/d3rty/json/internal/option"
-	"github.com/pelletier/go-toml/v2"
 )
 
 //go:embed default.toml
@@ -17,77 +18,127 @@ var embeddedConfig embed.FS
 // TODO: allow read single json into array (so just first item is filled)
 // and probably opposite (showing in red how much data was lost, but first was set)
 
+// Section is a config section (toml table).
+// Section is considered disabled if Disabled=true or full its parent is nil (see cfg.Init()).
+type Section struct {
+	Disabled bool `toml:"Disabled"`
+}
+
+func (s Section) IsDisabled() bool { return s.Disabled }
+
 // Config holds global settings for dirty unmarshalling.
 type Config struct {
-	Bool struct {
-		Allowed bool
+	Section
 
-		FallbackValue option.Bool
+	Bool     *BoolConfig     `toml:"Bool"`
+	Number   *NumberConfig   `toml:"Number"`
+	Date     *DateConfig     `toml:"Date"`
+	FlexKeys *FlexKeysConfig `toml:"FlexKeys"`
+}
 
-		FromStrings struct {
-			Allowed                 bool
-			CustomListForTrue       []string
-			CustomListForFalse      []string
-			CaseInsensitive         bool
-			FalseForEmptyString     bool
-			RespectFromNumbersLogic bool
-		}
-		FromNumbers struct {
-			Allowed         bool
-			CustomParseFunc BoolFromNumberAlg
-		}
-		FromNull struct {
-			Allowed bool
-			Inverse bool
-		}
+type BoolConfig struct {
+	Section
+
+	FallbackValue option.Bool `toml:"FallbackValue"`
+
+	FromStrings *BoolFromStringsConfig `toml:"FromStrings"`
+	FromNumbers *BoolFromNumbersConfig `toml:"FromNumbers"`
+	FromNull    *BoolFromNullConfig    `toml:"FromNull"`
+}
+
+type (
+	BoolFromStringsConfig struct {
+		Section
+
+		CustomListForTrue       []string `toml:"CustomListForTrue"`
+		CustomListForFalse      []string `toml:"CustomListForFalse"`
+		CaseInsensitive         bool     `toml:"CaseInsensitive"`
+		FalseForEmptyString     bool     `toml:"FalseForEmptyString"`
+		RespectFromNumbersLogic bool     `toml:"RespectFromNumbersLogic"`
 	}
-	Number struct {
-		Allowed     bool
-		FromStrings struct {
-			Allowed                 bool
-			SpacingAllowed          bool
-			ExponentNotationAllowed bool
-			CommasAllowed           bool
-			RoundingAlgorithm       RoundingAlg
-		}
-		FromBools struct {
-			Allowed bool
-		}
-		FromNull struct {
-			Allowed bool
-		}
+
+	BoolFromNumbersConfig struct {
+		Section
+
+		CustomParseFunc BoolFromNumberAlg `toml:"CustomParseFunc"`
 	}
-	Date struct {
-		Allowed  bool
-		Timezone struct {
-			Default             string
-			Fields              []string
-			ForceConvertingInto bool
-		}
-		FromNumbers struct {
-			Allowed            bool
-			UnixTimestamp      bool
-			UnixMilliTimestamp bool
-		}
-		FromStrings struct {
-			Allowed bool
-			Layouts struct {
-				Time     []string
-				Date     []string
-				DateTime []string
-			}
-			Aliases                 []string
-			RespectFromNumbersLogic bool
-		}
-		FromNull struct {
-			Allowed bool
-		}
+
+	BoolFromNullConfig struct {
+		Section
+
+		Inverse bool `toml:"Inverse"`
 	}
-	FlexKeys struct {
-		Allowed         bool
-		CaseInsensitive bool
-		ChameleonCase   bool
+)
+
+type NumberConfig struct {
+	Section
+
+	FromStrings *NumberFromStringsConfig `toml:"FromStrings"`
+	FromBools   *NumberFromBoolsConfig   `toml:"FromBools"`
+	FromNull    *NumberFromNullConfig    `toml:"FromNull"`
+}
+
+type (
+	NumberFromStringsConfig struct {
+		Section
+
+		SpacingAllowed          bool        `toml:"SpacingAllowed"`
+		ExponentNotationAllowed bool        `toml:"ExponentNotationAllowed"`
+		CommasAllowed           bool        `toml:"CommasAllowed"`
+		RoundingAlgorithm       RoundingAlg `toml:"RoundingAlgorithm"`
 	}
+	NumberFromBoolsConfig struct {
+		Section
+	}
+	NumberFromNullConfig struct {
+		Section
+	}
+)
+
+type DateConfig struct {
+	Section
+
+	Timezone    *DateTimezoneConfig    `toml:"Timezone"`
+	FromNumbers *DateFromNumbersConfig `toml:"FromNumbers"`
+	FromStrings *DateFromStringsConfig `toml:"FromStrings"`
+	FromNull    *DateFromNullConfig    `toml:"FromNull"`
+}
+
+type (
+	DateTimezoneConfig struct {
+		Section
+
+		Default             string   `toml:"Default"`
+		Fields              []string `toml:"Fields"`
+		ForceConvertingInto bool     `toml:"ForceConvertingInto"`
+	}
+	DateFromNumbersConfig struct {
+		Section
+
+		UnixTimestamp      bool `toml:"UnixTimestamp"`
+		UnixMilliTimestamp bool `toml:"UnixMilliTimestamp"`
+	}
+	DateFromStringsConfig struct {
+		Section
+
+		Layouts struct {
+			Time     []string `toml:"Time"`
+			Date     []string `toml:"Date"`
+			DateTime []string `toml:"DateTime"`
+		}
+		Aliases                 []string `toml:"Aliases"`
+		RespectFromNumbersLogic bool     `toml:"RespectFromNumbersLogic"`
+	}
+	DateFromNullConfig struct {
+		Section
+	}
+)
+
+type FlexKeysConfig struct {
+	Section
+
+	CaseInsensitive bool `toml:"CaseInsensitive"`
+	ChameleonCase   bool `toml:"ChameleonCase"`
 }
 
 // FromBytes read config from given raw []byte.
@@ -102,51 +153,46 @@ func FromBytes(data []byte) *Config {
 // String shows string represenatation of the config. It used primarily for debug purposes or verbose mode
 // We use `toml` representation here.
 func (cfg *Config) String() string {
-	j, _ := toml.Marshal(cfg)
+	j, err := toml.Marshal(cfg)
+	if err != nil {
+		return fmt.Sprintf("<<invalid config>>\n%s", err)
+	}
+
 	return string(j)
 }
 
-// TODO precache in variable.
+// Init sets default for all the config fields.
+// If a subconfig is nil, it automatically changes it to empty config with Disabled=true.
+func (cfg *Config) Init() { setDefaults(cfg) }
+
+// defaultConfigs returns a copy of the default config.
 func defaultConfig() *Config {
 	data, err := fs.ReadFile(embeddedConfig, "default.toml")
 	if err != nil {
 		panic("failed to read embedded default config " + err.Error())
 	}
 
+	// TODO precache in variable.
+
 	var cfg Config
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		panic("failed to unmarshal default.toml config: " + err.Error())
 	}
 
+	cfg.Init()
+
 	return &cfg
 }
 
-// cleanConfig returns config that disables all dirty options
-// unmarshalling with clean config behaves the same as clean starndard unmarshalling.
-func cleanConfig() *Config {
+// newConfig returns a new (empty/clean) config that disables all dirty options.
+// dirty unmarshalling with an empty config behaves the same as starndard unmarshalling.
+func newConfig() *Config {
 	var cfg Config
 	return &cfg
 }
 
 // ResetToEmpty resets config to its clean state (clean config).
-func (cfg *Config) ResetToEmpty() { *cfg = *cleanConfig() }
+func (cfg *Config) ResetToEmpty() { *cfg = *newConfig() }
 
 // ResetToDefault resets config to the default state.
 func (cfg *Config) ResetToDefault() { *cfg = *defaultConfig() }
-
-// clone via toml round-trip. It's a simple (but not the most efficient) way to clone the config.
-// Config is safe for marshalling (that's by design): It will never contain functions, etc.
-// We can live with this solution until we need increase performance.
-// TODO: remove panics for live prod code.
-func clone(cfg *Config) *Config {
-	contents, err := toml.Marshal(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	var clone Config
-	if err := toml.Unmarshal(contents, &clone); err != nil {
-		panic(err)
-	}
-	return &clone
-}

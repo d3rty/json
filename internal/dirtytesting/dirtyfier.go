@@ -91,7 +91,7 @@ func (d *Dirtyfier) Dirtify(val any) any {
 
 // makeDirtyKey makes a dirty key from given clean key.
 func (d *Dirtyfier) makeDirtyKey(key string) string {
-	if !d.cfg.FlexKeys.Allowed || !d.cfg.FlexKeys.CaseInsensitive && !d.cfg.FlexKeys.ChameleonCase {
+	if d.cfg.FlexKeys.IsDisabled() || !d.cfg.FlexKeys.CaseInsensitive && !d.cfg.FlexKeys.ChameleonCase {
 		return key
 	}
 	if d.keepItClean() {
@@ -147,10 +147,8 @@ func (d *Dirtyfier) makeDirtyKey(key string) string {
 }
 
 // makeDirtyBool makes a dirty bool from given clean bool.
-//
-//nolint:funlen // it's ok
 func (d *Dirtyfier) makeDirtyBool(v bool) any {
-	if !d.cfg.Bool.Allowed || d.keepItClean() {
+	if d.cfg.Bool.IsDisabled() || d.keepItClean() {
 		return v
 	}
 
@@ -160,10 +158,10 @@ func (d *Dirtyfier) makeDirtyBool(v bool) any {
 	// FromNull is handled separately, as it's considered additional setting
 	// to FromStrings and/or FromNumbers.
 	var flows []string
-	if cfg.FromStrings.Allowed {
+	if !cfg.FromStrings.IsDisabled() {
 		flows = append(flows, "string")
 	}
-	if cfg.FromNumbers.Allowed {
+	if !cfg.FromNumbers.IsDisabled() {
 		flows = append(flows, "number")
 	}
 	// If no conversion is allowed, return the clean boolean.
@@ -251,7 +249,7 @@ func (d *Dirtyfier) makeDirtyBool(v bool) any {
 
 // makeDirtyNumber makes a dirty number from given clean number.
 func (d *Dirtyfier) makeDirtyNumber(v float64) any {
-	if !d.cfg.Number.Allowed || d.keepItClean() {
+	if d.cfg.Number.IsDisabled() || d.keepItClean() {
 		return v
 	}
 
@@ -261,10 +259,10 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 	// FromNull is handled separately, as it's considered additional setting
 	// to FromStrings and/or FromNumbers.
 	var flows []string
-	if cfg.FromStrings.Allowed {
+	if !cfg.FromStrings.IsDisabled() {
 		flows = append(flows, "string")
 	}
-	if cfg.FromBools.Allowed {
+	if !cfg.FromBools.IsDisabled() {
 		flows = append(flows, "bool")
 	}
 
@@ -305,7 +303,7 @@ func (d *Dirtyfier) makeDirtyNumber(v float64) any {
 
 // maybeBoolNilify makes a nil instead of bool respecting the Bool.FromNull config.
 func (d *Dirtyfier) maybeBoolNilify(v bool, actual any) any {
-	if !d.cfg.Bool.FromNull.Allowed || d.keepItClean() {
+	if d.cfg.Bool.FromNull.IsDisabled() || d.keepItClean() {
 		return actual
 	}
 
@@ -323,7 +321,7 @@ func (d *Dirtyfier) maybeBoolNilify(v bool, actual any) any {
 
 // maybeNumberNilify makes a nil instead of number respecting the Number.FromNull config.
 func (d *Dirtyfier) maybeNumberNilify(v float64, actual any) any {
-	if !d.cfg.Bool.FromNull.Allowed || d.keepItClean() {
+	if d.cfg.Bool.FromNull.IsDisabled() || d.keepItClean() {
 		return actual
 	}
 
