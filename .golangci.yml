@@ -268,7 +268,6 @@ linters:
     - forbidigo # forbids identifiers
     - funlen # tool for detection of long functions
     - gocheckcompilerdirectives # validates go compiler directive comments (//go:)
-    - gochecknoglobals # checks that no global variables exist
     - gochecknoinits # checks that no init functions are present in Go code
     - gochecksumtype # checks exhaustiveness on Go "sum types"
     - goconst # finds repeated strings that could be replaced by a constant
@@ -284,8 +283,6 @@ linters:
     - loggercheck # checks key value pairs for common logger libraries (kitlog,klog,logr,zap)
     - makezero # finds slice declarations with non-zero initial length
     - mirror # reports wrong mirror patterns of bytes/strings usage
-    # - mnd # detects magic numbers TODO:::??? threshold adjusting.. too strict!
-    #    - musttag # enforces field tags in (un)marshaled structs
     - nakedret # finds naked returns in functions greater than a specified function length
     - nestif # reports deeply nested if statements
     - nilerr # finds the code that returns nil even if it checks that the error is not nil
@@ -322,6 +319,11 @@ linters:
     # - gocyclo # computes and checks the cyclomatic complexity of functions
     # - gocognit # computes and checks the cognitive complexity of functions
     # - cyclop # checks function and package cyclomatic complexity
+
+    ## disabled because of annoyed or too strict:
+    # - gochecknoglobals # checks that no global variables exist
+    # - mnd # detects magic numbers
+    # - musttag # enforces field tags in (un)marshaled structs
 
     ## you may want to enable
     #- decorder # checks declaration order and count of types, constants, variables and functions

@@ -163,7 +163,10 @@ func (cfg *Config) String() string {
 
 // Init sets default for all the config fields.
 // If a subconfig is nil, it automatically changes it to empty config with Disabled=true.
-func (cfg *Config) Init() { setDefaults(cfg) }
+func (cfg *Config) Init() *Config {
+	setDefaults(cfg)
+	return cfg
+}
 
 // defaultConfigs returns a copy of the default config.
 func defaultConfig() *Config {
@@ -187,8 +190,7 @@ func defaultConfig() *Config {
 // newConfig returns a new (empty/clean) config that disables all dirty options.
 // dirty unmarshalling with an empty config behaves the same as starndard unmarshalling.
 func newConfig() *Config {
-	var cfg Config
-	return &cfg
+	return (&Config{}).Init()
 }
 
 // ResetToEmpty resets config to its clean state (clean config).

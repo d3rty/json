@@ -1,29 +1,32 @@
 package config_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/d3rty/json/internal/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 // Example section struct implementidng the disabler interface.
-type MySection struct {
-	Disabled bool
-}
+
 type SectionFoo struct {
-	MySection
+	config.Section
 
 	Foo string
 }
 type SectionBar struct {
-	MySection
+	config.Section
 
 	Bar string
+	Baz *SectionBarBaz
 }
 
-func (s *MySection) IsDisabled() bool {
-	return s.Disabled
+type SectionBarBaz struct {
+	config.Section
+
+	BarBaz string
 }
 
 type TestConfig struct {
@@ -40,4 +43,21 @@ func TestSetDefaults(t *testing.T) {
 	assert.NotNil(t, cfg.Bar)
 	assert.True(t, cfg.Foo.IsDisabled())
 	assert.True(t, cfg.Bar.IsDisabled())
+	assert.True(t, cfg.Bar.Baz.IsDisabled())
+}
+
+func TestClone(t *testing.T) {
+	// Create an original config
+	cfg := config.Global()
+
+	// Clone the original config
+	cloned := config.Clone(cfg)
+
+	// in JSON representaiton they now must be the same as well
+	origBytes, err := json.Marshal(cfg)
+	require.NoError(t, err)
+	clonedBytes, err := json.Marshal(cloned)
+	require.NoError(t, err)
+
+	assert.Equal(t, string(origBytes), string(clonedBytes))
 }

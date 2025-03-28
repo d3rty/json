@@ -34,6 +34,9 @@ type disabler interface {
 	IsDisabled() bool
 }
 
+// disablerType is the reflect.Type of the disabler interface.
+var disablerType = reflect.TypeFor[disabler]()
+
 // setDefaults sets default values for all fields of the given struct.
 // By "Default Values" here we mean consistent state of "Disabled" field
 // So if a section (TOML Table) is not presented, it will be changed to an empty table with Disabled=true
@@ -72,10 +75,8 @@ func setDefaults(v any) {
 			continue
 		}
 
-		disablerType := reflect.TypeOf((*disabler)(nil)).Elem()
 		if fieldType.Type.Implements(disablerType) || fieldType.Type.Elem().Implements(disablerType) {
 			newInstance := reflect.New(fieldType.Type.Elem())
-
 			csField := newInstance.Elem().FieldByName(fieldNameSection)
 			if csField.IsValid() && csField.CanSet() && csField.Kind() == reflect.Struct {
 				disabledField := csField.FieldByName(fieldNameDisabled)
@@ -84,6 +85,7 @@ func setDefaults(v any) {
 				}
 			}
 			field.Set(newInstance)
+			setDefaults(newInstance.Interface())
 		}
 	}
 }
