@@ -147,7 +147,7 @@ func FromBytes(data []byte) *Config {
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil
 	}
-	return &cfg
+	return (&cfg).Init()
 }
 
 // String shows string represenatation of the config. It used primarily for debug purposes or verbose mode
@@ -198,3 +198,6 @@ func (cfg *Config) ResetToEmpty() { *cfg = *newConfig() }
 
 // ResetToDefault resets config to the default state.
 func (cfg *Config) ResetToDefault() { *cfg = *defaultConfig() }
+
+// New creates a new and empty config
+func New() *Config { return newConfig() }

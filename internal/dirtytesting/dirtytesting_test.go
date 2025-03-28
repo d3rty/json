@@ -12,9 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TODO: make a real test (at least smoke) with its own data, but not with testmodels.
-// WIP: now we go, and we can debug things
-func XTestGenerateDirtyJSON(t *testing.T) {
+func TestGenerateDirtyJSON(t *testing.T) {
 	cleanJSONPath := "../../tests/testdata/1.clean.json"
 	cleanContents, err := os.ReadFile(cleanJSONPath)
 	require.NoError(t, err)

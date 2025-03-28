@@ -9,7 +9,7 @@ import (
 // Option represents a key/value pair in the options array.
 type Option struct {
 	Key   string `json:"key"`
-	Value any    `json:"value"`
+	Value string `json:"value"`
 }
 
 type Options []Option
@@ -61,8 +61,8 @@ func (i Item) Dirty() any {
 			Info        struct {
 				Rating  dirty.Number `json:"rating"`
 				Options []struct {
-					Key   string            `json:"key"`
-					Value dirty.SmartScalar `json:"value"`
+					Key   string `json:"key"`
+					Value string `json:"value"` // TODO: change to scalar
 				} `json:"options"`
 			} `json:"info"`
 		} `json:"details"`

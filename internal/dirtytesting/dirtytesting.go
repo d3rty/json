@@ -14,17 +14,16 @@ import (
 func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 	coin := flipping.MaybeNewCoin(coinArg...)
 
-	cfg := new(config.Config)
+	cfg := config.New()
 
 	// --- Bool Configuration ---
 	// Randomly decide if dirty bool is allowed.
-	cfg.Bool.Disabled = coin.Flip()
-	if cfg.Bool.Disabled {
+	if cfg.Bool.Disabled = coin.Flip(); !cfg.Bool.Disabled {
+
 		cfg.Bool.FallbackValue = option.Some(coin.Flip())
 
-		// FromStrings
-		cfg.Bool.FromStrings.Disabled = coin.Flip()
-		if cfg.Bool.FromStrings.Disabled {
+		// Bool.FromStrings
+		if cfg.Bool.FromStrings.Disabled = coin.Flip(); cfg.Bool.FromStrings.Disabled {
 			dictMinSize, dictMaxSize := 3, 6
 			// Generate a random preset for "true" values (between 3 and 6 values)
 			cfg.Bool.FromStrings.CustomListForTrue = generateRandomPreset(dictTrues, dictMinSize, dictMaxSize, coin)
@@ -35,9 +34,8 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 			// Fallback value as a random boolean.
 		}
 
-		// FromNumbers
-		cfg.Bool.FromNumbers.Disabled = coin.Flip()
-		if cfg.Bool.FromNumbers.Disabled {
+		// Bool.FromNumbers
+		if cfg.Bool.FromNumbers.Disabled = coin.Flip(); !cfg.Bool.FromNumbers.Disabled {
 			cfg.Bool.FromNumbers.CustomParseFunc = flipping.FeelingLucky(
 				config.ListAvailableBoolFromNumberAlgs(),
 				coin,
@@ -45,18 +43,15 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 		}
 
 		// FromNull
-		cfg.Bool.FromNull.Disabled = coin.Flip()
-		if cfg.Bool.FromNull.Disabled {
+		if cfg.Bool.FromNull.Disabled = coin.Flip(); cfg.Bool.FromNull.Disabled {
 			cfg.Bool.FromNull.Inverse = coin.Flip()
 		}
 	}
 
 	// --- Number Configuration ---
-	cfg.Number.Disabled = coin.Flip()
-	if cfg.Number.Disabled {
+	if cfg.Number.Disabled = coin.Flip(); !cfg.Number.Disabled {
 		// FromStrings
-		cfg.Number.FromStrings.Disabled = coin.Flip()
-		if cfg.Number.FromStrings.Disabled {
+		if cfg.Number.FromStrings.Disabled = coin.Flip(); !cfg.Number.FromStrings.Disabled {
 			cfg.Number.FromStrings.SpacingAllowed = coin.Flip()
 			cfg.Number.FromStrings.ExponentNotationAllowed = coin.Flip()
 			cfg.Number.FromStrings.CommasAllowed = coin.Flip()
@@ -75,8 +70,7 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 	}
 
 	// --- FlexKeys Configuration ---
-	cfg.FlexKeys.Disabled = coin.Flip()
-	if cfg.FlexKeys.Disabled {
+	if cfg.FlexKeys.Disabled = coin.Flip(); !cfg.FlexKeys.Disabled {
 		cfg.FlexKeys.CaseInsensitive = coin.Flip()
 		cfg.FlexKeys.ChameleonCase = coin.Flip()
 	}
@@ -124,7 +118,7 @@ func Dirtify[T any](cleanJSON []byte, dcfg *DirtifyCfg, opts ...Opt) ([]byte, er
 		return nil, fmt.Errorf("failed to unmarshal clean JSON: %w", err)
 	}
 
-	dirtyModel := NewDirtyfier(dcfg.ratio, dcfg.cfg, dcfg.coin).Dirtify(
+	dirtyModel := NewDirtifier(dcfg.ratio, dcfg.cfg, dcfg.coin).Make(
 		StructToMap(cleanModel),
 	)
 
