@@ -11,37 +11,35 @@ type boolFromNum = func(i float64) option.Bool
 // We're OK without mutex for now.
 //
 //nolint:gochecknoglobals // we're ok with it as well
-var parsersBoolFromNum map[config.BoolFromNumberAlg]boolFromNum
+var (
+	parsersBoolFromNum = map[config.BoolFromNumberAlg]boolFromNum{
 
-//nolint:gochecknoinits // todo decide if we need this linter?
-func init() {
-	parsersBoolFromNum = make(map[config.BoolFromNumberAlg]boolFromNum)
+		config.BoolFromNumberBinary: func(i float64) option.Bool {
+			if i == 0 {
+				return option.False()
+			} else if i == 1 {
+				return option.True()
+			}
 
-	parsersBoolFromNum[config.BoolFromNumberBinary] = func(i float64) option.Bool {
-		if i == 0 {
-			return option.False()
-		} else if i == 1 {
+			return option.NoneBool()
+		},
+
+		config.BoolFromNumberPositiveNegative: func(i float64) option.Bool {
+			if i <= 0 {
+				return option.False()
+			}
+
 			return option.True()
-		}
+		},
 
-		return option.NoneBool()
+		config.BoolFromNumberSignOfOne: func(i float64) option.Bool {
+			if i == -1 {
+				return option.False()
+			} else if i == 1 {
+				return option.True()
+			}
+
+			return option.NoneBool()
+		},
 	}
-
-	parsersBoolFromNum[config.BoolFromNumberPositiveNegative] = func(i float64) option.Bool {
-		if i <= 0 {
-			return option.False()
-		}
-
-		return option.True()
-	}
-
-	parsersBoolFromNum[config.BoolFromNumberSignOfOne] = func(i float64) option.Bool {
-		if i == -1 {
-			return option.False()
-		} else if i == 1 {
-			return option.True()
-		}
-
-		return option.NoneBool()
-	}
-}
+)
