@@ -41,5 +41,7 @@ var (
 
 			return option.NoneBool()
 		},
+
+		config.BoolFromNumberUndefined: nil,
 	}
 )

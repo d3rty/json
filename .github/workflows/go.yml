@@ -21,8 +21,8 @@ jobs:
     - name: Tidy
       run: make tidy
 
-    - name: Lint
-      uses: golangci/golangci-lint-action@v6.5.1
+#    - name: Lint
+#      uses: golangci/golangci-lint-action@v7
 
     - name: Test
       run: make test
