@@ -5,17 +5,12 @@ import (
 )
 
 // globalConfig is the package-level variable storing the config.
+//
+//nolint:gochecknoglobals // it's an OK case for global variable
 var (
-	//nolint:gochecknoglobals // decide if we need this linter?
-	globalConfig *Config
-	//nolint:gochecknoglobals // decide if we need this linter?
-	mu sync.RWMutex
-)
-
-//nolint:gochecknoinits // decide if we need this linter?
-func init() {
 	globalConfig = defaultConfig()
-}
+	mu           sync.RWMutex
+)
 
 // Global returns a copy of the global configuration.
 // Returned copy is a clone. It's modifying doesn't affect the original config.

@@ -65,7 +65,7 @@ func NoneBool() Option[bool] { return None[bool]() }
 
 // MarshalJSON implements the json.Marshaler interface.
 // If the Option is None, it marshals to JSON null; otherwise, it marshals to the contained value.
-func (o *Option[T]) MarshalJSON() ([]byte, error) {
+func (o Option[T]) MarshalJSON() ([]byte, error) {
 	if !o.ok {
 		return []byte("null"), nil
 	}
@@ -90,7 +90,7 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalTOML returns the underlying value if it exists, or nil otherwise.
-func (o *Option[T]) MarshalTOML() ([]byte, error) {
+func (o Option[T]) MarshalTOML() ([]byte, error) {
 	if o.ok {
 		return json.Marshal(o.value)
 	}

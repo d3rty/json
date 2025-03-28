@@ -34,7 +34,10 @@ type disabler interface {
 	IsDisabled() bool
 }
 
-//nolint:nestif // such functions are ok to be deep
+// setDefaults sets default values for all fields of the given struct.
+// By "Default Values" here we mean consistent state of "Disabled" field
+// So if a section (TOML Table) is not presented, it will be changed to an empty table with Disabled=true
+// So, the IsDisabled() call is possible and returns true.
 func setDefaults(v any) {
 	if v == nil {
 		return
@@ -53,30 +56,34 @@ func setDefaults(v any) {
 		field := rv.Field(i)
 		fieldType := rt.Field(i)
 
-		if field.Kind() == reflect.Ptr && field.IsNil() {
-			if fieldType.Type.Elem().Kind() == reflect.Struct {
-				disablerType := reflect.TypeOf((*disabler)(nil)).Elem()
-				if fieldType.Type.Implements(disablerType) || fieldType.Type.Elem().Implements(disablerType) {
-					newInstance := reflect.New(fieldType.Type.Elem())
-
-					csField := newInstance.Elem().FieldByName(fieldNameSection)
-					if csField.IsValid() && csField.CanSet() && csField.Kind() == reflect.Struct {
-						disabledField := csField.FieldByName(fieldNameDisabled)
-						if disabledField.IsValid() && disabledField.CanSet() && disabledField.Kind() == reflect.Bool {
-							disabledField.SetBool(true)
-						}
-					}
-					field.Set(newInstance)
-				}
-			}
-		}
-
 		if field.Kind() == reflect.Struct {
 			setDefaults(field.Addr().Interface())
+			continue
+		}
+		if field.Kind() != reflect.Ptr {
+			continue
+		}
+		if field.Type().Elem().Kind() != reflect.Struct {
+			continue
 		}
 
-		if field.Kind() == reflect.Ptr && !field.IsNil() && field.Elem().Kind() == reflect.Struct {
+		if !field.IsNil() {
 			setDefaults(field.Interface())
+			continue
+		}
+
+		disablerType := reflect.TypeOf((*disabler)(nil)).Elem()
+		if fieldType.Type.Implements(disablerType) || fieldType.Type.Elem().Implements(disablerType) {
+			newInstance := reflect.New(fieldType.Type.Elem())
+
+			csField := newInstance.Elem().FieldByName(fieldNameSection)
+			if csField.IsValid() && csField.CanSet() && csField.Kind() == reflect.Struct {
+				disabledField := csField.FieldByName(fieldNameDisabled)
+				if disabledField.IsValid() && disabledField.CanSet() && disabledField.Kind() == reflect.Bool {
+					disabledField.SetBool(true)
+				}
+			}
+			field.Set(newInstance)
 		}
 	}
 }

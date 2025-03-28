@@ -90,8 +90,8 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 	)
 }
 
-//nolint:revive,stylecheck // we're OK as it's the way to disable the test
-func XTestSample1_Dirty_YellowChameleon(t *testing.T) {
+func TestSample1_Dirty_YellowChameleon(t *testing.T) {
+	t.Skip("TODO fix the test")
 	contents := ReadSampleFile(t, "1.dirty-yellow.keys")
 
 	// std should fail as types don't match
