@@ -1,0 +1,183 @@
+# This file holds the default configuration for dirty unmarshalling.
+# Disabled = false
+
+[Bool]
+# Bool is the configuration for dirty.Bool.
+# Disabled = false
+
+# Bool.FallbackValue is the bool value result when unmarshalling fell into unhappy path.
+#
+# FallbackValue = false/true will be converted to option.Some(false/true)
+# FallbackValue = null will be converted into option.None() - may cause a red result when unmarshalled.
+# This value can be overridden for specific FromStrings/FromNumbers/FromNull subconfigs.
+FallbackValue = false
+
+[Bool.FromStrings]
+# Bool.FromStrings holds the configuration for decoding booleans from strings.
+# Disabled = false
+
+# Bool.FromStrings.CustomListForTrue specifies list of string values that are considered true.
+CustomListForTrue = ["true", "yes", "on"]
+
+# Bool.FromStrings.CustomListForFalse specifies list of string values that are considered false.
+CustomListForFalse = ["false", "no", "off", ""]
+
+# Bool.FromStrings.CaseInsensitive specifies where the strings from CustomListForTrue/CustomListForFalse
+# are considered to be case-insensitive. E.g. `True` is treated the same as `true`
+CaseInsensitive = true
+
+# Bool.FromStrings.RespectFromNumbersLogic allows to parse stringified number value
+# as a regular number value (corresponding to the FromNumbers config).
+RespectFromNumbersLogic = true
+
+[Bool.FromNumbers]
+# Bool.FromNumbers holds the configuration for decoding booleans from numbers.
+# Disabled = false
+
+# Bool.FromNumbers.CustomParseFunc specifies how to parse numbers to bool.
+# Available values: "binary", "positive_negative", "sign_of_one"
+CustomParseFunc = "binary"
+
+[Bool.FromNull]
+# Bool.FromNull holds the configuration for decoding booleans from null.
+# Disabled = flase
+
+# Bool.FromNull.Inverse means inversing the FromNull logic.
+# If inverse:true, nulls will be considered `true` rather than `false` as by default.
+Inverse = false
+
+
+[Number]
+# Number is the configuration for dirty.Number.
+# Disabled = false
+
+[Number.FromStrings]
+# Number.FromStrings holds the configuration for decoding numbers from strings.
+# Disabled = false
+
+# Number.FromStrings.SpacingAllowed indicates whether the spacing should be trimmed
+# in the stringified numbers.
+#
+# Example: "1 000 000" is considered as a valid 1000000 in this case.
+SpacingAllowed = true
+
+# Number.FromStrings.ExponentNotationAllowed specifies whether numeric values with exponent
+# should be accepted.
+#
+# Example: "1e6" is considered as a valid 1000000 in this case.
+ExponentNotationAllowed = true
+
+# Number.FromStrings.CommasAllowed indicates whether numeric values with comma should be accepted.
+#
+# Example: "1,000,000" is considered as a valid 1000000 in this case.
+CommasAllowed = true
+
+# Number.FromStrings.RoundingAlgorithm specifies how integers can be Parsed from Floats.
+#
+# Available values:
+#  "none"  - allows only float value with zero decimal part to be parsed as integers.
+#  "floor" - math.Floor: decimal part is removed
+#  "round" - math.Round: rounding to closest integer value.
+RoundingAlgorithm = "floor"
+
+[Number.FromBools]
+# Number.FromBools holds the configuration for decoding numbers from booleans.
+# Disabled = false
+
+[Number.FromNull]
+# Number.FromNull holds the configuration for decoding numbers from null.
+# Disabled = false
+
+
+[Date]
+# Date is the configuration for dirty.Date.
+# Disabled = false
+
+[Date.Timezone]
+# Date.Timezone
+#
+# We can specify the name of field where timezone is set e.g. `"timezone", "tz"`
+# We can manually specify timezone which should convert all parsed time
+Default = "UTC"
+Fields = ["timezone", "tz"]
+ForceConvertingInto = false
+
+[Date.FromNumbers]
+# Date.FromNumbers holds the configuration for decoding dates from numbers.
+Disabled = false
+
+# Date.FromNumbers.UnixTimestamp enables decoding given number as a second Unix timestamp.
+UnixTimestamp = true
+
+# Date.FromNumbers.UnixMilliTimestamp enables decoding given number as a millisecond Unix timestamp.
+#
+# Note: when both UnixTimestamp and UnixMilliTimestamp are enabled
+# we can't guarantee 100% distinguishing between them. It will work for reasonable amount of time-range
+# within our modern time.
+UnixMilliTimestamp = true
+
+[Date.FromStrings]
+# Date.FromStrings holds the configuration for decoding dates from strings.
+# Date.FromStrings.Allowed allows date to be decoded from a String.
+# By default, true is decoded as 1.0/0.0 for Floats and 1/0 for Integers.
+Allowed = true
+
+# Date.FromStrings.Aliases enables parsing years.Aliases
+# e.g. `today`, `yesterday`, `tomorrow`, etc
+# TODO(possible-feature): use `amberpixels/years` option `WithCustomAliases()`
+Aliases = true
+
+# Date.FromStrings.RespectFromNumbersLogic allows to parse stringified number value
+# as a regular number value (corresponding to the FromNumbers config).
+RespectFromNumbersLogic = true
+
+[Date.FromStrings.Layouts]
+# Date.FromStrings.Layouts for different date/time formats.
+# Date.FromStrings.Layout.Time specific the time-only layouts (e.g. time.TimeOnly)
+Time = ["3:04PM", "15:04", "15:04:05"]
+
+# Date.FromStrings.Layouts.Date specifies the date-only layouts (e.g. time.DateOnly)
+# TODO(possible-feature) in `amberpixels/years` let's support wildcard-ish time-formats
+Date = [
+    "2006-01-02",
+    "2006/01/02",
+    "02 Jan 06",
+    "02-Jan-06",
+    "Mon, 02 Jan 06",
+    "Mon, 02-Jan-06",
+    "Monday, 02 Jan 06",
+    "Monday, 02-Jan-06",
+    "02 Jan 2006",
+    "02-Jan-2006",
+    "Mon, 02 Jan 2006",
+    "Mon, 02-Jan-2006",
+    "Monday, 02 Jan 2006",
+    "Monday, 02-Jan-2006",
+]
+
+# Date.FromStrings.DateTime specify the date (generic) layouts (e.g. time.DateTime, RFC3339)
+DateTime = [
+    "2006-01-02T15:04:05",
+    "2006-01-02T15:04:05Z07:00",
+    "2006-01-02T15:04:05.999999999Z07:00",
+]
+
+[Date.FromNull]
+# Date.FromNull holds the configuration for decoding dates from null.
+Disabled = false
+
+
+[FlexKeys]
+# FlexKeys is the configuration for JSON keys flexibility.
+Disabled = true
+
+# FlexKeys.CaseInsensitive specifies whether keys are allowed to be case-insensitive.
+# Note: can cause a Yellow/Red result when a struct meets multiple keys that are considered the same.
+# E.g. {"key":"value", "KEY":"value"} will be considered as:
+#    - Yellow if the struct field's tag strictly matches at least one candidate.
+#    - Red if it doesn't match strictly any candidate.
+CaseInsensitive = false
+
+# FlexKeys.ChameleonCase means that keys of different camelCase/snake_case/kebab-case/PascalCase are considered the same.
+# Note: like CaseInsensitive, this can result in Yellow or Red outcomes.
+ChameleonCase = false

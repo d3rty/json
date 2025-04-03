@@ -1,0 +1,50 @@
+[Bool]
+    Disabled = false
+    FallbackValue = true
+[Bool.FromStrings]
+    Disabled = true
+    CustomListForTrue = ["yep", "1", "true", "on", "ok"]
+    CustomListForFalse = ["nope", "0", "", "off", "false"]
+    CaseInsensitive = false
+    RespectFromNumbersLogic = true
+[Bool.FromNumbers]
+    Disabled = true
+    CustomParseFunc = ""
+[Bool.FromNull]
+    Disabled = false
+    Inverse = false
+
+[Number]
+    Disabled = false
+[Number.FromStrings]
+    Disabled = false
+    SpacingAllowed = false
+    ExponentNotationAllowed = true
+CommasAllowed = false
+    RoundingAlgorithm = "floor"
+[Number.FromBools]
+    Disabled = true
+[Number.FromNull]
+    Disabled = false
+
+[Date]
+    Disabled = true
+[Date.Timezone]
+    Disabled = true
+    Default = ""
+    ForceConvertingInto = false
+[Date.FromNumbers]
+    Disabled = true
+    UnixTimestamp = false
+    UnixMilliTimestamp = false
+[Date.FromStrings]
+    Disabled = true
+    RespectFromNumbersLogic = false
+[Date.FromStrings.Layouts]
+[Date.FromNull]
+    Disabled = true
+
+[FlexKeys]
+    Disabled = false
+    CaseInsensitive = false
+    ChameleonCase = true
