@@ -1,6 +1,12 @@
 # d3rty/json 🧼
 
-Flexible JSON unmarshalling for Go: gracefully handling schema variations and forgiving mistakes.
+<p align="center">
+  <img src="logo.png" alt="Logo" width="300"/><br>
+</p>
+<h3 align="center">Flexible JSON unmarshalling for Go:</h3>
+<h4 align="center"><em>Gracefully handling schema variations and forgiving mistakes.</em></h4>
+
+
 
 > 🚧 Project is a `Work In Progress` thing.
 
