@@ -2,7 +2,8 @@ package dirtytesting_test
 
 import (
 	"encoding/json"
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
 	"strconv"
 	"testing"
@@ -87,7 +88,7 @@ func TestGenerateDirtyJSON(t *testing.T) {
 			iStr+": failed with config "+dcfg.Config().String()+" on "+string(dirtyContents),
 		)
 	}
-	log.Println("Done ", n, " attempts.")
+	slog.Debug(fmt.Sprintf("Done %d attempts", n))
 }
 
 func minifyJSON(t *testing.T, raw []byte) []byte {

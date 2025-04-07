@@ -264,7 +264,8 @@ func IsHybridCase(s string) bool {
 	return hasUpper && hasLower
 }
 
-// It supports determined cases (not Hybrid. For Hybrid use TransformToHybrid).
+// TransformTo transforms given string into a target Case.
+// It supports determined cases only, but not Hybrid. For Hybrid use TransformToHybrid.
 func TransformTo(s string, target Case) string {
 	words := SplitWords(s)
 	switch target {

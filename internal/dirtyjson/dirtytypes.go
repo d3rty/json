@@ -151,29 +151,29 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 	// Raw token (can be number, boolean, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	switch {
-	case s[0] == 'n': /* null  */
+	switch s[0] {
+	case 'n': /* null  */
 		if cfg.FromNull.IsDisabled() {
 			return errors.New("dirty.Number: numbers from nulls are not allowed")
 		}
 		*v = Number(0.0)
 		return nil
 
-	case s[0] == 't':
+	case 't':
 		if cfg.FromBools.IsDisabled() {
 			return errors.New("dirty.Number: numbers from bools are not allowed")
 		}
 		*v = Number(1.0)
 		return nil
 
-	case s[0] == 'f':
+	case 'f':
 		if cfg.FromBools.IsDisabled() {
 			return errors.New("dirty.Number: numbers from bools are not allowed")
 		}
 		*v = Number(0.0)
 		return nil
 
-	case s[0] == '[' || s[0] == '{':
+	case '[', '{':
 		return errors.New("dirty.Number: can't parse bools from object/array values")
 	}
 
@@ -248,29 +248,29 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 	// Raw token (can be number, boolean, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	switch {
-	case s[0] == 'n': /* null  */
+	switch s[0] {
+	case 'n': /* null  */
 		if cfg.FromNull.IsDisabled() {
 			return errors.New("dirty.Integer: numbers from nulls are not allowed")
 		}
 		*v = Integer(0)
 		return nil
 
-	case s[0] == 't':
+	case 't':
 		if cfg.FromBools.IsDisabled() {
 			return errors.New("dirty.Integer: numbers from bools are not allowed")
 		}
 		*v = Integer(1)
 		return nil
 
-	case s[0] == 'f':
+	case 'f':
 		if cfg.FromBools.IsDisabled() {
 			return errors.New("dirty.Integer: numbers from bools are not allowed")
 		}
 		*v = Integer(0)
 		return nil
 
-	case s[0] == '[' || s[0] == '{':
+	case '[', '{':
 		return errors.New("dirty.Integer: can't parse bools from object/array values")
 	}
 
@@ -429,22 +429,20 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 	s := string(data)
 
 	// As we consider it a valid JSON, if first letter is `t` or `f` then it definetely true/false
-	switch {
-	case s[0] == 't':
+	switch s[0] {
+	case 't':
 		*v = true
 		return nil
-	case s[0] == 'f':
+	case 'f':
 		*v = false
 		return nil
-	case s[0] == 'n': /* null  */
+	case 'n': /* null  */
 		if cfg.FromNull.IsDisabled() {
 			return errors.New("dirty.Bool: cannot parse bool from null")
 		}
 		*v = Bool(cfg.FromNull.Inverse) // if Inverse: we'll return true, otherwise: false
 		return nil
-	}
-
-	if s[0] == '{' || s[0] == '[' {
+	case '{', '[':
 		return errors.New("dirty.Bool: can't parse bools from object/array values")
 	}
 
@@ -519,25 +517,29 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalJSON converts []byte into an Date.
-func (v *DateTime) UnmarshalJSON(data []byte) (err error) {
+func (v *DateTime) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.DateTime: UnmarshalJSON on nil pointer")
 	}
 
+	var err error
 	*v, err = unmarshalDateTime[DateTime](context.Background(), data)
-	return
+	return err
 }
 
 // UnmarshalJSON converts []byte into a Date.
-func (v *Date) UnmarshalJSON(data []byte) (err error) {
+func (v *Date) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.Date: UnmarshalJSON on nil pointer")
 	}
 
-	*v, err = unmarshalDateTime[Date](context.Background(), data)
+	res, err := unmarshalDateTime[Date](context.Background(), data)
+	if err != nil {
+		return err
+	}
 
 	// trimming DateTime to Date
-	var t = time.Time(*v)
+	var t = time.Time(res)
 	*v = Date(
 		years.Mutate(&t).TruncateToDay().Time(),
 	)
@@ -550,13 +552,12 @@ func (v *Time) UnmarshalJSON(data []byte) error {
 		return errors.New("dirty.Date: UnmarshalJSON on nil pointer")
 	}
 
-	var err error
-	*v, err = unmarshalDateTime[Time](context.Background(), data)
+	res, err := unmarshalDateTime[Time](context.Background(), data)
 	if err != nil {
 		return fmt.Errorf("dirty.Date unmarshal failure: %w", err)
 	}
 
-	var t = time.Time(*v)
+	var t = time.Time(res)
 	*v = Time(
 		years.Mutate(&t).SetYear(0).SetMonth(0).SetDay(0).Time(),
 	)
@@ -630,15 +631,15 @@ func unmarshalDateTime[T Date | DateTime | Time](ctx context.Context, data []byt
 	// Raw token (can be number, null, objet, array)
 	s := strings.TrimSpace(string(data))
 
-	switch {
-	case s[0] == 'n': /* null  */
+	switch s[0] {
+	case 'n': /* null  */
 		if cfg.FromNull.IsDisabled() {
 			return zero, errors.New("dirty.DateTime: dates from nulls are not allowed")
 		}
 		return zero, nil
-	case s[0] == 't' || s[0] == 'f':
+	case 't', 'f':
 		return zero, errors.New("dirty.DateTime: can't parse dates from boolean values")
-	case s[0] == '[' || s[0] == '{':
+	case '[', '{':
 		return zero, errors.New("dirty.DateTime: can't parse dates from object/array values")
 	}
 

@@ -60,8 +60,12 @@ func TestUnmarshal_Yellow(t *testing.T) {
 
 func TestUnmarshal_Envelope(t *testing.T) {
 	var e Envelope
-	require.NoError(t,
-		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","is_active":"1","must_bool":"true"}]}`), &e),
+	require.NoError(
+		t,
+		dirty.Unmarshal(
+			[]byte(`{"total":1,"data":[{"id":"123","name":"foobar","is_active":"1","must_bool":"true"}]}`),
+			&e,
+		),
 	)
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)
@@ -92,8 +96,12 @@ func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
 	})
 
 	var e Envelope
-	require.NoError(t,
-		dirty.Unmarshal([]byte(`{"total":1,"data":[{"id":"123","name":"foobar","Is-Active":"1","must_bool":"true"}]}`), &e),
+	require.NoError(
+		t,
+		dirty.Unmarshal(
+			[]byte(`{"total":1,"data":[{"id":"123","name":"foobar","Is-Active":"1","must_bool":"true"}]}`),
+			&e,
+		),
 	)
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)

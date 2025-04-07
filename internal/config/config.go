@@ -213,6 +213,7 @@ func (cfg *Config) ResetToDefault() { *cfg = *defaultConfig() }
 func New() *Config { return newConfig() }
 
 func Load(path string) (*Config, error) {
+	// #nosec G304 -- we're OK with loading dynamic variable
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err

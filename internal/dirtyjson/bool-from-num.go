@@ -15,13 +15,14 @@ var (
 	parsersBoolFromNum = map[config.BoolFromNumberAlg]boolFromNum{
 
 		config.BoolFromNumberBinary: func(i float64) option.Bool {
-			if i == 0 {
+			switch i {
+			case 0:
 				return option.False()
-			} else if i == 1 {
+			case 1:
 				return option.True()
+			default:
+				return option.NoneBool()
 			}
-
-			return option.NoneBool()
 		},
 
 		config.BoolFromNumberPositiveNegative: func(i float64) option.Bool {
@@ -33,13 +34,14 @@ var (
 		},
 
 		config.BoolFromNumberSignOfOne: func(i float64) option.Bool {
-			if i == -1 {
+			switch i {
+			case -1:
 				return option.False()
-			} else if i == 1 {
+			case 1:
 				return option.True()
+			default:
+				return option.NoneBool()
 			}
-
-			return option.NoneBool()
 		},
 
 		config.BoolFromNumberUndefined: nil,
