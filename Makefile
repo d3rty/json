@@ -1,7 +1,6 @@
 # Variables
 GOLANGCI_LINT := $(shell which golangci-lint)
 
-
 # Default target
 all: tidy
 
@@ -18,7 +17,6 @@ lint-install:
 	fi
 
 # Lint the code using golangci-lint
-# todo reuse var if possible
 lint: lint-install
 	$(shell which golangci-lint) fmt
 	$(shell which golangci-lint) run
