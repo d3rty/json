@@ -1,7 +1,6 @@
 package cases_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/d3rty/json/internal/cases"
@@ -137,33 +136,6 @@ func TestIsHybridCase(t *testing.T) {
 	assert.False(t, cases.IsHybridCase(""), "empty string is not hybrid")
 }
 
-func TestTransformToHybridCase_NilRNG(t *testing.T) {
-	input := "helloWorldTestFoo_BarBazOne_Two-three-Four-FiveSix"
-
-	for range 100 {
-		output := cases.TransformToHybridCase(input)
-
-		// We cannot predict the exact output here, but we can verify some properties:
-		// - The output should be non-empty.
-		// - It should contain at least one separator, either "-" or "_". (might be flaky. fix later if needed)
-		assert.NotEmpty(t, output, "Output should not be empty")
-		assert.True(t, strings.Contains(output, "-") || strings.Contains(output, "_"),
-			"Output should contain at least one hyphen or underscore as separator: "+output)
-
-		// Additionally, we can check that the words are transformed in either lower or title case.
-		words := cases.SplitWords(output)
-		assert.Len(t, words, 12, words)
-		for _, word := range words {
-			// Each word should have its first letter either uppercase or lowercase.
-			if len(word) > 0 {
-				first := word[0]
-				assert.True(t, (first >= 'A' && first <= 'Z') || (first >= 'a' && first <= 'z'),
-					"Each word should start with an alphabetic character")
-			}
-		}
-	}
-}
-
 // SplitWordsSuite defines the suite for testing SplitWords.
 type SplitWordsSuite struct {
 	suite.Suite
@@ -172,7 +144,8 @@ type SplitWordsSuite struct {
 // TestEmptyString tests that an empty input returns nil.
 func (s *SplitWordsSuite) TestEmptyString() {
 	result := cases.SplitWords("")
-	s.Nil(result, "Expected nil for empty input")
+	expected := []string{}
+	s.Equal(expected, result, "Expected nil for empty input")
 }
 
 // TestCamelCase tests splitting a camelCase string.

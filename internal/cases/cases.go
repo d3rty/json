@@ -4,8 +4,6 @@ import (
 	"slices"
 	"strings"
 	"unicode"
-
-	"github.com/d3rty/json/internal/flipping"
 )
 
 // Case defines the target naming convention.
@@ -21,11 +19,23 @@ const (
 	Hybrid     Case = "hybrid"      // e.g. "Hello_beautiful-WorldHere"
 )
 
+// hasValuableSymbols returns true if the given string has at least one valuable symbol.
+// Valuable symbols are any characters except delimiters (hyphen, underscore, space).
+func hasValuableSymbols(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	return strings.ContainsFunc(s, func(r rune) bool {
+		return r != '-' && r != '_' && r != ' '
+	})
+}
+
 // isSnakeCase returns true if s is snake_case.
 // It requires that s contains at least one underscore and that
 // all alphabetic characters are lowercase.
 func isSnakeCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
 	if !strings.Contains(s, "_") {
@@ -47,7 +57,7 @@ func isSnakeCase(s string) bool {
 // It checks that s starts with a lowercase letter, contains no underscores or hyphens,
 // and has at least one uppercase letter (after the first character).
 func isCamelCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
 	runes := []rune(s)
@@ -69,7 +79,7 @@ func isCamelCase(s string) bool {
 // It ensures that s starts with an uppercase letter and that,
 // after lowercasing the first letter, the result is a valid camelCase.
 func isPascalCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
 	runes := []rune(s)
@@ -110,8 +120,8 @@ func isHeaderCase(s string) bool {
 	}
 
 	for _, part := range parts {
-		// Each part must be non-empty.
-		if part == "" {
+		// each part must have at least one valuable symbol
+		if !hasValuableSymbols(part) {
 			return false
 		}
 		runes := []rune(part)
@@ -133,7 +143,7 @@ func isHeaderCase(s string) bool {
 // It requires that s contains at least one hyphen and that
 // all alphabetic characters are lowercase.
 func isKebabCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
 	if !strings.Contains(s, "-") {
@@ -154,14 +164,14 @@ func isKebabCase(s string) bool {
 // Title Snake Case means the string contains underscores and each segment (separated by underscores)
 // starts with an uppercase letter and is followed by only lowercase letters.
 func isTitleSnakeCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
-	// Must contain at least one underscore.
-	if !strings.Contains(s, "_") {
-		return false
-	}
+
 	parts := strings.Split(s, "_")
+	if len(parts) == 1 { // Must contain at least one underscore.
+		return false
+	}
 	// All parts must be non-empty and follow the title rule.
 	for _, part := range parts {
 		if part == "" {
@@ -207,11 +217,10 @@ func Is(s string, target Case) bool {
 // IsComplexCase returns true if s is in one of the recognized naming conventions:
 // PascalCase, camelCase, snake_case, kebab-case, Header-Case, or hybrid_Case.
 func IsComplexCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
 
-	// TODO(possible-issue): `--__--` will be considered as complex case. Should it?
 	if strings.Contains(s, "-") || strings.Contains(s, "_") {
 		return true
 	}
@@ -223,9 +232,10 @@ func IsComplexCase(s string) bool {
 // IsHybridCase returns true if the string contains a mix of separators (e.g., both "-" and "_")
 // and a mix of casing that does not conform strictly to one of the standard conventions.
 func IsHybridCase(s string) bool {
-	if s == "" {
+	if !hasValuableSymbols(s) { // no valuable symbols are always considered as `false`
 		return false
 	}
+
 	// Check if it contains at least two different types of separators.
 	hasHyphen := strings.Contains(s, "-")
 	hasUnderscore := strings.Contains(s, "_")
@@ -296,54 +306,12 @@ func TransformTo(s string, target Case) string {
 // '\x00' represents the empty rune. E.g., It's used for `camelCase` separation.
 const separatorRunes = "-_ \x00"
 
-// TransformToHybridCase transforms the input string s into a hybrid case string.
-// It uses randomness to decide, for each gap between words, whether to insert an underscore ("_"),
-// a hyphen ("-"), or no separator at all. When no separator is chosen,
-// if the last character of the previous word and the first character of the next word are both lowercase
-// (which might merge the words indistinguishably),
-// then the empty separator is overridden with either a hyphen or underscore.
-// The forced choice uses hyphenRatio: with probability hyphenRatio a hyphen is used, otherwise an underscore.
-// The function accepts an optional RNG argument (variadic); if none is provided, a default RNG is used.
-//
-// todo update comment about hyphen ratio.
-func TransformToHybridCase(s string, coinArg ...*flipping.Coin) string {
-	words := SplitWords(s)
-	if len(words) == 0 {
-		return s
-	}
-
-	coin := flipping.MaybeNewCoin(coinArg...)
-
-	// Start with the first word as-is.
-	result := words[0]
-	for i := 1; i < len(words); i++ {
-		sep := flipping.FeelingLucky([]rune(separatorRunes), coin)
-
-		// If no separator was chosen, check if joining the words would merge them indistinguishably.
-		if sep == '\x00' {
-			prevRunes := []rune(result)
-			nextRunes := []rune(words[i])
-			if len(prevRunes) > 0 && len(nextRunes) > 0 {
-				lastRune := prevRunes[len(prevRunes)-1]
-				firstRune := nextRunes[0]
-				// If both are lowercase, force a separator.
-				if unicode.IsLower(lastRune) && unicode.IsLower(firstRune) {
-					sep = rune(separatorRunes[coin.Rng().Intn(2)])
-				}
-			}
-		}
-
-		result += string(sep) + words[i]
-	}
-	return result
-}
-
 // SplitWords attempts to split an input string into words.
 // It handles strings that use underscores, hyphens, or camel/pascal style,
 // and works well for hybrid cases (mixing these conventions).
 func SplitWords(s string) []string {
-	if s == "" {
-		return nil
+	if !hasValuableSymbols(s) { // nothing to split
+		return []string{}
 	}
 
 	// If the string contains underscores or hyphens,

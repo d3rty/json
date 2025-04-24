@@ -115,7 +115,7 @@ func (d *Dirtifier) makeDirtyKey(key string) string {
 
 		convertTo := flipping.FeelingLucky(allCases, d.coin)
 		if convertTo == cases.Hybrid {
-			return cases.TransformToHybridCase(key, d.coin)
+			return TransformToHybridCase(key, d.coin)
 		}
 
 		return cases.TransformTo(key, convertTo)
