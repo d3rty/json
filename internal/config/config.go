@@ -20,6 +20,7 @@ type Section struct {
 	Disabled bool `toml:"Disabled"`
 }
 
+// IsDisabled return true if its `Disabled:true` was set in the toml.
 func (s Section) IsDisabled() bool { return s.Disabled }
 
 // Config holds global settings for dirty unmarshalling.
