@@ -20,16 +20,16 @@ as much meaningful data as possible.
 
 ## Key Features
 
-- **Flexible Unmarshalling:**
+- **Flexible Unmarshalling:**<br>
   Attempts standard decoding first and then gracefully falls back to a more flexible decoding when encountering schema variations.
 
-- **Custom Data Types:**
+- **Custom Data Types:**<br>
   Provides custom types (such as `Number`, `String`, `Bool`, `Array`, and `Object`) that are designed to interpret JSON values even when they deviate from the standard.
 
-- **Seamless Integration:**
+- **Seamless Integration:**<br>
   Designed to work as a drop-in replacement for the standard library’s `json.Unmarshal`, `json.NewDecoder` allowing you to easily switch without rewriting your models.
 
-- **Error & Warning Reporting:**
+- **Error & Warning Reporting: 🚧 NOT IMPLEMENTED 🚧**<br>
   Incorporates a system of result colors (🟢 Green, 🟡 Yellow, 🔴 Red) to signal the quality of the unmarshalling process—whether it was clean, achieved through forgiving conversions, or partially lossy.
 
 ## Installation
