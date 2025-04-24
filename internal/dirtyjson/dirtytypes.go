@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"strconv"
 	"strings"
@@ -69,13 +70,8 @@ type (
 	// Time means a given moment within a day (day is not specified in the source value).
 	Time time.Time
 
-	// TODO(possible-feature): SmartScalar
-	// It can be parsed from Null, Bool, Number or String (number/bool supported in string as well)
-	// Issue is, that in clean model it's anyway will be `any`. So we can't be "stricter" than clean model.
-	// Therefore if we allow to fail, then it will be "red" result but with actually data not being lost.
-	// That's why the feature is not so clear how-to-be-implemented-and-used.
-
-	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringified.
+	// TODO(github.com/d3rty/json/issues/4): SmartScalar
+	// TODO(github.com/d3rty/json/issues/5): StringifiedContainers
 )
 
 const (
@@ -86,7 +82,7 @@ const (
 // getConfig returns the config from the given context.
 func getConfig(ctx context.Context) *config.Config {
 	_ = ctx
-	// TODO(future-feature): we need a way to pass config per marshalling in context
+	// TODO(github.com/d3rty/json/issues/6): support for per-ctx configs
 	return config.Global()
 }
 
@@ -132,17 +128,16 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 			s = strings.ReplaceAll(s, ",", "")
 		}
 
-		// TODO: ensure cfg.FromStrings.ExponentNotationAllowed is respected
+		// TODO(github.com/d3rty/json/issues/10): respect all things from cfg.FromStrings
+		// 		Note on handle cfg.FromStrings.FloatishAllowed:
+		//      we can't know about it here, as we don't know the destination clean type
+		//		(and we probably won't never know it here. so it will be at a later stage)
 
 		// Parse the float.
 		n, err := strconv.ParseFloat(strings.TrimSpace(s), 64)
 		if err != nil {
 			return fmt.Errorf("dirty.Number: cannot parse number: %w", err)
 		}
-
-		// TODO: handle cfg.FromStrings.FloatishAllowed
-		// we can't know about it here, as we don't know the destination clean type
-		// (and we probably won't never know it here. so it will be at a later stage)
 
 		*v = Number(n)
 		return nil
@@ -229,17 +224,16 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 			s = strings.ReplaceAll(s, ",", "")
 		}
 
-		// TODO: ensure cfg.FromStrings.ExponentNotationAllowed is respected
+		// TODO(github.com/d3rty/json/issues/10): respect all things from cfg.FromStrings
+		// 		Note on handle cfg.FromStrings.FloatishAllowed:
+		//      we can't know about it here, as we don't know the destination clean type
+		//		(and we probably won't never know it here. so it will be at a later stage)
 
 		// Parse the float.
 		n, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
 		if err != nil {
 			return fmt.Errorf("dirty.Number: cannot parse number: %w", err)
 		}
-
-		// TODO: handle cfg.FromStrings.FloatishAllowed
-		// we can't know about it here, as we don't know the destination clean type
-		// (and we probably won't never know it here. so it will be at a later stage)
 
 		*v = Integer(n)
 		return nil
@@ -277,7 +271,7 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 	// should be a regular integer value.
 
 	// Parse the float.
-	// TODO: configurable: if we allow to "round" floats??
+	// TODO(github.com/d3rty/json/issues/12) Roundable floats?
 	n, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64)
 	if err != nil {
 		return fmt.Errorf("dirty.Integer: cannot parse number: %w", err)
@@ -330,8 +324,9 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			if parser, ok := parsersBoolFromNum[fromNumbersCfg.CustomParseFunc]; ok {
 				b = parser(n)
 			} else {
-				// TRICKY THING. CORRUPTED CONFIG IS HERE. We should not just silently exit
-				// Let's log or something similar (TODO: handle this carefully)
+				// TRICKY THING. CORRUPTED CONFIG IS HERE.
+				// TODO(github.com/d3rty/json/issues/11): do a loud log here
+				slog.Error("possible corrupted config ", "parse_func", fromNumbersCfg.CustomParseFunc)
 				return option.NoneBool()
 			}
 

@@ -62,7 +62,7 @@ func (i Item) Dirty() any {
 				Rating  dirty.Number `json:"rating"`
 				Options []struct {
 					Key   string `json:"key"`
-					Value string `json:"value"` // TODO: change to scalar
+					Value string `json:"value"`
 				} `json:"options"`
 			} `json:"info"`
 		} `json:"details"`

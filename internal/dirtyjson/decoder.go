@@ -58,7 +58,6 @@ func (dec *Decoder) cleanDecode(val any) error {
 func (dec *Decoder) decode(val reflect.Value) error {
 	switch val.Kind() {
 	case reflect.Struct:
-		// TODO possible bug here when struct is actually a SmartScalar
 		if !val.CanAddr() {
 			return dec.decodeStruct(val)
 		}
@@ -145,7 +144,8 @@ func (dec *Decoder) decodeDirty(v Dirtyable) error {
 	}
 
 	// Merge: marshal the dirty schema to JSON...
-	// TODO: this part looks the ugliest. We're OK for now, but it's not good.
+	// TODO(github.com/d3rty/json/issues/9): this part looks the ugliest.
+	// 		We're OK for now, but it's not good.
 	buf, err := json.Marshal(scheme)
 	if err != nil {
 		return fmt.Errorf("marshalling dirty schema failed: %w", err)

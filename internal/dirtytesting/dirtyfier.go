@@ -130,8 +130,6 @@ func (d *Dirtifier) makeDirtyKey(key string) string {
 			strings.ToUpper,
 			strings.ToLower,
 			strings.ToTitle,
-
-			// todo: cases.ToRandomTitle
 		}
 		rand.Shuffle(len(transformations), func(i, j int) {
 			transformations[i], transformations[j] = transformations[j], transformations[i]
