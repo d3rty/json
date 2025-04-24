@@ -16,8 +16,8 @@ import (
 // Dirtifier makes dirty JSONs from clean ones.
 type Dirtifier struct {
 	// threshold is a number from 0.0 to 1.0 that sets how much "dirty" the result will end up.
-	// E.g. 1.0 means that 100% of possible fields will be dirtified.
-	//      0.0 means that 0% of possible fields will be dirtified (so result will remain clean).
+	// e.g., 1.0 means that 100% of possible fields will be dirtified.
+	//      0.0 means that 0% of possible fields will be dirtified (so the result will remain clean).
 	threshold float64
 
 	// coin is a wrapper around the random generator
@@ -37,7 +37,7 @@ func NewDirtifier(threshold float64, cfg *config.Config, coinArg ...*flipping.Co
 	}
 }
 
-// keepItClean returns true/false depending on current rand generation and the threshold
+// keepItClean returns true/false depending on the current rand generation and the threshold
 // keepItClean returns true if we should omit dirtifying, and false if we should do dirtifying.
 func (d *Dirtifier) keepItClean() bool { return d.coin.Chance(d.threshold) }
 
@@ -48,7 +48,7 @@ func (d *Dirtifier) randomCase(s string) string {
 	// Convert the string to a slice of runes to properly handle Unicode characters.
 	runes := []rune(s)
 	for i, r := range runes {
-		// With 50% chance convert to lower case, else upper case.
+		// With a 50% chance convert to lower case, else upper case.
 		if d.coin.Flip() {
 			runes[i] = unicode.ToLower(r)
 		} else {
@@ -89,7 +89,7 @@ func (d *Dirtifier) Make(val any) any {
 	}
 }
 
-// makeDirtyKey makes a dirty key from given clean key.
+// makeDirtyKey makes a dirty key from a given clean key.
 func (d *Dirtifier) makeDirtyKey(key string) string {
 	if d.cfg.FlexKeys.IsDisabled() {
 		return key
@@ -125,7 +125,7 @@ func (d *Dirtifier) makeDirtyKey(key string) string {
 		// Let's mix the case (make it upper/lower/title/etc)
 
 		// We have to shuffle and try them until we get first transformation that makes sense
-		// This is made in case key is already Upper so ToUpper transform will be ignored.
+		// This is made in case the key is already Upper so ToUpper transform will be ignored.
 		transformations := []func(string) string{
 			strings.ToUpper,
 			strings.ToLower,
@@ -158,7 +158,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 	cfg := d.cfg.Bool
 
 	// Let's extract the available flows from the config
-	// FromNull is handled separately, as it's considered additional setting
+	// FromNull is handled separately, as it's considered an additional setting
 	// to FromStrings and/or FromNumbers.
 	var flows []string
 	if !cfg.FromStrings.IsDisabled() {
@@ -182,7 +182,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 
 		// if we respect numbers logic then with 50% chance generate a stringish number
 		// e.g. "1", "0", etc.
-		// Here we can fallthrough into "number" case if we simply flip the true coin,
+		// Here we can fallthrough into the "number" case if we simply flip the true coin,
 		// or we have no option (custom strings are disabled in config).
 		if cfgFromStrings.RespectFromNumbersLogic {
 			customStringsDisabled := !v && len(cfgFromStrings.CustomListForFalse) == 0 ||
@@ -195,7 +195,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 
 		if !numberToBeStringified {
 			if v {
-				var sTrue = "true" // by default "true" string is considered to be as true
+				var sTrue = "true" // by default, the "true" string is considered to be as true
 				if len(cfgFromStrings.CustomListForTrue) > 0 {
 					sTrue = flipping.FeelingLucky(cfgFromStrings.CustomListForTrue, d.coin)
 				}
@@ -207,7 +207,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 			}
 
 			var sFalse = "false"
-			if len(cfgFromStrings.CustomListForFalse) > 0 { // by default "false" string is considered to be as false
+			if len(cfgFromStrings.CustomListForFalse) > 0 { // by default, the "false" string is considered to be as false
 				sFalse = flipping.FeelingLucky(cfgFromStrings.CustomListForFalse, d.coin)
 			}
 			if cfgFromStrings.CaseInsensitive && d.coin.Flip() {
@@ -257,7 +257,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 	}
 }
 
-// makeDirtyNumber makes a dirty number from given clean number.
+// makeDirtyNumber makes a dirty number from a given clean number.
 func (d *Dirtifier) makeDirtyNumber(v float64) any {
 	if d.cfg.Number.IsDisabled() || d.keepItClean() {
 		return v
@@ -266,7 +266,7 @@ func (d *Dirtifier) makeDirtyNumber(v float64) any {
 	cfg := d.cfg.Number
 
 	// Let's extract the available flows from the config
-	// FromNull is handled separately, as it's considered additional setting
+	// FromNull is handled separately, as it's considered an additional setting
 	// to FromStrings and/or FromNumbers.
 	var flows []string
 	if !cfg.FromStrings.IsDisabled() {
@@ -288,7 +288,7 @@ func (d *Dirtifier) makeDirtyNumber(v float64) any {
 		if v == 0 || v == 1 {
 			return d.maybeNumberNilify(v, v != 0)
 		}
-		// if we only have `bool` flow, then for other number we just keep it clean
+		// if we only have `bool` flow, then for another number we just keep it clean
 		if !slices.Contains(flows, "string") {
 			return v
 		}
@@ -302,7 +302,7 @@ func (d *Dirtifier) makeDirtyNumber(v float64) any {
 		_ = cfg.FromStrings.CommasAllowed
 		_ = cfg.FromStrings.RoundingAlgorithm
 
-		// Convert number to its string representation.
+		// Convert the number to its string representation.
 		// Optionally, if the config allowed spacing, commas, or exponent notation,
 		// you could inject or remove them here.
 		return d.maybeNumberNilify(v, fmt.Sprintf("%v", v))
@@ -311,14 +311,14 @@ func (d *Dirtifier) makeDirtyNumber(v float64) any {
 	}
 }
 
-// maybeBoolNilify makes a nil instead of bool respecting the Bool.FromNull config.
+// maybeBoolNilify makes nil instead of bool respecting the Bool.FromNull config.
 func (d *Dirtifier) maybeBoolNilify(v bool, actual any) any {
 	if d.cfg.Bool.FromNull.IsDisabled() || d.keepItClean() {
 		return actual
 	}
 
 	// let's make nilify logic even rare-er
-	// As it's a very specific, rare, edge-casy logic.
+	// As it's a very specific, rare, edge-case-ish logic.
 	if d.coin.Flip() {
 		return actual
 	}
@@ -329,14 +329,14 @@ func (d *Dirtifier) maybeBoolNilify(v bool, actual any) any {
 	return actual
 }
 
-// maybeNumberNilify makes a nil instead of number respecting the Number.FromNull config.
+// maybeNumberNilify makes nil instead of number respecting the Number.FromNull config.
 func (d *Dirtifier) maybeNumberNilify(v float64, actual any) any {
 	if d.cfg.Bool.FromNull.IsDisabled() || d.keepItClean() {
 		return actual
 	}
 
 	// let's make nilify logic even rare-er
-	// As it's a very specific, rare, edge-casy logic.
+	// As it's a very specific, rare, edge-case-ish logic.
 	if d.coin.Flip() {
 		return actual
 	}

@@ -45,7 +45,7 @@ func TestJSONMarshalling(t *testing.T) {
 
 	// Test marshalling of a None option.
 	optNone := option.None[int]()
-	marshalledNone, err := json.Marshal(&optNone) // should work with pointer as well
+	marshalledNone, err := json.Marshal(&optNone) // should work with a pointer as well
 	require.NoError(t, err, "Marshalling None should not error")
 	assert.Equal(t, "null", string(marshalledNone))
 
@@ -63,7 +63,7 @@ func TestJSONMarshalling(t *testing.T) {
 }
 
 func TestUnmarshalText(t *testing.T) {
-	// For testing UnmarshalText, we'll use Option[string] since string
+	// For testing UnmarshalText, we'll use Option[string] since the string
 	// works directly with json.Unmarshal in our fallback.
 	var opt option.Option[string]
 

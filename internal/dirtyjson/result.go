@@ -8,7 +8,7 @@ const (
 	// Data could be unmarshalled directly into the target clean struct.
 	ColorGreen Color = iota
 
-	// ColorYellow means successful (loseless) unmarshalling via dirty schema.
+	// ColorYellow means successful (lossless) unmarshalling via dirty schema.
 	// At least one dirty concept was used. See `Warnings` to list them.
 	ColorYellow
 

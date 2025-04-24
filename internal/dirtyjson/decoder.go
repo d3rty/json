@@ -13,7 +13,7 @@ import (
 	"github.com/d3rty/json/internal/config"
 )
 
-// Token is needed for `CleanDecoder` interface.
+// Token is needed for the `CleanDecoder` interface.
 type Token = json.Token
 
 // CleanDecoder is an interface that stands for the part of `*json.Decoder` that is required in dirty decoding.
@@ -52,9 +52,9 @@ func (dec *Decoder) cleanDecode(val any) error {
 	return dec.clean.Decode(val)
 }
 
-// decode recursively decodes JSON from dec into the provided value.
-// it does a regular decode routine for all types recursively, until it reaches the structs.
-// on structs it tries to decodeDirty if possible.
+// The `decode` recursively decodes JSON from dec into the provided value.
+// It does a regular decoding routine for all types recursively until it reaches the structs.
+// On structs, it tries to decodeDirty if possible.
 func (dec *Decoder) decode(val reflect.Value) error {
 	switch val.Kind() {
 	case reflect.Struct:
@@ -79,7 +79,7 @@ func (dec *Decoder) decode(val reflect.Value) error {
 		return dec.decodeMap(val)
 
 	default:
-		// For scalars and others just use clean decoding.
+		// For scalars and others use clean decoding.
 		ptr := reflect.New(val.Type())
 		if err := dec.cleanDecode(ptr.Interface()); err != nil {
 			return err
@@ -206,7 +206,7 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 			if keyMatch(fieldName, name, cfg) {
 				fieldFound = true
 				fv := val.Field(i)
-				// If field is a pointer and nil, allocate it.
+				// If the field is a pointer and nil, allocate it.
 				if fv.Kind() == reflect.Ptr && fv.IsNil() {
 					fv.Set(reflect.New(fv.Type().Elem()))
 				}
@@ -238,7 +238,7 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 	return nil
 }
 
-// keyMatch matches json keys (input json vs model) corresponding to the given config.
+// keyMatch matches JSON keys (input JSON vs. model) corresponding to the given config.
 func keyMatch(jsonKey, modelKey string, cfg *config.Config) bool {
 	if jsonKey == modelKey {
 		return true
@@ -257,7 +257,7 @@ func keyMatch(jsonKey, modelKey string, cfg *config.Config) bool {
 	}
 
 	// For ChameleonCase currently we simply normalize keys:
-	// we make them lowercase and "one-wordish" ("-_ " ommitted)
+	// we make them lowercase and "one-wordish" (omitting hyphens, underscores and spaces)
 	return normalizeJSONKey(jsonKey) == normalizeJSONKey(modelKey)
 }
 

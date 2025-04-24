@@ -143,7 +143,7 @@ type FlexKeysConfig struct {
 	ChameleonCase   bool `toml:"ChameleonCase"`
 }
 
-// FromBytes read config from given raw []byte.
+// FromBytes read config from a given raw [] byte.
 func FromBytes(data []byte) *Config {
 	var cfg Config
 	if err := toml.Unmarshal(data, &cfg); err != nil {
@@ -152,7 +152,7 @@ func FromBytes(data []byte) *Config {
 	return (&cfg).Init()
 }
 
-// String shows string represenatation of the config. It used primarily for debug purposes or verbose mode
+// String shows string representation of the config. It used primarily for debug purposes or verbose mode
 // We use `toml` representation here.
 func (cfg *Config) String() string {
 	j, err := toml.Marshal(cfg)
@@ -164,7 +164,7 @@ func (cfg *Config) String() string {
 }
 
 // Init sets default for all the config fields.
-// If a subconfig is nil, it automatically changes it to empty config with Disabled=true.
+// If a subconfig is nil, it automatically changes it to an empty config with Disabled=true.
 func (cfg *Config) Init() *Config {
 	handleDefaultFieldDisabled(cfg)
 
@@ -198,7 +198,7 @@ func defaultConfig() *Config {
 }
 
 // newConfig returns a new (empty/clean) config that disables all dirty options.
-// dirty unmarshalling with an empty config behaves the same as starndard unmarshalling.
+// dirty unmarshalling with an empty config behaves the same as standard unmarshalling.
 func newConfig() *Config {
 	return (&Config{}).Init()
 }

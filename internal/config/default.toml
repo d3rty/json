@@ -5,7 +5,7 @@
 # Bool is the configuration for dirty.Bool.
 # Disabled = false
 
-# Bool.FallbackValue is the bool value result when unmarshalling fell into unhappy path.
+# Bool.FallbackValue is the bool value result when unmarshalling fell into an unhappy path.
 #
 # FallbackValue = false/true will be converted to option.Some(false/true)
 # FallbackValue = null will be converted into option.None() - may cause a red result when unmarshalled.
@@ -16,10 +16,10 @@ FallbackValue = false
 # Bool.FromStrings holds the configuration for decoding booleans from strings.
 # Disabled = false
 
-# Bool.FromStrings.CustomListForTrue specifies list of string values that are considered true.
+# Bool.FromStrings.CustomListForTrue specifies a list of string values that are considered true.
 CustomListForTrue = ["true", "yes", "on"]
 
-# Bool.FromStrings.CustomListForFalse specifies list of string values that are considered false.
+# Bool.FromStrings.CustomListForFalse specifies a list of string values that are considered false.
 CustomListForFalse = ["false", "no", "off", ""]
 
 # Bool.FromStrings.CaseInsensitive specifies where the strings from CustomListForTrue/CustomListForFalse
@@ -58,26 +58,26 @@ Inverse = false
 # Number.FromStrings.SpacingAllowed indicates whether the spacing should be trimmed
 # in the stringified numbers.
 #
-# Example: "1 000 000" is considered as a valid 1000000 in this case.
+# Example: "1 000 000" is considered as a valid 1,000,000 in this case.
 SpacingAllowed = true
 
 # Number.FromStrings.ExponentNotationAllowed specifies whether numeric values with exponent
 # should be accepted.
 #
-# Example: "1e6" is considered as a valid 1000000 in this case.
+# Example: "1e6" is considered as a valid 1,000,000 in this case.
 ExponentNotationAllowed = true
 
 # Number.FromStrings.CommasAllowed indicates whether numeric values with comma should be accepted.
 #
-# Example: "1,000,000" is considered as a valid 1000000 in this case.
+# Example: "1,000,000" is considered as a valid 1,000,000 in this case.
 CommasAllowed = true
 
 # Number.FromStrings.RoundingAlgorithm specifies how integers can be Parsed from Floats.
 #
 # Available values:
-#  "none"  - allows only float value with zero decimal part to be parsed as integers.
+#  "none"  - allows only float values with zero decimal parts to be parsed as integers.
 #  "floor" - math.Floor: decimal part is removed
-#  "round" - math.Round: rounding to closest integer value.
+#  "round" - math.Round: rounding to the closest integer value.
 RoundingAlgorithm = "floor"
 
 [Number.FromBools]
@@ -106,13 +106,13 @@ ForceConvertingInto = false
 # Date.FromNumbers holds the configuration for decoding dates from numbers.
 Disabled = false
 
-# Date.FromNumbers.UnixTimestamp enables decoding given number as a second Unix timestamp.
+# Date.FromNumbers.UnixTimestamp enables decoding the given number as a second Unix timestamp.
 UnixTimestamp = true
 
-# Date.FromNumbers.UnixMilliTimestamp enables decoding given number as a millisecond Unix timestamp.
+# Date.FromNumbers.UnixMilliTimestamp enables decoding a given number as a millisecond Unix timestamp.
 #
-# Note: when both UnixTimestamp and UnixMilliTimestamp are enabled
-# we can't guarantee 100% distinguishing between them. It will work for reasonable amount of time-range
+# Note: when both UnixTimestamp and UnixMilliTimestamp are enabled,
+# we can't guarantee 100% to distinguish between them. It will work for a reasonable amount of time-range
 # within our modern time.
 UnixMilliTimestamp = true
 
@@ -133,7 +133,7 @@ RespectFromNumbersLogic = true
 
 [Date.FromStrings.Layouts]
 # Date.FromStrings.Layouts for different date/time formats.
-# Date.FromStrings.Layout.Time specific the time-only layouts (e.g. time.TimeOnly)
+# Date.FromStrings.Layout.Time specific the time-only layouts (e.g., time.TimeOnly)
 Time = ["3:04PM", "15:04", "15:04:05"]
 
 # Date.FromStrings.Layouts.Date specifies the date-only layouts (e.g. time.DateOnly)
@@ -155,7 +155,7 @@ Date = [
     "Monday, 02-Jan-2006",
 ]
 
-# Date.FromStrings.DateTime specify the date (generic) layouts (e.g. time.DateTime, RFC3339)
+# Date.FromStrings.DateTime specify the date (generic) layouts (e.g., time.DateTime, RFC3339)
 DateTime = [
     "2006-01-02T15:04:05",
     "2006-01-02T15:04:05Z07:00",

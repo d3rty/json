@@ -13,7 +13,7 @@ var (
 )
 
 // Global returns a copy of the global configuration.
-// Returned copy is a clone. It's modifying doesn't affect the original config.
+// The returned copy is a clone. Modifying of it doesn't affect the original config.
 func Global() *Config {
 	mu.RLock()
 	defer mu.RUnlock()

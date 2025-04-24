@@ -34,10 +34,10 @@ type disabler interface {
 	IsDisabled() bool
 }
 
-// disablerType is the reflect.Type of the disabler interface.
+// disablerType is the `reflect.Type` of the disabler interface.
 var disablerType = reflect.TypeFor[disabler]()
 
-// handleDefaultFieldDisabled sets default value for `Disabled bool`
+// handleDefaultFieldDisabled sets the default value for `Disabled bool`
 // So if a section (TOML Table) is not presented, it will be changed to an empty table with Disabled=true
 // So, the IsDisabled() call is possible and returns true.
 func handleDefaultFieldDisabled(v any) {

@@ -40,7 +40,7 @@ func (o *Option[T]) Some(args ...T) bool {
 }
 
 // Unwrap returns the contained value if present; otherwise, it panics.
-// This mirrors Rust's unwrap, providing a quick way to extract the value
+// This mirrors Rust's `unwrap`, providing a quick way to extract the value
 // when you are certain that it is present.
 func (o *Option[T]) Unwrap() T {
 	if !o.ok {
@@ -128,7 +128,7 @@ func (o *Option[T]) UnmarshalText(text []byte) error {
 		isScalar = true
 	}
 
-	// for scalar we can re-use json.Unmarshal handler
+	// for scalar, we can re-use json.Unmarshal handler
 	if isScalar {
 		var scalar T
 		if err := json.Unmarshal(text, &scalar); err != nil {

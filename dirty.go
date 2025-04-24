@@ -36,7 +36,7 @@ type Config = config.Config
 type Number = dirtyjson.Number
 
 // String s a custom type for unmarshalling strings.
-// Anything except actual json string will be rejected.
+// Anything except an actual JSON string will be rejected.
 type String = dirtyjson.String
 
 // Bool is a custom type for unmarshalling booleans.
@@ -61,8 +61,8 @@ type Object = dirtyjson.Object
 // The clean model also MUST implement Dirtyable interface.
 type Enabled = dirtyjson.Enabled
 
-// Disabled is an atom struct that that remains syntaxly valid dirty model,
+// Disabled is an atom struct that that remains a syntactically valid dirty model
 // but disables dirty unmarshalling.
 // You can easily switch from `dirty.Enabled` to `dirty.Disabled`
-// keeping all models & interfaces working (falling back to standard (clean) json.Unmarshal).
+// keeping all models and interfaces working (falling back to standard (clean) json.Unmarshal).
 type Disabled = dirtyjson.Disabled

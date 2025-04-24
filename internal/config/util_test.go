@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Example section struct implementidng the disabler interface.
+// Example section struct implementing the disabler interface.
 
 type SectionFoo struct {
 	config.Section
@@ -53,7 +53,7 @@ func TestClone(t *testing.T) {
 	// Clone the original config
 	cloned := config.Clone(cfg)
 
-	// in JSON representaiton they now must be the same as well
+	// in JSON representation they now must be the same as well
 	origBytes, err := json.Marshal(cfg)
 	require.NoError(t, err)
 	clonedBytes, err := json.Marshal(cloned)

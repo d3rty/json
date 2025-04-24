@@ -92,8 +92,8 @@ func TestGenerateDirtyJSON(t *testing.T) {
 }
 
 func minifyJSON(t *testing.T, raw []byte) []byte {
-	// minify JSON via marshalling round trip
-	// here we assume json is valid but just in case we assert errors
+	// minify JSON via a marshalling round trip
+	// here we assume JSON is valid, but just in case we assert errors
 	var d map[string]any
 	err := json.Unmarshal(raw, &d)
 	require.NoError(t, err)

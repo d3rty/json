@@ -142,7 +142,7 @@ var dictTrues = []string{"true", "yes", "on", "1", "ok", "yep"}
 var dictFalses = []string{"false", "no", "off", "0", "nah", "nope", ""}
 
 // generateRandomPreset selects a random subset (of size between min and max)
-// from the provided master list.
+// from the provided dict list.
 func generateRandomPreset(dict []string, from, to int, coinArg ...*flipping.Coin) []string {
 	coin := flipping.MaybeNewCoin(coinArg...)
 
@@ -152,7 +152,7 @@ func generateRandomPreset(dict []string, from, to int, coinArg ...*flipping.Coin
 		len(dict),
 	)
 
-	// Shuffle the master copy.
+	// Shuffle the dict copy.
 	shuffled := slices.Clone(dict)
 	coin.Rng().Shuffle(len(shuffled), func(i, j int) {
 		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]

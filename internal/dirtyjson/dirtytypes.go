@@ -22,12 +22,12 @@ type d3rtyContainer interface {
 	result() any
 }
 
-// Dirtyable is used as a way to link clean model with dirty model.
+// Dirtyable is used as a way to link a clean model with a dirty model.
 type Dirtyable interface {
 	Dirty() any
 }
 
-// Enabled is a struct atom that enables dirty unmarshalling for struct where it's embedded.
+// Enabled is a struct atom that enables dirty unmarshalling for the struct where it's embedded.
 type Enabled struct {
 	res any
 }
@@ -35,10 +35,10 @@ type Enabled struct {
 func (e *Enabled) result() any { return e.res }
 func (e *Enabled) init(v any)  { e.res = v }
 
-// Disabled is an atom struct that that remains syntaxly valid dirty model,
+// Disabled is an atom struct that that remains a syntactically valid dirty model
 // but disables dirty unmarshalling.
 // You can easily switch from `dirty.Enabled` to `dirty.Disabled`
-// keeping all models & interfaces working (falling back to standard (clean) json.Unmarshal).
+// keeping all models and interfaces working (falling back to standard (clean) json.Unmarshal).
 type Disabled struct{}
 
 func (*Disabled) result() any { return nil }
@@ -50,7 +50,7 @@ type (
 	Number float64
 	// String means simply a string.
 	String string
-	// Bool meansns a boolean value.
+	// Bool means a boolean value.
 	Bool bool
 	// Array means array of anything.
 	Array []any
@@ -75,7 +75,7 @@ type (
 	// Therefore if we allow to fail, then it will be "red" result but with actually data not being lost.
 	// That's why the feature is not so clear how-to-be-implemented-and-used.
 
-	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringifed.
+	// TODO: Arrays from String, Objects from strings. When some part of nested JSON is stringified.
 )
 
 const (
@@ -107,7 +107,7 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// cfg stays for specifically config of Number decoding
+	// cfg stays for specifical config of Number decoding
 	cfg := fullCfg.Number
 
 	// var s string
@@ -148,7 +148,7 @@ func (v *Number) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// Raw token (can be number, boolean, null, objet, array)
+	// Raw token (can be number, boolean, null, object, array)
 	s := strings.TrimSpace(string(data))
 
 	switch s[0] {
@@ -245,7 +245,7 @@ func (v *Integer) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	// Raw token (can be number, boolean, null, objet, array)
+	// Raw token (can be number, boolean, null, object, array)
 	s := strings.TrimSpace(string(data))
 
 	switch s[0] {
@@ -330,7 +330,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			if parser, ok := parsersBoolFromNum[fromNumbersCfg.CustomParseFunc]; ok {
 				b = parser(n)
 			} else {
-				// TRICKY THING. CORRUPTED CONFIG IS HERE. We should not just silenty exit
+				// TRICKY THING. CORRUPTED CONFIG IS HERE. We should not just silently exit
 				// Let's log or something similar (TODO: handle this carefully)
 				return option.NoneBool()
 			}
@@ -344,7 +344,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 
 		boolFromString = func(s string, cfg *config.BoolFromStringsConfig) option.Bool {
 			if s == "" {
-				// if not presented in custom lists, then assume as false
+				// if not presented in custom lists, then assume it as false
 				if !slices.Contains(cfg.CustomListForTrue, "") && !slices.Contains(cfg.CustomListForFalse, "") {
 					return option.False()
 				}
@@ -428,7 +428,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 
 	s := string(data)
 
-	// As we consider it a valid JSON, if first letter is `t` or `f` then it definetely true/false
+	// As we consider it a valid JSON, if the first letter is 't' or 'f' then it definitely true/false
 	switch s[0] {
 	case 't':
 		*v = true
@@ -484,7 +484,7 @@ func (v *Array) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data[1:len(data)-1], &arr); err != nil {
 		return fmt.Errorf("dirty.Array cant be parsed from json content: %w", err)
 	}
-	*v = Array(arr)
+	*v = arr
 	return nil
 }
 
@@ -516,7 +516,7 @@ func (v *Object) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// UnmarshalJSON converts []byte into an Date.
+// UnmarshalJSON converts []byte into a Date.
 func (v *DateTime) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.DateTime: UnmarshalJSON on nil pointer")

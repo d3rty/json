@@ -16,7 +16,7 @@ const (
 	BoolFromNumberUndefined BoolFromNumberAlg = 0
 
 	// BoolFromNumberBinary is the "1/0" parser. 1 is true, 0 is false.
-	// Other numbers are considered "non parsed" (fallback value or Red result).
+	// Other numbers are considered "non-parsed" (fallback value or Red result).
 	BoolFromNumberBinary BoolFromNumberAlg = 1 << (iota - 1) // 1 (001)
 
 	// BoolFromNumberPositiveNegative is the "<=0 vs >0" parser.
@@ -24,7 +24,7 @@ const (
 	BoolFromNumberPositiveNegative // 2 (010)
 
 	// BoolFromNumberSignOfOne is the "-1/1" parser.
-	// -1 means false, 1 means true. Other numbers are considerd "non parsed" (fallback value or Red result).
+	// -1 means false, 1 means true. Other numbers are considered "non-parsed" (fallback value or Red result).
 	BoolFromNumberSignOfOne // 4 (100)
 )
 
@@ -53,7 +53,7 @@ func (b *BoolFromNumberAlg) UnmarshalText(text []byte) error {
 }
 
 // MarshalText implements the encoding.TextMarshaler interface for BoolFromNumberAlg.
-// It converts enum value into its string representation.
+// It converts an enum value into its string representation.
 func (b *BoolFromNumberAlg) MarshalText() ([]byte, error) {
 	if s := b.String(); s != undefined {
 		return []byte(s), nil
@@ -62,7 +62,7 @@ func (b *BoolFromNumberAlg) MarshalText() ([]byte, error) {
 	return []byte(undefined), nil
 }
 
-// String stringifies value of BoolFromNumberAlg.
+// String stringifies the value of BoolFromNumberAlg.
 func (b *BoolFromNumberAlg) String() string {
 	if b != nil {
 		for s, v := range enumBoolFromNumberAlgs {
@@ -132,7 +132,7 @@ func (b *RoundingAlg) UnmarshalText(text []byte) error {
 }
 
 // MarshalText implements the encoding.TextMarshaler interface for RoundingAlg.
-// It converts enum value into its string representation.
+// It converts an enum value into its string representation.
 func (b *RoundingAlg) MarshalText() ([]byte, error) {
 	if s := b.String(); s != undefined {
 		return []byte(s), nil
@@ -141,7 +141,7 @@ func (b *RoundingAlg) MarshalText() ([]byte, error) {
 	return []byte(undefined), nil
 }
 
-// String stringifies value of RoundingAlg.
+// String stringifies the value of RoundingAlg.
 func (b *RoundingAlg) String() string {
 	if b != nil {
 		for s, v := range enumRoundingAlgs {

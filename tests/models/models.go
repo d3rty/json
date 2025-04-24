@@ -6,7 +6,7 @@ import (
 	dirty "github.com/d3rty/json"
 )
 
-// Option represents a key/value pair in the options array.
+// Option represents a key/value pair in the option array.
 type Option struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
@@ -42,7 +42,7 @@ type Item struct {
 	Tags     []string `json:"tags"`
 }
 
-// String returns json representation of the Item (Clean JSON).
+// String returns JSON representation of the Item (Clean JSON).
 func (i Item) String() string {
 	jj, _ := json.Marshal(i)
 	return string(jj)

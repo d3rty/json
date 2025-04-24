@@ -23,7 +23,7 @@ func NewCoin(rngArg ...*rand.Rand) *Coin {
 	if len(rngArg) > 0 && rngArg[0] != nil {
 		rng = rngArg[0]
 	} else {
-		//nolint: gosec // wer're find with simple `math/rand` here
+		//nolint:gosec // we're fine with simple `math/rand` here
 		rng = rand.New(rand.NewSource(time.Now().UnixNano()))
 	}
 
@@ -40,7 +40,7 @@ func (c *Coin) Chance(threshold float64) bool {
 
 func (c *Coin) Rng() *rand.Rand { return c.rng }
 
-// FeelingLucky returns random item from the given slice.
+// FeelingLucky returns a random item from the given slice.
 func FeelingLucky[T comparable](s []T, coinArg ...*Coin) T {
 	if len(s) == 0 {
 		var zero T

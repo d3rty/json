@@ -21,7 +21,7 @@ type Event struct {
 	Name     string `json:"name"`
 	IsActive bool   `json:"is_active"`
 
-	// MustBool won't be considered in dirty model, so it must parsed
+	// MustBool won't be considered in a dirty model, so it must be parsed.
 	MustBool bool `json:"must_bool"`
 }
 
@@ -70,7 +70,7 @@ func TestUnmarshal_Envelope(t *testing.T) {
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)
 
-	// It should be RED because of lost "must_bool" field
+	// It should be RED because of the lost "must_bool" field
 
 	evt := e.Events[0]
 	assert.Equal(t, 123, evt.ID)
@@ -106,7 +106,7 @@ func TestUnmarshal_EnvelopeFlexKeys(t *testing.T) {
 	assert.Equal(t, 1, e.Total)
 	assert.NotEmpty(t, e.Events)
 
-	// It should be RED because of lost "must_bool" field
+	// It should be RED because of the lost "must_bool" field
 
 	evt := e.Events[0]
 	assert.Equal(t, 123, evt.ID)

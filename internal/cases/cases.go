@@ -38,7 +38,7 @@ func isSnakeCase(s string) bool {
 		if unicode.IsLetter(r) && !unicode.IsLower(r) {
 			return false
 		}
-		// snake_case means lower letters, digits and udnerscores only
+		// snake_case means lower letters, digits and underscores only
 	}
 	return true
 }
@@ -67,7 +67,7 @@ func isCamelCase(s string) bool {
 
 // isPascalCase returns true if s is PascalCase.
 // It ensures that s starts with an uppercase letter and that,
-// after lowercasing the first letter, the result is valid camelCase.
+// after lowercasing the first letter, the result is a valid camelCase.
 func isPascalCase(s string) bool {
 	if s == "" {
 		return false
@@ -77,10 +77,10 @@ func isPascalCase(s string) bool {
 		return false
 	}
 
-	// all upper is not pascal case
+	// all uppers are not pascal case
 	nUpper := 0
-	for _, rune := range runes {
-		if !unicode.IsUpper(rune) {
+	for _, r := range runes {
+		if !unicode.IsUpper(r) {
 			break
 		}
 		nUpper++
@@ -94,16 +94,16 @@ func isPascalCase(s string) bool {
 	return isCamelCase(lowered)
 }
 
-// isHeaderCase returns true if s is in header case.
+// isHeaderCase returns true if s is in the header case.
 // Header case means the string is split by hyphens, and for each segment,
-// the first letter is uppercase (if it is a letter) and all subsequent letters are lowercase.
+// the first letter is uppercase (if it is a letter), and all further letters are lowercase.
 // HeaderCase considers we have at least one hyphen (so two words or more words).
 func isHeaderCase(s string) bool {
 	if s == "" {
 		return false
 	}
 
-	// Split the string into parts using hyphen as separator.
+	// Split the string into parts using hyphen as a separator.
 	parts := strings.Split(s, "-")
 	if len(parts) <= 1 {
 		return false
@@ -115,7 +115,7 @@ func isHeaderCase(s string) bool {
 			return false
 		}
 		runes := []rune(part)
-		// First rune must be uppercase if it's a letter.
+		// The first rune must be uppercase if it's a letter.
 		if unicode.IsLetter(runes[0]) && !unicode.IsUpper(runes[0]) {
 			return false
 		}
@@ -129,7 +129,7 @@ func isHeaderCase(s string) bool {
 	return true
 }
 
-// isKebabCase returns true if s is kebab-case.
+// isKebabCase returns true if s is a kebab-case.
 // It requires that s contains at least one hyphen and that
 // all alphabetic characters are lowercase.
 func isKebabCase(s string) bool {
@@ -168,11 +168,11 @@ func isTitleSnakeCase(s string) bool {
 			return false
 		}
 		runes := []rune(part)
-		// First rune must be uppercase.
+		// The first rune must be uppercase.
 		if !unicode.IsUpper(runes[0]) {
 			return false
 		}
-		// Remaining runes should be lowercase letters (if they are letters).
+		// The remaining runes should be lowercase letters (if they are letters).
 		for _, r := range runes[1:] {
 			if unicode.IsLetter(r) && !unicode.IsLower(r) {
 				return false
@@ -182,7 +182,7 @@ func isTitleSnakeCase(s string) bool {
 	return true
 }
 
-// Is returns true if s is in target case.
+// Is returns true if s is in the target case.
 func Is(s string, target Case) bool {
 	switch target {
 	case TitleSnake:
@@ -216,7 +216,7 @@ func IsComplexCase(s string) bool {
 		return true
 	}
 
-	// because of `-` and `_` check only CamelCase and PascalCase remained not covered
+	// because of `-` and `_` check, only CamelCase and PascalCase remained not covered
 	return isCamelCase(s) || isPascalCase(s)
 }
 
@@ -232,7 +232,7 @@ func IsHybridCase(s string) bool {
 	if !hasHyphen && !hasUnderscore {
 		return false
 	}
-	// If both hyphen and underscore are present, it's clearly hybrid.
+	// If both hyphen and underscore are present, it's a hybrid.
 	if hasHyphen && hasUnderscore {
 		return true
 	}
@@ -264,7 +264,7 @@ func IsHybridCase(s string) bool {
 	return hasUpper && hasLower
 }
 
-// TransformTo transforms given string into a target Case.
+// TransformTo transforms a given string into a target Case.
 // It supports determined cases only, but not Hybrid. For Hybrid use TransformToHybrid.
 func TransformTo(s string, target Case) string {
 	words := SplitWords(s)
@@ -292,8 +292,8 @@ func TransformTo(s string, target Case) string {
 	}
 }
 
-// separatorRunes are list of runes used for separation in hybrid case
-// '\x00' represents the empty rune. E.g. It's used for `camelCase` separation.
+// separatorRunes are a list of runes used for separation in hybrid case
+// '\x00' represents the empty rune. E.g., It's used for `camelCase` separation.
 const separatorRunes = "-_ \x00"
 
 // TransformToHybridCase transforms the input string s into a hybrid case string.
@@ -354,7 +354,7 @@ func SplitWords(s string) []string {
 			return r == '_' || r == '-' || r == ' ' || r == '\x00'
 		})
 		var words []string
-		// For each part, check if it has mixed case (camel/Pascal style).
+		// For each part, check if it has a mixed case (camel/Pascal style).
 		// If yes, further split it; otherwise, use the part as-is.
 		for _, part := range parts {
 			if part == "" {
@@ -395,7 +395,7 @@ func splitCamelCase(s string) []string {
 	var lastIdx int
 	runes := []rune(s)
 	for i := 1; i < len(runes); i++ {
-		// If current rune is uppercase and the previous rune is lowercase or digit,
+		// If the current rune is uppercase and the previous rune is lowercase or digit,
 		// consider it as a boundary.
 		if unicode.IsUpper(runes[i]) && (unicode.IsLower(runes[i-1]) || unicode.IsDigit(runes[i-1])) {
 			words = append(words, string(runes[lastIdx:i]))

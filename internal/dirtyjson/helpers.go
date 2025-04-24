@@ -22,10 +22,10 @@ func limitedStr(s string, limitArg ...int) string {
 	return s
 }
 
-// getStringBetweenQuotes returns the string between the quotes.
+// The `getStringBetweenQuotes` returns the string between the quotes.
 // It returns an error if the string is not valid.
-// E.g. `"hello"` returns `hello`.
-// `"something`, `something`, `something "else"`, etc  will fail.
+// E.g. `"hello"` returns `hello`,
+// `"something`, `something`, `something "else"`, etc. will fail.
 func getStringBetweenQuotes(data []byte) (string, error) {
 	if data[0] != '"' {
 		return "", errors.New("quoted string must start with a quote")
@@ -40,7 +40,7 @@ func getStringBetweenQuotes(data []byte) (string, error) {
 	return s, nil
 }
 
-// normalizeJSONKeys normalizes given string:
+// normalizeJSONKeys normalizes a given string:
 // makes it lowercase + removes _,-, spaces.
 func normalizeJSONKey(key string) string {
 	if key == "" {

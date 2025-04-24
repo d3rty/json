@@ -60,7 +60,7 @@ func TestSample1_Dirty_Yellow(t *testing.T) {
 		dirty.Unmarshal(contents, &dirty1Result),
 	)
 
-	// Default config should work although.
+	// Default config should work, although.
 	dirty.ConfigSetGlobal(func(cfg *dirty.Config) {
 		cfg.ResetToDefault()
 	})

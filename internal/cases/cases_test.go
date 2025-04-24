@@ -11,7 +11,7 @@ import (
 
 func TestIsCamelCase(t *testing.T) {
 	assert.True(t, cases.Is("camelCase", cases.Camel), `"camelCase" should be camelCase`)
-	assert.True(t, cases.Is("cAMEL", cases.Camel), `"cAMEL" should be camelCase`) // for now it's OK
+	assert.True(t, cases.Is("cAMEL", cases.Camel), `"cAMEL" should be camelCase`) // for now, it's OK
 
 	assert.False(t, cases.Is("", cases.Camel), `"" should not be camelCase`)
 	assert.False(t, cases.Is("camelcase", cases.Camel), `"camelcase" should not be camelCase`)
@@ -21,7 +21,7 @@ func TestIsCamelCase(t *testing.T) {
 }
 
 func TestIsPascalCase(t *testing.T) {
-	// Valid PascalCase: starts with uppercase and becomes valid camelCase when first letter lowercased.
+	// Valid PascalCase: starts with uppercase and becomes valid camelCase when the first letter lowercased.
 	assert.True(t, cases.Is("PascalCase", cases.Pascal), `"PascalCase" should be PascalCase`)
 
 	assert.False(t, cases.Is("", cases.Pascal), `"" should not be PascalCase`)

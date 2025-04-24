@@ -60,9 +60,9 @@ type Event struct {
     Name   string `json:"name"`
 
     // These fields will be rewritten in dirty schema.
-    // In case if they were dirty-read (stringified integers, etc) - they are still valid. (Yellow Mode)
+    // In case if they were dirty-read (stringified integers, etc.) - they are still valid. (Yellow Mode)
     ID       int    `json:"id"`
-    IsActive bool   `json:"is_active"` // this will be read as is_active/IsActive/is-active, etc
+    IsActive bool   `json:"is_active"` // this will be read as is_active/IsActive/is-active, etc.
 
     // MustBool won't be rewritten in dirty schema. So this field MUST be bool or ignored (Red Mode).
     MustBool bool `json:"must_bool"`
@@ -86,12 +86,12 @@ func main() {
       log.Fatalf("error unmarshalling: %v", err)
     }
 
-    // We successfully marshalled, fixing all the mistakes that we forgave (Yellow mode):
+    // We successfully marshaled, fixing all the mistakes that we forgave (Yellow mode):
     fmt.Println(event.ID) // 123
     fmt.Println(event.IsActive) // true
     fmt.Println(event.MustBool) // true
 
-    // Unparsable value on strict (clean) field:
+    // Unparsable value on the strict (clean) field:
     // We couldn't fix all the mistakes, so we lost the data (Red mode):
     data = []byte(`{"id": "123", "name": "Sample Event", "IsActive": "on", "must_bool": "true"}`)
 
@@ -102,6 +102,6 @@ func main() {
 
     fmt.Println(event.ID) // 123
     fmt.Println(event.IsActive) // true
-    fmt.Println(event.MustBool) // false (Because it's not declared in dirty scheme)
+    fmt.Println(event.MustBool) // false (Because it's not declared in a dirty scheme)
 }
 ````

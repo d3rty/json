@@ -1,6 +1,6 @@
 package config
 
-// Following exported functions are only accessible from tests.
+// The following exported functions are only accessible from tests.
 //
 //nolint:gochecknoglobals // `export_test.go` is meant to declare global variables
 var (
