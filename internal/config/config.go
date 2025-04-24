@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/d3rty/json/internal/option"
@@ -13,14 +14,8 @@ import (
 //go:embed default.toml
 var embeddedConfig embed.FS
 
-// TODO: FromNull behavior should be done via Option
-// So, if dirty model has the Option type, then FromNull should respect the option type.
-
-// TODO: allow read single json into array (so just first item is filled)
-// and probably opposite (showing in red how much data was lost, but first was set)
-
 // Section is a config section (toml table).
-// Section is considered disabled if Disabled=true or full its parent is nil (see cfg.Init()).
+// Section is considered disabled if Disabled=true or full its parent is nil (see cfg.init()).
 type Section struct {
 	Disabled bool `toml:"Disabled"`
 }
@@ -34,6 +29,7 @@ type Config struct {
 	Bool     *BoolConfig     `toml:"Bool"`
 	Number   *NumberConfig   `toml:"Number"`
 	Date     *DateConfig     `toml:"Date"`
+	Array    *ArrayConfig    `toml:"Array"`
 	FlexKeys *FlexKeysConfig `toml:"FlexKeys"`
 }
 
@@ -136,6 +132,13 @@ type (
 	}
 )
 
+type ArrayConfig struct {
+	Section
+
+	// AutoWrapSingleValues allows to have `result: x` to be considered as `result: [x]`
+	AutoWrapSingleValues bool `toml:"AutoWrapSingleValues"`
+}
+
 type FlexKeysConfig struct {
 	Section
 
@@ -149,7 +152,7 @@ func FromBytes(data []byte) *Config {
 	if err := toml.Unmarshal(data, &cfg); err != nil {
 		return nil
 	}
-	return (&cfg).Init()
+	return (&cfg).init()
 }
 
 // String shows string representation of the config. It used primarily for debug purposes or verbose mode
@@ -163,9 +166,19 @@ func (cfg *Config) String() string {
 	return string(j)
 }
 
-// Init sets default for all the config fields.
-// If a subconfig is nil, it automatically changes it to an empty config with Disabled=true.
-func (cfg *Config) Init() *Config {
+// Clone returns the deep safe copy of a Config instance.
+func (cfg *Config) Clone() *Config {
+	cloned, err := clone(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	return cloned
+}
+
+// init sets default for all the config fields.
+// if a subconfig is nil, it automatically changes it to an empty config with Disabled=true.
+func (cfg *Config) init() *Config {
 	handleDefaultFieldDisabled(cfg)
 
 	if cfg.Date.Timezone.Default == "" {
@@ -178,36 +191,17 @@ func (cfg *Config) Init() *Config {
 	return cfg
 }
 
-// defaultConfigs returns a copy of the default config.
-func defaultConfig() *Config {
-	data, err := fs.ReadFile(embeddedConfig, "default.toml")
-	if err != nil {
-		panic("failed to read embedded default config " + err.Error())
-	}
-
-	// TODO precache in variable.
-
-	var cfg Config
-	if err := toml.Unmarshal(data, &cfg); err != nil {
-		panic("failed to unmarshal default.toml config: " + err.Error())
-	}
-
-	cfg.Init()
-
-	return &cfg
-}
-
 // newConfig returns a new (empty/clean) config that disables all dirty options.
 // dirty unmarshalling with an empty config behaves the same as standard unmarshalling.
 func newConfig() *Config {
-	return (&Config{}).Init()
+	return (&Config{}).init()
 }
 
 // ResetToEmpty resets config to its clean state (clean config).
 func (cfg *Config) ResetToEmpty() { *cfg = *newConfig() }
 
 // ResetToDefault resets config to the default state.
-func (cfg *Config) ResetToDefault() { *cfg = *defaultConfig() }
+func (cfg *Config) ResetToDefault() { *cfg = *Default() }
 
 // New creates a new and empty config.
 func New() *Config { return newConfig() }
@@ -224,5 +218,30 @@ func Load(path string) (*Config, error) {
 		panic("failed to unmarshal default.toml config: " + err.Error())
 	}
 
-	return cfg.Init(), nil
+	return cfg.init(), nil
+}
+
+var (
+	defaultCfg  *Config
+	defaultOnce sync.Once
+)
+
+// Default returns a copy of the loaded default config (default.toml).
+func Default() *Config {
+	defaultOnce.Do(func() {
+		data, err := fs.ReadFile(embeddedConfig, "default.toml")
+		if err != nil {
+			panic("failed to read embedded default config " + err.Error())
+		}
+
+		var cfg Config
+		if err := toml.Unmarshal(data, &cfg); err != nil {
+			panic("failed to unmarshal default.toml config: " + err.Error())
+		}
+
+		defaultCfg = (&cfg).init()
+	})
+
+	// Return a deep copy to prevent modification of the cached config
+	return defaultCfg.Clone()
 }

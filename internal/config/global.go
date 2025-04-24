@@ -8,7 +8,7 @@ import (
 //
 //nolint:gochecknoglobals // it's an OK case for global variable
 var (
-	globalConfig = defaultConfig()
+	globalConfig = Default()
 	mu           sync.RWMutex
 )
 
@@ -18,7 +18,7 @@ func Global() *Config {
 	mu.RLock()
 	defer mu.RUnlock()
 
-	return clone(globalConfig)
+	return globalConfig.Clone()
 }
 
 // SetGlobal updates the global configuration.

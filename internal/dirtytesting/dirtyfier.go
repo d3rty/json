@@ -207,7 +207,9 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 			}
 
 			var sFalse = "false"
-			if len(cfgFromStrings.CustomListForFalse) > 0 { // by default, the "false" string is considered to be as false
+			if len(
+				cfgFromStrings.CustomListForFalse,
+			) > 0 { // by default, the "false" string is considered to be as false
 				sFalse = flipping.FeelingLucky(cfgFromStrings.CustomListForFalse, d.coin)
 			}
 			if cfgFromStrings.CaseInsensitive && d.coin.Flip() {

@@ -51,7 +51,7 @@ func TestClone(t *testing.T) {
 	cfg := config.Global()
 
 	// Clone the original config
-	cloned := config.Clone(cfg)
+	cloned := cfg.Clone()
 
 	// in JSON representation they now must be the same as well
 	origBytes, err := json.Marshal(cfg)
