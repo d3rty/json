@@ -48,7 +48,7 @@ type (
 	BoolFromStringsConfig struct {
 		Section
 
-		// TODO: precache customListForTrue + CaseInsensitive (so we don't do lower of the list each time)
+		// TODO(github.com/d3rty/json/issues/3) precache customListForTrue + CaseInsensitive (so we don't do lower of the list each time)
 
 		CustomListForTrue       []string `toml:"CustomListForTrue"`
 		CustomListForFalse      []string `toml:"CustomListForFalse"`
