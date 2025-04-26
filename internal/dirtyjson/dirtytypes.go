@@ -296,8 +296,6 @@ func (v *String) UnmarshalJSON(data []byte) error {
 }
 
 // UnmarshalJSON converts []byte into a Bool.
-//
-//nolint:funlen // we're OK
 func (v *Bool) UnmarshalJSON(data []byte) error {
 	if v == nil {
 		return errors.New("dirty.Bool: UnmarshalJSON on nil pointer")

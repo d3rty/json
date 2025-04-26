@@ -47,9 +47,10 @@ func normalizeJSONKey(key string) string {
 		return key
 	}
 
+	n := len(key)
 	var sb strings.Builder
-	sb.Grow(len(key)) // preallocate memory
-	for i := range len(key) {
+	sb.Grow(n) // preallocate memory
+	for i := range n {
 		c := key[i]
 		// Skip underscores, dashes, and spaces.
 		if c == '_' || c == '-' || c == ' ' {
