@@ -1,13 +1,13 @@
 package dirtyjson
 
 import (
+	"github.com/amberpixels/abu/maybe"
 	"github.com/d3rty/json/internal/config"
-	"github.com/d3rty/json/internal/option"
 )
 
 // GetBoolFromNumParser returns the parser function for the given BoolFromNumberAlg.
 // This function is exported only for testing purposes.
-func GetBoolFromNumParser(alg config.BoolFromNumberAlg) func(float64) option.Bool {
+func GetBoolFromNumParser(alg config.BoolFromNumberAlg) func(float64) maybe.Bool {
 	return parsersBoolFromNum[alg]
 }
 

@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/amberpixels/abu/maybe"
 	"github.com/d3rty/json/internal/config"
-	"github.com/d3rty/json/internal/option"
 
 	"github.com/amberpixels/years"
 )
@@ -315,17 +315,17 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 	cfg := fullCfg.Bool
 
 	var (
-		boolFromNumber = func(n float64) option.Bool {
+		boolFromNumber = func(n float64) maybe.Bool {
 			// assuming config is enabled
 			fromNumbersCfg := cfg.FromNumbers
-			var b option.Bool
+			var b maybe.Bool
 			if parser, ok := parsersBoolFromNum[fromNumbersCfg.CustomParseFunc]; ok {
 				b = parser(n)
 			} else {
 				// TRICKY THING. CORRUPTED CONFIG IS HERE.
 				// TODO(github.com/d3rty/json/issues/11): do a loud log here
 				slog.Error("possible corrupted config ", "parse_func", fromNumbersCfg.CustomParseFunc)
-				return option.NoneBool()
+				return maybe.NoneBool()
 			}
 
 			if b.Some() {
@@ -335,11 +335,11 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			return cfg.FallbackValue
 		}
 
-		boolFromString = func(s string, cfg *config.BoolFromStringsConfig) option.Bool {
+		boolFromString = func(s string, cfg *config.BoolFromStringsConfig) maybe.Bool {
 			if s == "" {
 				// if not presented in custom lists, then assume it as false
 				if !slices.Contains(cfg.CustomListForTrue, "") && !slices.Contains(cfg.CustomListForFalse, "") {
-					return option.False()
+					return maybe.False()
 				}
 
 				// otherwise continue with regular logic
@@ -352,18 +352,18 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 				if cfg.CaseInsensitive {
 					for _, ts := range cfg.CustomListForTrue {
 						if sLower == strings.ToLower(ts) {
-							return option.True()
+							return maybe.True()
 						}
 					}
 				} else if slices.Contains(cfg.CustomListForTrue, s) {
-					return option.True()
+					return maybe.True()
 				}
 			} else {
 				if literalForTrue == s {
-					return option.True()
+					return maybe.True()
 				}
 				if cfg.CaseInsensitive && literalForTrue == strings.ToLower(s) {
-					return option.True()
+					return maybe.True()
 				}
 			}
 
@@ -371,18 +371,18 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 				if cfg.CaseInsensitive {
 					for _, ts := range cfg.CustomListForFalse {
 						if sLower == strings.ToLower(ts) {
-							return option.False()
+							return maybe.False()
 						}
 					}
 				} else if slices.Contains(cfg.CustomListForFalse, s) {
-					return option.False()
+					return maybe.False()
 				}
 			} else {
 				if literalForFalse == s {
-					return option.False()
+					return maybe.False()
 				}
 				if cfg.CaseInsensitive && literalForFalse == strings.ToLower(s) {
-					return option.False()
+					return maybe.False()
 				}
 			}
 

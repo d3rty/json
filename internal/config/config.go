@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/d3rty/json/internal/option"
+	"github.com/amberpixels/abu/maybe"
 )
 
 //go:embed default.toml
@@ -37,7 +37,7 @@ type Config struct {
 type BoolConfig struct {
 	Section
 
-	FallbackValue option.Bool `toml:"FallbackValue"`
+	FallbackValue maybe.Bool `toml:"FallbackValue"`
 
 	FromStrings *BoolFromStringsConfig `toml:"FromStrings"`
 	FromNumbers *BoolFromNumbersConfig `toml:"FromNumbers"`

@@ -3,9 +3,9 @@ package dirtyjson_test
 import (
 	"testing"
 
+	"github.com/amberpixels/abu/maybe"
 	"github.com/d3rty/json/internal/config"
 	"github.com/d3rty/json/internal/dirtyjson"
-	"github.com/d3rty/json/internal/option"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -18,13 +18,13 @@ func TestBoolFromNumberBinary(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    float64
-		expected option.Bool
+		expected maybe.Bool
 	}{
-		{"Zero returns false", 0, option.False()},
-		{"One returns true", 1, option.True()},
-		{"Negative number returns none", -1, option.NoneBool()},
-		{"Positive number (not 1) returns none", 2, option.NoneBool()},
-		{"Decimal number returns none", 0.5, option.NoneBool()},
+		{"Zero returns false", 0, maybe.False()},
+		{"One returns true", 1, maybe.True()},
+		{"Negative number returns none", -1, maybe.NoneBool()},
+		{"Positive number (not 1) returns none", 2, maybe.NoneBool()},
+		{"Decimal number returns none", 0.5, maybe.NoneBool()},
 	}
 
 	// Run test cases
@@ -45,14 +45,14 @@ func TestBoolFromNumberPositiveNegative(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    float64
-		expected option.Bool
+		expected maybe.Bool
 	}{
-		{"Zero returns false", 0, option.False()},
-		{"Negative number returns false", -1, option.False()},
-		{"Large negative number returns false", -1000, option.False()},
-		{"Small positive number returns true", 0.1, option.True()},
-		{"One returns true", 1, option.True()},
-		{"Large positive number returns true", 1000, option.True()},
+		{"Zero returns false", 0, maybe.False()},
+		{"Negative number returns false", -1, maybe.False()},
+		{"Large negative number returns false", -1000, maybe.False()},
+		{"Small positive number returns true", 0.1, maybe.True()},
+		{"One returns true", 1, maybe.True()},
+		{"Large positive number returns true", 1000, maybe.True()},
 	}
 
 	// Run test cases
@@ -73,14 +73,14 @@ func TestBoolFromNumberSignOfOne(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    float64
-		expected option.Bool
+		expected maybe.Bool
 	}{
-		{"Negative one returns false", -1, option.False()},
-		{"One returns true", 1, option.True()},
-		{"Zero returns none", 0, option.NoneBool()},
-		{"Negative number (not -1) returns none", -2, option.NoneBool()},
-		{"Positive number (not 1) returns none", 2, option.NoneBool()},
-		{"Decimal number returns none", 0.5, option.NoneBool()},
+		{"Negative one returns false", -1, maybe.False()},
+		{"One returns true", 1, maybe.True()},
+		{"Zero returns none", 0, maybe.NoneBool()},
+		{"Negative number (not -1) returns none", -2, maybe.NoneBool()},
+		{"Positive number (not 1) returns none", 2, maybe.NoneBool()},
+		{"Decimal number returns none", 0.5, maybe.NoneBool()},
 	}
 
 	// Run test cases

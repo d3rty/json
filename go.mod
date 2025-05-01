@@ -8,6 +8,8 @@ require (
 	github.com/stretchr/testify v1.10.0
 )
 
+require github.com/amberpixels/abu v0.0.2
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/djherbis/times v1.6.0 // indirect

@@ -7,8 +7,8 @@
 
 # Bool.FallbackValue is the bool value result when unmarshalling fell into an unhappy path.
 #
-# FallbackValue = false/true will be converted to option.Some(false/true)
-# FallbackValue = null will be converted into option.None() - may cause a red result when unmarshalled.
+# FallbackValue = false/true will be converted to maybe.Some(false/true)
+# FallbackValue = null will be converted into maybe.None() - may cause a red result when unmarshalled.
 # This value can be overridden for specific FromStrings/FromNumbers/FromNull subconfigs.
 FallbackValue = false
 

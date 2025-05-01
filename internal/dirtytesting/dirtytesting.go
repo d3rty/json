@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/amberpixels/abu/maybe"
 	"github.com/d3rty/json/internal/config"
 	"github.com/d3rty/json/internal/flipping"
-	"github.com/d3rty/json/internal/option"
 )
 
 // RandomConfig returns a randomly generated *Config.
@@ -19,7 +19,7 @@ func RandomConfig(coinArg ...*flipping.Coin) *config.Config {
 	// --- Bool Configuration ---
 	// Randomly decide if dirty bool is allowed.
 	if cfg.Bool.Disabled = coin.Flip(); !cfg.Bool.Disabled {
-		cfg.Bool.FallbackValue = option.Some(coin.Flip())
+		cfg.Bool.FallbackValue = maybe.Some(coin.Flip())
 
 		// Bool.FromStrings
 		if cfg.Bool.FromStrings.Disabled = coin.Flip(); cfg.Bool.FromStrings.Disabled {

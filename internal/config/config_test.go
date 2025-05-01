@@ -3,8 +3,8 @@ package config_test
 import (
 	"testing"
 
+	"github.com/amberpixels/abu/maybe"
 	"github.com/d3rty/json/internal/config"
-	"github.com/d3rty/json/internal/option"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -23,7 +23,7 @@ func TestGlobalConfig_Valid(t *testing.T) {
 	boolConfig := globalConfig.Bool
 	assert.NotNil(t, boolConfig)
 	assert.False(t, boolConfig.IsDisabled())
-	assert.Equal(t, boolConfig.FallbackValue, option.False())
+	assert.Equal(t, boolConfig.FallbackValue, maybe.False())
 
 	assert.NotNil(t, boolConfig.FromStrings)
 	assert.False(t, boolConfig.FromStrings.IsDisabled())
