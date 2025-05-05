@@ -36,7 +36,12 @@
       onsubmit="return false;">
     <label>
         <strong>Dirty JSON</strong><br>
-        <textarea name="json" rows="8" placeholder='{"id":"123","name":"Sample","is_active":"yes","must_bool":true}'></textarea>
+        <textarea name="json" rows="8">{
+  "id": "2.5e6",
+  "Is_Active": "yes",
+  "must_bool": 1,
+  "Name": "hello World"
+}</textarea>
     </label>
     <button type="submit">Clean it →</button>
 </form>
