@@ -24,5 +24,17 @@ lint: lint-install
 test:
 	go test ./...
 
+wasm:
+	@echo "Building WASM module..."
+	GOOS=js GOARCH=wasm go build -o demo/main.wasm ./cmd/wasm-demo
+	@echo "Installing wasm_exec.js…"
+	@GOROOT=$$(go env GOROOT); \
+	cp $$GOROOT/lib/wasm/wasm_exec.js demo/; \
+
+
+demoserve:
+	@echo "📡  Serving demo/ at http://localhost:8080"
+	cd demo && python3 -m http.server 8080
+
 # Phony targets
-.PHONY: all tidy lint-install lint test
+.PHONY: all tidy lint-install lint test wasm demoserve
