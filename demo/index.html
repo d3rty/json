@@ -3,51 +3,103 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>d3rty/json WASM Demo</title>
+    <title>d3rty/json 🧼 Demo</title>
 
     <!-- HTMX v2 -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
 
+    <!-- Prism.js for syntax highlighting -->
+    <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-json.min.js"></script>
+
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        textarea { width: 100%; font-family: monospace; margin: 0.5rem 0; }
-        pre { background: #f4f4f4; padding: 1rem; overflow-x: auto; }
-        button { padding: 0.5rem 1rem; }
-        label { display: block; margin-top: 1rem; }
-        code { display: block; white-space: pre; font-family: monospace; }
+        body {
+            font-family: sans-serif;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            max-width: 1000px;
+        }
+        .container {
+            display: flex;
+            gap: 1rem;
+        }
+        .pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 1rem;
+            overflow-x: auto;
+            border-radius: 4px;
+            margin: 0;
+            flex: 1;
+        }
+        .json-input, .json-container {
+            border: 1px solid #ccc;
+            outline: none;
+            cursor: text;
+            white-space: pre;
+            font-family: monospace;
+        }
+        .model-code {
+            margin: 1rem 0;
+        }
+        .form-footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .clean-button {
+            padding: 1rem 2rem;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<h1>d3rty/json WASM Demo</h1>
+<h1>d3rty/json 🧼 Demo</h1>
 <p>Below is the fixed model we’ll unmarshal into:</p>
-<pre><code>type Event struct {
+
+<!-- Read‑only, syntax‑highlighted Go code -->
+<pre class="model-code"><code class="language-go">// Event is the demo model.
+type Event struct {
     dirty.Enabled
-    Name     string <span style="color: #0a0;">&#96;json:"name"&#96;</span>
-    ID       int    <span style="color: #0a0;">&#96;json:"id"&#96;</span>
-    IsActive bool   <span style="color: #0a0;">&#96;json:"is_active"&#96;</span>
-    MustBool bool   <span style="color: #0a0;">&#96;json:"must_bool"&#96;</span>
+    Name     string `json:"name"`
+    ID       int    `json:"id"`
+    IsActive bool   `json:"is_active"`
+    MustBool bool   `json:"must_bool"`
 }</code></pre>
 
-<form id="cleaner"
-      hx-post="/clean"
-      hx-target="#output"
-      hx-swap="innerHTML"
-      onsubmit="return false;">
-    <label>
-        <strong>Dirty JSON</strong><br>
-        <textarea name="json" rows="8">{
-  "id": "2.5e6",
+<div class="container">
+    <div class="pane">
+        <h2>Dirty JSON</h2>
+        <pre class="json-input" contenteditable="true"><code id="json-input" class="language-json">{
+  "id": "100000",
   "Is_Active": "yes",
   "must_bool": 1,
   "Name": "hello World"
-}</textarea>
-    </label>
-    <button type="submit">Clean it →</button>
-</form>
+}</code></pre>
+    </div>
 
-<h2>Clean JSON</h2>
-<pre id="output">{ … result appears here … }</pre>
+    <div class="pane">
+        <h2>Clean JSON</h2>
+        <pre class="json-container"><code id="output" class="language-json">{
+  /* result will appear here */
+}</code></pre>
+    </div>
+</div>
+
+<div class="form-footer">
+    <button class="clean-button" type="button">Clean it 🧼</button>
+</div>
 
 <!-- Go WASM runtime -->
 <script src="wasm_exec.js"></script>
@@ -59,28 +111,27 @@
 		.catch(console.error);
 </script>
 
-<!-- HTMX listener to call our WASM function instead of doing a network request -->
+<!-- Prism highlight input on edit -->
 <script>
-	document.body.addEventListener('htmx:beforeRequest', event => {
-		const form = event.detail.elt;
-		if (form.id !== 'cleaner') return;
+	const inputEl = document.getElementById('json-input');
+	inputEl.addEventListener('input', () => {
+		Prism.highlightElement(inputEl);
+	});
+</script>
 
-		// prevent the dummy POST
-		event.preventDefault();
-
-		// grab the JSON input
-		const jsonRaw = form.querySelector('[name=json]').value;
-
-		// call the WASM-exported function
+<!-- Button handler to clean JSON -->
+<script>
+	document.querySelector('.clean-button').addEventListener('click', () => {
+		const jsonRaw = document.getElementById('json-input').textContent;
 		let out;
 		try {
 			out = cleanJSON(jsonRaw);
 		} catch (err) {
-			out = JSON.stringify({ error: err.toString() }, null, 2);
+			out = "failed to cleanJSON: " + err
 		}
-
-		// inject into the <pre id="output">
-		document.getElementById('output').textContent = out;
+		const codeEl = document.getElementById('output');
+		codeEl.textContent = out;
+		Prism.highlightElement(codeEl);
 	});
 </script>
 
