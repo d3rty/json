@@ -97,6 +97,56 @@ type Event struct {
     </div>
 </div>
 
+<h2>Configuration</h2>
+<form id="config-form">
+    <fieldset>
+        <legend>Bool</legend>
+        <label><input type="checkbox" name="boolEnabled" checked> Enable dirty Bool</label><br>
+        <label>Fallback: <select name="boolFallback">
+            <option value="false" selected>false</option>
+            <option value="true">true</option>
+            <option value="null">null</option>
+        </select></label><br>
+
+        <label><input type="checkbox" name="boolFromStrings" checked> FromStrings</label><br>
+        <div class="nested">
+            <label><input type="checkbox" name="boolCaseInsensitive" checked> CaseInsensitive</label><br>
+            <label><input type="checkbox" name="respectFromNumbersLogic" checked> RespectFromNumbersLogic</label><br>
+        </div>
+
+        <label><input type="checkbox" name="boolFromNumbers" checked> FromNumbers</label><br>
+        <label>ParseFunc: <select name="boolParseFunc">
+            <option value="binary">binary</option>
+            <option value="positive_negative">positive_negative</option>
+            <option value="sign_of_one">sign_of_one</option>
+        </select></label><br>
+        <label><input type="checkbox" name="boolFromNull" checked> FromNull</label><br>
+        <label><input type="checkbox" name="boolNullInverse"> Null Inverse</label>
+    </fieldset>
+
+    <fieldset>
+        <legend>Number</legend>
+        <label><input type="checkbox" name="numberEnabled" checked> Enable dirty Number</label><br>
+        <label><input type="checkbox" name="numSpacingAllowed" checked> SpacingAllowed</label><br>
+        <label><input type="checkbox" name="numExponentAllowed" checked> ExponentNotationAllowed</label><br>
+        <label><input type="checkbox" name="numCommasAllowed" checked> CommasAllowed</label><br>
+        <label>Rounding: <select name="numRounding">
+            <option value="none">none</option>
+            <option value="floor" selected>floor</option>
+            <option value="round">round</option>
+        </select></label><br>
+        <label><input type="checkbox" name="numFromBools" checked> FromBools</label><br>
+        <label><input type="checkbox" name="numFromNull" checked> FromNull</label>
+    </fieldset>
+
+    <fieldset>
+        <legend>FlexKeys</legend>
+        <label><input type="checkbox" name="flexEnabled"> Enable FlexKeys</label><br>
+        <label><input type="checkbox" name="flexCaseInsensitive"> CaseInsensitive</label><br>
+        <label><input type="checkbox" name="flexChameleon"> ChameleonCase</label>
+    </fieldset>
+</form>
+
 <div class="form-footer">
     <button class="clean-button" type="button">Clean it 🧼</button>
 </div>

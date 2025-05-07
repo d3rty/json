@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Config Form</title>
+</head>
+<body>
+<form method="POST" action="/config/save">
+  
+<fieldset>
+  <legend>Bool</legend>
+  <div>
+    <label for="Bool.FallbackValue">FallbackValue</label>
+      <input type="text" id="Bool.FallbackValue" name="Bool.FallbackValue" value="{false true}">
+
+  </div>
+    
+<fieldset>
+  <legend>FromStrings</legend>
+  <div>
+    <label for="Bool.FromStrings.CustomListForTrue">CustomListForTrue</label>
+      <input type="text" id="Bool.FromStrings.CustomListForTrue" name="Bool.FromStrings.CustomListForTrue" value="[true yes on]">
+
+  </div>
+  <div>
+    <label for="Bool.FromStrings.CustomListForFalse">CustomListForFalse</label>
+      <input type="text" id="Bool.FromStrings.CustomListForFalse" name="Bool.FromStrings.CustomListForFalse" value="[false no off ]">
+
+  </div>
+  <div>
+    <label for="Bool.FromStrings.CaseInsensitive">CaseInsensitive</label>
+      <input type="checkbox" id="Bool.FromStrings.CaseInsensitive" name="Bool.FromStrings.CaseInsensitive" checked>
+
+  </div>
+  <div>
+    <label for="Bool.FromStrings.RespectFromNumbersLogic">RespectFromNumbersLogic</label>
+      <input type="checkbox" id="Bool.FromStrings.RespectFromNumbersLogic" name="Bool.FromStrings.RespectFromNumbersLogic" checked>
+
+  </div>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromNumbers</legend>
+  <div>
+    <label for="Bool.FromNumbers.CustomParseFunc">CustomParseFunc</label>
+      <select id="Bool.FromNumbers.CustomParseFunc" name="Bool.FromNumbers.CustomParseFunc">
+          <option value="0">Undefined</option>
+          <option value="1" selected>Binary</option>
+          <option value="2">PositiveNegative</option>
+          <option value="4">SignOfOne</option>
+      </select>
+
+  </div>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromNull</legend>
+  <div>
+    <label for="Bool.FromNull.Inverse">Inverse</label>
+      <input type="checkbox" id="Bool.FromNull.Inverse" name="Bool.FromNull.Inverse">
+
+  </div>
+</fieldset>
+
+</fieldset>
+
+  
+<fieldset>
+  <legend>Number</legend>
+    
+<fieldset>
+  <legend>FromStrings</legend>
+  <div>
+    <label for="Number.FromStrings.SpacingAllowed">SpacingAllowed</label>
+      <input type="checkbox" id="Number.FromStrings.SpacingAllowed" name="Number.FromStrings.SpacingAllowed" checked>
+
+  </div>
+  <div>
+    <label for="Number.FromStrings.ExponentNotationAllowed">ExponentNotationAllowed</label>
+      <input type="checkbox" id="Number.FromStrings.ExponentNotationAllowed" name="Number.FromStrings.ExponentNotationAllowed" checked>
+
+  </div>
+  <div>
+    <label for="Number.FromStrings.CommasAllowed">CommasAllowed</label>
+      <input type="checkbox" id="Number.FromStrings.CommasAllowed" name="Number.FromStrings.CommasAllowed" checked>
+
+  </div>
+  <div>
+    <label for="Number.FromStrings.RoundingAlgorithm">RoundingAlgorithm</label>
+      <input type="text" id="Number.FromStrings.RoundingAlgorithm" name="Number.FromStrings.RoundingAlgorithm" value="2">
+
+  </div>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromBools</legend>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromNull</legend>
+</fieldset>
+
+</fieldset>
+
+  
+<fieldset>
+  <legend>Date</legend>
+    
+<fieldset>
+  <legend>Timezone</legend>
+  <div>
+    <label for="Date.Timezone.Default">Default</label>
+      <input type="text" id="Date.Timezone.Default" name="Date.Timezone.Default" value="UTC">
+
+  </div>
+  <div>
+    <label for="Date.Timezone.Fields">Fields</label>
+      <input type="text" id="Date.Timezone.Fields" name="Date.Timezone.Fields" value="[timezone tz]">
+
+  </div>
+  <div>
+    <label for="Date.Timezone.ForceConvertingInto">ForceConvertingInto</label>
+      <input type="checkbox" id="Date.Timezone.ForceConvertingInto" name="Date.Timezone.ForceConvertingInto">
+
+  </div>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromNumbers</legend>
+  <div>
+    <label for="Date.FromNumbers.UnixTimestamp">UnixTimestamp</label>
+      <input type="checkbox" id="Date.FromNumbers.UnixTimestamp" name="Date.FromNumbers.UnixTimestamp" checked>
+
+  </div>
+  <div>
+    <label for="Date.FromNumbers.UnixMilliTimestamp">UnixMilliTimestamp</label>
+      <input type="checkbox" id="Date.FromNumbers.UnixMilliTimestamp" name="Date.FromNumbers.UnixMilliTimestamp" checked>
+
+  </div>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromStrings</legend>
+  <div>
+    <label for="Date.FromStrings.Layouts">Layouts</label>
+      <input type="text" id="Date.FromStrings.Layouts" name="Date.FromStrings.Layouts" value="{[3:04PM 15:04 15:04:05] [2006-01-02 2006/01/02 02 Jan 06 02-Jan-06 Mon, 02 Jan 06 Mon, 02-Jan-06 Monday, 02 Jan 06 Monday, 02-Jan-06 02 Jan 2006 02-Jan-2006 Mon, 02 Jan 2006 Mon, 02-Jan-2006 Monday, 02 Jan 2006 Monday, 02-Jan-2006] [2006-01-02T15:04:05 2006-01-02T15:04:05Z07:00 2006-01-02T15:04:05.999999999Z07:00]}">
+
+  </div>
+  <div>
+    <label for="Date.FromStrings.Aliases">Aliases</label>
+      <input type="checkbox" id="Date.FromStrings.Aliases" name="Date.FromStrings.Aliases" checked>
+
+  </div>
+  <div>
+    <label for="Date.FromStrings.RespectFromNumbersLogic">RespectFromNumbersLogic</label>
+      <input type="checkbox" id="Date.FromStrings.RespectFromNumbersLogic" name="Date.FromStrings.RespectFromNumbersLogic" checked>
+
+  </div>
+</fieldset>
+
+    
+<fieldset>
+  <legend>FromNull</legend>
+</fieldset>
+
+</fieldset>
+
+  
+<fieldset>
+  <legend>Array</legend>
+  <div>
+    <label for="Array.AutoWrapSingleValues">AutoWrapSingleValues</label>
+      <input type="checkbox" id="Array.AutoWrapSingleValues" name="Array.AutoWrapSingleValues">
+
+  </div>
+</fieldset>
+
+  
+<fieldset>
+  <legend>FlexKeys</legend>
+  <div>
+    <label for="FlexKeys.CaseInsensitive">CaseInsensitive</label>
+      <input type="checkbox" id="FlexKeys.CaseInsensitive" name="FlexKeys.CaseInsensitive">
+
+  </div>
+  <div>
+    <label for="FlexKeys.ChameleonCase">ChameleonCase</label>
+      <input type="checkbox" id="FlexKeys.ChameleonCase" name="FlexKeys.ChameleonCase">
+
+  </div>
+</fieldset>
+
+  <button type="submit">Save</button>
+</form>
+</body>
+</html>
+
+
+

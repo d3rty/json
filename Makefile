@@ -24,6 +24,12 @@ lint: lint-install
 test:
 	go test ./...
 
+# Generate HTML form for your Config
+.PHONY: generate-config-form
+generate-config-form:
+	@echo "🔧  Generating config-form.html…"
+	go run ./cmd/formgen > config-form.html
+
 wasm:
 	@echo "Building WASM module..."
 	GOOS=js GOARCH=wasm go build -o demo/main.wasm ./cmd/wasm-demo
