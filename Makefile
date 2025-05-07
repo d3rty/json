@@ -25,10 +25,11 @@ test:
 	go test ./...
 
 # Generate HTML form for your Config
-.PHONY: generate-config-form
-generate-config-form:
-	@echo "🔧  Generating config-form.html…"
-	go run ./cmd/formgen > config-form.html
+.PHONY: config-schema.json
+config-schema.json:
+	@echo "🔧 Generating config-schema.json…"
+	@go run ./cmd/config-schema > demo/config-schema.json
+
 
 wasm:
 	@echo "Building WASM module..."

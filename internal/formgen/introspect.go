@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+
+	"github.com/d3rty/json/internal/config"
 )
 
-// Introspect walks your config struct and builds a tree of sections,
-// each with its fields (including Disabled) and any nested subsections.
+// Introspect walks the provided cfg (must be a pointer to your Config) and
+// builds a FormModel representing each section, its Disabled flag, fields,
+// and nested subsections.
 func Introspect(cfg interface{}) (*FormModel, error) {
 	v := reflect.ValueOf(cfg)
 	if v.Kind() == reflect.Ptr {
@@ -16,13 +19,13 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 
 	model := &FormModel{}
 	t := v.Type()
-
 	for i := 0; i < t.NumField(); i++ {
 		fi := t.Field(i)
+		// skip embedded Section
 		if fi.Name == "Section" {
 			continue
 		}
-		// toml tag or fallback to field name
+
 		tag := fi.Tag.Get("toml")
 		if tag == "" {
 			tag = fi.Name
@@ -33,37 +36,35 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 			continue
 		}
 
-		// the actual struct value for this section
 		sectVal := fv.Elem()
 		sect := &FormSection{Title: tag}
 
-		// 1) add the embedded Disabled checkbox
+		// 1) embedded Disabled flag
 		if secEmbed := sectVal.FieldByName("Section"); secEmbed.IsValid() {
 			disabled := secEmbed.FieldByName("Disabled").Bool()
 			sect.Fields = append(sect.Fields, FormField{
-				Label: "Disabled",
 				Name:  tag + ".Disabled",
-				Value: strconv.FormatBool(disabled),
+				Label: "Disabled",
 				Type:  FieldCheckbox,
+				Value: strconv.FormatBool(disabled),
 			})
 		}
 
-		// 2) add all the non‑nested leaf fields
+		// 2) leaf fields
 		for j := 0; j < sectVal.NumField(); j++ {
 			subFi := sectVal.Type().Field(j)
-			// skip only the embedded Section (we already grabbed its Disabled)
 			if subFi.Name == "Section" {
 				continue
 			}
-			// skip nested structs here (we’ll handle them below)
+			// skip nested structs
 			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
 				continue
 			}
-			ff := makeFormField(tag, sectVal.Field(j), subFi)
-			sect.Fields = append(sect.Fields, ff)
+			fv2 := sectVal.Field(j)
+			sect.Fields = append(sect.Fields, makeFormField(tag, fv2, subFi))
 		}
 
-		// 3) now build any nested subsections
+		// 3) nested subsections
 		for j := 0; j < sectVal.NumField(); j++ {
 			subFi := sectVal.Type().Field(j)
 			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
@@ -71,7 +72,6 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 					continue
 				}
 
-				// subsection name
 				subTag := subFi.Tag.Get("toml")
 				if subTag == "" {
 					subTag = subFi.Name
@@ -80,25 +80,25 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 				childVal := sectVal.Field(j).Elem()
 				child := &FormSection{Title: subTag}
 
-				// include this subsection’s Disabled
+				// child's Disabled
 				if secEmbed := childVal.FieldByName("Section"); secEmbed.IsValid() {
 					disabled := secEmbed.FieldByName("Disabled").Bool()
 					child.Fields = append(child.Fields, FormField{
+						Name:  fmt.Sprintf("%s.%s.Disabled", tag, subTag),
 						Label: "Disabled",
-						Name:  tag + "." + subTag + ".Disabled",
-						Value: strconv.FormatBool(disabled),
 						Type:  FieldCheckbox,
+						Value: strconv.FormatBool(disabled),
 					})
 				}
 
-				// now the leaf fields of the subsection
+				// child's leaf fields
 				for k := 0; k < childVal.NumField(); k++ {
 					leafFi := childVal.Type().Field(k)
 					if leafFi.Name == "Section" {
 						continue
 					}
-					ff := makeFormField(tag+"."+subTag, childVal.Field(k), leafFi)
-					child.Fields = append(child.Fields, ff)
+					fv3 := childVal.Field(k)
+					child.Fields = append(child.Fields, makeFormField(tag+"."+subTag, fv3, leafFi))
 				}
 
 				sect.Subsections = append(sect.Subsections, child)
@@ -111,17 +111,14 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 	return model, nil
 }
 
-// helper that builds a FormField from a reflect.Value + StructField
+// makeFormField creates a FormField for a single struct field, including
+// special handling for your BoolFromNumberAlg enum (pulling from config.All...)
 func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) FormField {
 	tomlTag := fi.Tag.Get("toml")
 	if tomlTag == "" {
 		tomlTag = fi.Name
 	}
-	// field-name
 	name := prefix + "." + tomlTag
-
-	// if prefix is only a top‑level section, show "Section → Field",
-	// otherwise (nested) show only the field name.
 	label := tomlTag
 
 	var ftype FieldType
@@ -135,38 +132,26 @@ func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) For
 		ftype = FieldNumber
 		sval = fmt.Sprintf("%d", val.Int())
 	default:
+		// enum BoolFromNumberAlg → select
+		if fi.Type == reflect.TypeFor[config.BoolFromNumberAlg]() {
+			ftype = FieldSelect
+			var opts []Option
+			for _, v := range config.ListAvailableBoolFromNumberAlgs() {
+				opts = append(opts, Option{
+					Value: fmt.Sprint(uint8(v)),
+					Label: v.String(),
+				})
+			}
+			return FormField{Name: name, Label: label, Type: ftype,
+				Value:   fmt.Sprint(uint8(val.Interface().(config.BoolFromNumberAlg))),
+				Options: opts,
+			}
+		}
+
+		// fallback → text
 		ftype = FieldText
 		sval = fmt.Sprint(val.Interface())
 	}
 
-	// --- ENUM SPECIAL‑CASE ---
-	// Detect our BoolFromNumberAlg type and turn it into a <select>
-	if fi.Type.Name() == "BoolFromNumberAlg" {
-		ftype = FieldSelect
-		// map of (value, label). Tweak labels as you like:
-		enumDefs := []struct{ Val, Label string }{
-			{"0", "Undefined"},
-			{"1", "Binary"},
-			{"2", "PositiveNegative"},
-			{"4", "SignOfOne"},
-		}
-		opts := make([]Option, len(enumDefs))
-		for i, e := range enumDefs {
-			opts[i] = Option{Value: e.Val, Label: e.Label}
-		}
-		return FormField{
-			Label:   label,
-			Name:    name,
-			Value:   sval,
-			Type:    ftype,
-			Options: opts,
-		}
-	}
-
-	return FormField{
-		Label: label,
-		Name:  name,
-		Value: sval,
-		Type:  ftype,
-	}
+	return FormField{Name: name, Label: label, Type: ftype, Value: sval}
 }

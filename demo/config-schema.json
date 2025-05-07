@@ -1,0 +1,321 @@
+{
+  "sections": [
+    {
+      "title": "Bool",
+      "fields": [
+        {
+          "name": "Bool.Disabled",
+          "label": "Disabled",
+          "type": "checkbox",
+          "value": "false"
+        },
+        {
+          "name": "Bool.FallbackValue",
+          "label": "FallbackValue",
+          "type": "text",
+          "value": "{false true}"
+        }
+      ],
+      "subsections": [
+        {
+          "title": "FromStrings",
+          "fields": [
+            {
+              "name": "Bool.FromStrings.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Bool.FromStrings.CustomListForTrue",
+              "label": "CustomListForTrue",
+              "type": "text",
+              "value": "[true yes on]"
+            },
+            {
+              "name": "Bool.FromStrings.CustomListForFalse",
+              "label": "CustomListForFalse",
+              "type": "text",
+              "value": "[false no off ]"
+            },
+            {
+              "name": "Bool.FromStrings.CaseInsensitive",
+              "label": "CaseInsensitive",
+              "type": "checkbox",
+              "value": "true"
+            },
+            {
+              "name": "Bool.FromStrings.RespectFromNumbersLogic",
+              "label": "RespectFromNumbersLogic",
+              "type": "checkbox",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "title": "FromNumbers",
+          "fields": [
+            {
+              "name": "Bool.FromNumbers.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Bool.FromNumbers.CustomParseFunc",
+              "label": "CustomParseFunc",
+              "type": "select",
+              "value": "1",
+              "options": [
+                {
+                  "value": "2",
+                  "label": "positive_negative"
+                },
+                {
+                  "value": "4",
+                  "label": "sign_of_one"
+                },
+                {
+                  "value": "1",
+                  "label": "binary"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "FromNull",
+          "fields": [
+            {
+              "name": "Bool.FromNull.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Bool.FromNull.Inverse",
+              "label": "Inverse",
+              "type": "checkbox",
+              "value": "false"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Number",
+      "fields": [
+        {
+          "name": "Number.Disabled",
+          "label": "Disabled",
+          "type": "checkbox",
+          "value": "false"
+        }
+      ],
+      "subsections": [
+        {
+          "title": "FromStrings",
+          "fields": [
+            {
+              "name": "Number.FromStrings.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Number.FromStrings.SpacingAllowed",
+              "label": "SpacingAllowed",
+              "type": "checkbox",
+              "value": "true"
+            },
+            {
+              "name": "Number.FromStrings.ExponentNotationAllowed",
+              "label": "ExponentNotationAllowed",
+              "type": "checkbox",
+              "value": "true"
+            },
+            {
+              "name": "Number.FromStrings.CommasAllowed",
+              "label": "CommasAllowed",
+              "type": "checkbox",
+              "value": "true"
+            },
+            {
+              "name": "Number.FromStrings.RoundingAlgorithm",
+              "label": "RoundingAlgorithm",
+              "type": "text",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "title": "FromBools",
+          "fields": [
+            {
+              "name": "Number.FromBools.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            }
+          ]
+        },
+        {
+          "title": "FromNull",
+          "fields": [
+            {
+              "name": "Number.FromNull.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Date",
+      "fields": [
+        {
+          "name": "Date.Disabled",
+          "label": "Disabled",
+          "type": "checkbox",
+          "value": "false"
+        }
+      ],
+      "subsections": [
+        {
+          "title": "Timezone",
+          "fields": [
+            {
+              "name": "Date.Timezone.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Date.Timezone.Default",
+              "label": "Default",
+              "type": "text",
+              "value": "UTC"
+            },
+            {
+              "name": "Date.Timezone.Fields",
+              "label": "Fields",
+              "type": "text",
+              "value": "[timezone tz]"
+            },
+            {
+              "name": "Date.Timezone.ForceConvertingInto",
+              "label": "ForceConvertingInto",
+              "type": "checkbox",
+              "value": "false"
+            }
+          ]
+        },
+        {
+          "title": "FromNumbers",
+          "fields": [
+            {
+              "name": "Date.FromNumbers.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Date.FromNumbers.UnixTimestamp",
+              "label": "UnixTimestamp",
+              "type": "checkbox",
+              "value": "true"
+            },
+            {
+              "name": "Date.FromNumbers.UnixMilliTimestamp",
+              "label": "UnixMilliTimestamp",
+              "type": "checkbox",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "title": "FromStrings",
+          "fields": [
+            {
+              "name": "Date.FromStrings.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            },
+            {
+              "name": "Date.FromStrings.Layouts",
+              "label": "Layouts",
+              "type": "text",
+              "value": "{[3:04PM 15:04 15:04:05] [2006-01-02 2006/01/02 02 Jan 06 02-Jan-06 Mon, 02 Jan 06 Mon, 02-Jan-06 Monday, 02 Jan 06 Monday, 02-Jan-06 02 Jan 2006 02-Jan-2006 Mon, 02 Jan 2006 Mon, 02-Jan-2006 Monday, 02 Jan 2006 Monday, 02-Jan-2006] [2006-01-02T15:04:05 2006-01-02T15:04:05Z07:00 2006-01-02T15:04:05.999999999Z07:00]}"
+            },
+            {
+              "name": "Date.FromStrings.Aliases",
+              "label": "Aliases",
+              "type": "checkbox",
+              "value": "true"
+            },
+            {
+              "name": "Date.FromStrings.RespectFromNumbersLogic",
+              "label": "RespectFromNumbersLogic",
+              "type": "checkbox",
+              "value": "true"
+            }
+          ]
+        },
+        {
+          "title": "FromNull",
+          "fields": [
+            {
+              "name": "Date.FromNull.Disabled",
+              "label": "Disabled",
+              "type": "checkbox",
+              "value": "false"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Array",
+      "fields": [
+        {
+          "name": "Array.Disabled",
+          "label": "Disabled",
+          "type": "checkbox",
+          "value": "true"
+        },
+        {
+          "name": "Array.AutoWrapSingleValues",
+          "label": "AutoWrapSingleValues",
+          "type": "checkbox",
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "title": "FlexKeys",
+      "fields": [
+        {
+          "name": "FlexKeys.Disabled",
+          "label": "Disabled",
+          "type": "checkbox",
+          "value": "true"
+        },
+        {
+          "name": "FlexKeys.CaseInsensitive",
+          "label": "CaseInsensitive",
+          "type": "checkbox",
+          "value": "false"
+        },
+        {
+          "name": "FlexKeys.ChameleonCase",
+          "label": "ChameleonCase",
+          "type": "checkbox",
+          "value": "false"
+        }
+      ]
+    }
+  ]
+}
