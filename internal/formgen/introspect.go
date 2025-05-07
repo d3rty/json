@@ -6,7 +6,8 @@ import (
 	"strconv"
 )
 
-// Introspect now returns a tree of FormSection
+// Introspect walks your config struct and builds a tree of sections,
+// each with its fields (including Disabled) and any nested subsections.
 func Introspect(cfg interface{}) (*FormModel, error) {
 	v := reflect.ValueOf(cfg)
 	if v.Kind() == reflect.Ptr {
@@ -16,12 +17,12 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 	model := &FormModel{}
 	t := v.Type()
 
-	// Top‑level: one FormSection per pointer‑to‑struct field
 	for i := 0; i < t.NumField(); i++ {
 		fi := t.Field(i)
 		if fi.Name == "Section" {
 			continue
 		}
+		// toml tag or fallback to field name
 		tag := fi.Tag.Get("toml")
 		if tag == "" {
 			tag = fi.Name
@@ -32,16 +33,29 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 			continue
 		}
 
+		// the actual struct value for this section
 		sectVal := fv.Elem()
 		sect := &FormSection{Title: tag}
 
-		// 1) leaf fields at this level
+		// 1) add the embedded Disabled checkbox
+		if secEmbed := sectVal.FieldByName("Section"); secEmbed.IsValid() {
+			disabled := secEmbed.FieldByName("Disabled").Bool()
+			sect.Fields = append(sect.Fields, FormField{
+				Label: "Disabled",
+				Name:  tag + ".Disabled",
+				Value: strconv.FormatBool(disabled),
+				Type:  FieldCheckbox,
+			})
+		}
+
+		// 2) add all the non‑nested leaf fields
 		for j := 0; j < sectVal.NumField(); j++ {
 			subFi := sectVal.Type().Field(j)
-			if subFi.Name == "Section" || subFi.Name == "Disabled" {
+			// skip only the embedded Section (we already grabbed its Disabled)
+			if subFi.Name == "Section" {
 				continue
 			}
-			// skip nested struct pointers here
+			// skip nested structs here (we’ll handle them below)
 			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
 				continue
 			}
@@ -49,27 +63,44 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 			sect.Fields = append(sect.Fields, ff)
 		}
 
-		// 2) now build any nested subsections
+		// 3) now build any nested subsections
 		for j := 0; j < sectVal.NumField(); j++ {
 			subFi := sectVal.Type().Field(j)
 			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
 				if sectVal.Field(j).IsNil() {
 					continue
 				}
+
+				// subsection name
 				subTag := subFi.Tag.Get("toml")
 				if subTag == "" {
 					subTag = subFi.Name
 				}
+
+				childVal := sectVal.Field(j).Elem()
 				child := &FormSection{Title: subTag}
-				// walk all *leaf* fields of this child
-				for k := 0; k < sectVal.Field(j).Elem().NumField(); k++ {
-					leafFi := sectVal.Field(j).Elem().Type().Field(k)
-					if leafFi.Name == "Section" || leafFi.Name == "Disabled" {
+
+				// include this subsection’s Disabled
+				if secEmbed := childVal.FieldByName("Section"); secEmbed.IsValid() {
+					disabled := secEmbed.FieldByName("Disabled").Bool()
+					child.Fields = append(child.Fields, FormField{
+						Label: "Disabled",
+						Name:  tag + "." + subTag + ".Disabled",
+						Value: strconv.FormatBool(disabled),
+						Type:  FieldCheckbox,
+					})
+				}
+
+				// now the leaf fields of the subsection
+				for k := 0; k < childVal.NumField(); k++ {
+					leafFi := childVal.Type().Field(k)
+					if leafFi.Name == "Section" {
 						continue
 					}
-					ff := makeFormField(tag+"."+subTag, sectVal.Field(j).Elem().Field(k), leafFi)
+					ff := makeFormField(tag+"."+subTag, childVal.Field(k), leafFi)
 					child.Fields = append(child.Fields, ff)
 				}
+
 				sect.Subsections = append(sect.Subsections, child)
 			}
 		}

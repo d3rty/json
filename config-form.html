@@ -10,6 +10,11 @@
 <fieldset>
   <legend>Bool</legend>
   <div>
+    <label for="Bool.Disabled">Disabled</label>
+      <input type="checkbox" id="Bool.Disabled" name="Bool.Disabled">
+
+  </div>
+  <div>
     <label for="Bool.FallbackValue">FallbackValue</label>
       <input type="text" id="Bool.FallbackValue" name="Bool.FallbackValue" value="{false true}">
 
@@ -17,6 +22,11 @@
     
 <fieldset>
   <legend>FromStrings</legend>
+  <div>
+    <label for="Bool.FromStrings.Disabled">Disabled</label>
+      <input type="checkbox" id="Bool.FromStrings.Disabled" name="Bool.FromStrings.Disabled">
+
+  </div>
   <div>
     <label for="Bool.FromStrings.CustomListForTrue">CustomListForTrue</label>
       <input type="text" id="Bool.FromStrings.CustomListForTrue" name="Bool.FromStrings.CustomListForTrue" value="[true yes on]">
@@ -43,6 +53,11 @@
 <fieldset>
   <legend>FromNumbers</legend>
   <div>
+    <label for="Bool.FromNumbers.Disabled">Disabled</label>
+      <input type="checkbox" id="Bool.FromNumbers.Disabled" name="Bool.FromNumbers.Disabled">
+
+  </div>
+  <div>
     <label for="Bool.FromNumbers.CustomParseFunc">CustomParseFunc</label>
       <select id="Bool.FromNumbers.CustomParseFunc" name="Bool.FromNumbers.CustomParseFunc">
           <option value="0">Undefined</option>
@@ -58,6 +73,11 @@
 <fieldset>
   <legend>FromNull</legend>
   <div>
+    <label for="Bool.FromNull.Disabled">Disabled</label>
+      <input type="checkbox" id="Bool.FromNull.Disabled" name="Bool.FromNull.Disabled">
+
+  </div>
+  <div>
     <label for="Bool.FromNull.Inverse">Inverse</label>
       <input type="checkbox" id="Bool.FromNull.Inverse" name="Bool.FromNull.Inverse">
 
@@ -69,9 +89,19 @@
   
 <fieldset>
   <legend>Number</legend>
+  <div>
+    <label for="Number.Disabled">Disabled</label>
+      <input type="checkbox" id="Number.Disabled" name="Number.Disabled">
+
+  </div>
     
 <fieldset>
   <legend>FromStrings</legend>
+  <div>
+    <label for="Number.FromStrings.Disabled">Disabled</label>
+      <input type="checkbox" id="Number.FromStrings.Disabled" name="Number.FromStrings.Disabled">
+
+  </div>
   <div>
     <label for="Number.FromStrings.SpacingAllowed">SpacingAllowed</label>
       <input type="checkbox" id="Number.FromStrings.SpacingAllowed" name="Number.FromStrings.SpacingAllowed" checked>
@@ -97,11 +127,21 @@
     
 <fieldset>
   <legend>FromBools</legend>
+  <div>
+    <label for="Number.FromBools.Disabled">Disabled</label>
+      <input type="checkbox" id="Number.FromBools.Disabled" name="Number.FromBools.Disabled">
+
+  </div>
 </fieldset>
 
     
 <fieldset>
   <legend>FromNull</legend>
+  <div>
+    <label for="Number.FromNull.Disabled">Disabled</label>
+      <input type="checkbox" id="Number.FromNull.Disabled" name="Number.FromNull.Disabled">
+
+  </div>
 </fieldset>
 
 </fieldset>
@@ -109,9 +149,19 @@
   
 <fieldset>
   <legend>Date</legend>
+  <div>
+    <label for="Date.Disabled">Disabled</label>
+      <input type="checkbox" id="Date.Disabled" name="Date.Disabled">
+
+  </div>
     
 <fieldset>
   <legend>Timezone</legend>
+  <div>
+    <label for="Date.Timezone.Disabled">Disabled</label>
+      <input type="checkbox" id="Date.Timezone.Disabled" name="Date.Timezone.Disabled">
+
+  </div>
   <div>
     <label for="Date.Timezone.Default">Default</label>
       <input type="text" id="Date.Timezone.Default" name="Date.Timezone.Default" value="UTC">
@@ -133,6 +183,11 @@
 <fieldset>
   <legend>FromNumbers</legend>
   <div>
+    <label for="Date.FromNumbers.Disabled">Disabled</label>
+      <input type="checkbox" id="Date.FromNumbers.Disabled" name="Date.FromNumbers.Disabled">
+
+  </div>
+  <div>
     <label for="Date.FromNumbers.UnixTimestamp">UnixTimestamp</label>
       <input type="checkbox" id="Date.FromNumbers.UnixTimestamp" name="Date.FromNumbers.UnixTimestamp" checked>
 
@@ -147,6 +202,11 @@
     
 <fieldset>
   <legend>FromStrings</legend>
+  <div>
+    <label for="Date.FromStrings.Disabled">Disabled</label>
+      <input type="checkbox" id="Date.FromStrings.Disabled" name="Date.FromStrings.Disabled">
+
+  </div>
   <div>
     <label for="Date.FromStrings.Layouts">Layouts</label>
       <input type="text" id="Date.FromStrings.Layouts" name="Date.FromStrings.Layouts" value="{[3:04PM 15:04 15:04:05] [2006-01-02 2006/01/02 02 Jan 06 02-Jan-06 Mon, 02 Jan 06 Mon, 02-Jan-06 Monday, 02 Jan 06 Monday, 02-Jan-06 02 Jan 2006 02-Jan-2006 Mon, 02 Jan 2006 Mon, 02-Jan-2006 Monday, 02 Jan 2006 Monday, 02-Jan-2006] [2006-01-02T15:04:05 2006-01-02T15:04:05Z07:00 2006-01-02T15:04:05.999999999Z07:00]}">
@@ -167,6 +227,11 @@
     
 <fieldset>
   <legend>FromNull</legend>
+  <div>
+    <label for="Date.FromNull.Disabled">Disabled</label>
+      <input type="checkbox" id="Date.FromNull.Disabled" name="Date.FromNull.Disabled">
+
+  </div>
 </fieldset>
 
 </fieldset>
@@ -174,6 +239,11 @@
   
 <fieldset>
   <legend>Array</legend>
+  <div>
+    <label for="Array.Disabled">Disabled</label>
+      <input type="checkbox" id="Array.Disabled" name="Array.Disabled" checked>
+
+  </div>
   <div>
     <label for="Array.AutoWrapSingleValues">AutoWrapSingleValues</label>
       <input type="checkbox" id="Array.AutoWrapSingleValues" name="Array.AutoWrapSingleValues">
@@ -184,6 +254,11 @@
   
 <fieldset>
   <legend>FlexKeys</legend>
+  <div>
+    <label for="FlexKeys.Disabled">Disabled</label>
+      <input type="checkbox" id="FlexKeys.Disabled" name="FlexKeys.Disabled" checked>
+
+  </div>
   <div>
     <label for="FlexKeys.CaseInsensitive">CaseInsensitive</label>
       <input type="checkbox" id="FlexKeys.CaseInsensitive" name="FlexKeys.CaseInsensitive">
