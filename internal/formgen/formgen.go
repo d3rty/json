@@ -5,7 +5,7 @@ package formgen
 //
 // We’ve moved away from HTML templates to a JSON-first approach.
 // The API is:
-//   Introspect(cfg interface{}) (*FormModel, error)
+//   Introspect(cfg any) (*FormModel, error)
 // and the core types are:
 //   FormModel, FormSection, FormField, Option, FieldType
 

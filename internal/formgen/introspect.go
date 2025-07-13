@@ -8,10 +8,14 @@ import (
 	"github.com/d3rty/json/internal/config"
 )
 
+const (
+	LabelSection = "Section"
+)
+
 // Introspect walks the provided cfg (must be a pointer to your Config) and
 // builds a FormModel representing each section, its Disabled flag, fields,
 // and nested subsections.
-func Introspect(cfg interface{}) (*FormModel, error) {
+func Introspect(cfg any) (*FormModel, error) {
 	v := reflect.ValueOf(cfg)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -19,10 +23,10 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 
 	model := &FormModel{}
 	t := v.Type()
-	for i := 0; i < t.NumField(); i++ {
+	for i := range t.NumField() {
 		fi := t.Field(i)
 		// skip embedded Section
-		if fi.Name == "Section" {
+		if fi.Name == LabelSection {
 			continue
 		}
 
@@ -40,7 +44,7 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 		sect := &FormSection{Title: tag}
 
 		// 1) embedded Disabled flag
-		if secEmbed := sectVal.FieldByName("Section"); secEmbed.IsValid() {
+		if secEmbed := sectVal.FieldByName(LabelSection); secEmbed.IsValid() {
 			disabled := secEmbed.FieldByName("Disabled").Bool()
 			sect.Fields = append(sect.Fields, FormField{
 				Name:  tag + ".Disabled",
@@ -51,9 +55,9 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 		}
 
 		// 2) leaf fields
-		for j := 0; j < sectVal.NumField(); j++ {
+		for j := range sectVal.NumField() {
 			subFi := sectVal.Type().Field(j)
-			if subFi.Name == "Section" {
+			if subFi.Name == LabelSection {
 				continue
 			}
 			// skip nested structs
@@ -65,7 +69,7 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 		}
 
 		// 3) nested subsections
-		for j := 0; j < sectVal.NumField(); j++ {
+		for j := range sectVal.NumField() {
 			subFi := sectVal.Type().Field(j)
 			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
 				if sectVal.Field(j).IsNil() {
@@ -81,7 +85,7 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 				child := &FormSection{Title: subTag}
 
 				// child's Disabled
-				if secEmbed := childVal.FieldByName("Section"); secEmbed.IsValid() {
+				if secEmbed := childVal.FieldByName(LabelSection); secEmbed.IsValid() {
 					disabled := secEmbed.FieldByName("Disabled").Bool()
 					child.Fields = append(child.Fields, FormField{
 						Name:  fmt.Sprintf("%s.%s.Disabled", tag, subTag),
@@ -92,9 +96,9 @@ func Introspect(cfg interface{}) (*FormModel, error) {
 				}
 
 				// child's leaf fields
-				for k := 0; k < childVal.NumField(); k++ {
+				for k := range childVal.NumField() {
 					leafFi := childVal.Type().Field(k)
-					if leafFi.Name == "Section" {
+					if leafFi.Name == LabelSection {
 						continue
 					}
 					fv3 := childVal.Field(k)
@@ -130,7 +134,7 @@ func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) For
 		sval = strconv.FormatBool(val.Bool())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		ftype = FieldNumber
-		sval = fmt.Sprintf("%d", val.Int())
+		sval = strconv.FormatInt(val.Int(), 10)
 	default:
 		// enum BoolFromNumberAlg → select
 		if fi.Type == reflect.TypeFor[config.BoolFromNumberAlg]() {
@@ -138,12 +142,13 @@ func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) For
 			var opts []Option
 			for _, v := range config.ListAvailableBoolFromNumberAlgs() {
 				opts = append(opts, Option{
-					Value: fmt.Sprint(uint8(v)),
+					Value: strconv.FormatUint(uint64(uint8(v)), 10),
 					Label: v.String(),
 				})
 			}
 			return FormField{Name: name, Label: label, Type: ftype,
-				Value:   fmt.Sprint(uint8(val.Interface().(config.BoolFromNumberAlg))),
+				//nolint:errcheck // it's fine here
+				Value:   strconv.FormatUint(uint64(uint8(val.Interface().(config.BoolFromNumberAlg))), 10),
 				Options: opts,
 			}
 		}
