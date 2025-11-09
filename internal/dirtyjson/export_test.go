@@ -1,7 +1,7 @@
 package dirtyjson
 
 import (
-	"github.com/amberpixels/abu/maybe"
+	"github.com/amberpixels/k1/maybe"
 	"github.com/d3rty/json/internal/config"
 )
 
