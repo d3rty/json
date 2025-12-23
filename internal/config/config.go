@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/BurntSushi/toml"
-	"github.com/amberpixels/abu/maybe"
+	"github.com/amberpixels/k1/maybe"
 )
 
 //go:embed default.toml
