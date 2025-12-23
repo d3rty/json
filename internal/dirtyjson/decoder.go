@@ -40,7 +40,7 @@ func (dec *Decoder) More() bool            { return dec.clean.More() }
 // Decode decodes the given value respecting dirty schema if possible.
 func (dec *Decoder) Decode(val any) error {
 	rv := reflect.ValueOf(val)
-	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+	if rv.Kind() != reflect.Pointer || rv.IsNil() {
 		return errors.New("v must be a non-nil pointer")
 	}
 
