@@ -18,9 +18,10 @@ type Option struct {
 
 // FormField describes a single input field in the form.
 type FormField struct {
-	Name  string    `json:"name"`  // e.g. "Bool.FromStrings.CustomListForTrue"
-	Label string    `json:"label"` // e.g. "CustomListForTrue"
-	Type  FieldType `json:"type"`
+	Name        string    `json:"name"`                 // e.g. "Bool.FromStrings.CustomListForTrue"
+	Label       string    `json:"label"`                // e.g. "CustomListForTrue"
+	Type        FieldType `json:"type"`
+	Description string    `json:"description,omitempty"` // tooltip/help text from TOML comments
 
 	Value   string   `json:"value"`             // the value as string
 	Options []Option `json:"options,omitempty"` // the value only for selects

@@ -2,6 +2,7 @@ package formgen
 
 import (
 	"fmt"
+	"io/fs"
 	"reflect"
 	"strconv"
 
@@ -16,6 +17,22 @@ const (
 // builds a FormModel representing each section, its Disabled flag, fields,
 // and nested subsections.
 func Introspect(cfg any) (*FormModel, error) {
+	// Load TOML comments from the embedded config
+	tomlFile, err := fs.ReadFile(config.EmbeddedConfig(), "default.toml")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read default.toml: %w", err)
+	}
+
+	comments, err := ParseTOMLComments(string(tomlFile))
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse TOML comments: %w", err)
+	}
+
+	return introspectWithComments(cfg, comments)
+}
+
+// introspectWithComments is the internal version that accepts parsed comments.
+func introspectWithComments(cfg any, comments TOMLComments) (*FormModel, error) {
 	v := reflect.ValueOf(cfg)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
@@ -47,10 +64,11 @@ func Introspect(cfg any) (*FormModel, error) {
 		if secEmbed := sectVal.FieldByName(LabelSection); secEmbed.IsValid() {
 			disabled := secEmbed.FieldByName("Disabled").Bool()
 			sect.Fields = append(sect.Fields, FormField{
-				Name:  tag + ".Disabled",
-				Label: "Disabled",
-				Type:  FieldCheckbox,
-				Value: strconv.FormatBool(disabled),
+				Name:        tag + ".Disabled",
+				Label:       "Disabled",
+				Type:        FieldCheckbox,
+				Value:       strconv.FormatBool(disabled),
+				Description: comments.GetDescription(tag + ".Disabled"),
 			})
 		}
 
@@ -65,7 +83,7 @@ func Introspect(cfg any) (*FormModel, error) {
 				continue
 			}
 			fv2 := sectVal.Field(j)
-			sect.Fields = append(sect.Fields, makeFormField(tag, fv2, subFi))
+			sect.Fields = append(sect.Fields, makeFormField(tag, fv2, subFi, comments))
 		}
 
 		// 3) nested subsections
@@ -87,11 +105,13 @@ func Introspect(cfg any) (*FormModel, error) {
 				// child's Disabled
 				if secEmbed := childVal.FieldByName(LabelSection); secEmbed.IsValid() {
 					disabled := secEmbed.FieldByName("Disabled").Bool()
+					childPath := fmt.Sprintf("%s.%s.Disabled", tag, subTag)
 					child.Fields = append(child.Fields, FormField{
-						Name:  fmt.Sprintf("%s.%s.Disabled", tag, subTag),
-						Label: "Disabled",
-						Type:  FieldCheckbox,
-						Value: strconv.FormatBool(disabled),
+						Name:        childPath,
+						Label:       "Disabled",
+						Type:        FieldCheckbox,
+						Value:       strconv.FormatBool(disabled),
+						Description: comments.GetDescription(childPath),
 					})
 				}
 
@@ -102,7 +122,7 @@ func Introspect(cfg any) (*FormModel, error) {
 						continue
 					}
 					fv3 := childVal.Field(k)
-					child.Fields = append(child.Fields, makeFormField(tag+"."+subTag, fv3, leafFi))
+					child.Fields = append(child.Fields, makeFormField(tag+"."+subTag, fv3, leafFi, comments))
 				}
 
 				sect.Subsections = append(sect.Subsections, child)
@@ -117,13 +137,14 @@ func Introspect(cfg any) (*FormModel, error) {
 
 // makeFormField creates a FormField for a single struct field, including
 // special handling for your BoolFromNumberAlg enum (pulling from config.All...)
-func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) FormField {
+func makeFormField(prefix string, val reflect.Value, fi reflect.StructField, comments TOMLComments) FormField {
 	tomlTag := fi.Tag.Get("toml")
 	if tomlTag == "" {
 		tomlTag = fi.Name
 	}
 	name := prefix + "." + tomlTag
 	label := tomlTag
+	description := comments.GetDescription(name)
 
 	var ftype FieldType
 	var sval string
@@ -146,7 +167,11 @@ func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) For
 					Label: v.String(),
 				})
 			}
-			return FormField{Name: name, Label: label, Type: ftype,
+			return FormField{
+				Name:        name,
+				Label:       label,
+				Type:        ftype,
+				Description: description,
 				//nolint:errcheck // it's fine here
 				Value:   strconv.FormatUint(uint64(uint8(val.Interface().(config.BoolFromNumberAlg))), 10),
 				Options: opts,
@@ -158,5 +183,11 @@ func makeFormField(prefix string, val reflect.Value, fi reflect.StructField) For
 		sval = fmt.Sprint(val.Interface())
 	}
 
-	return FormField{Name: name, Label: label, Type: ftype, Value: sval}
+	return FormField{
+		Name:        name,
+		Label:       label,
+		Type:        ftype,
+		Value:       sval,
+		Description: description,
+	}
 }

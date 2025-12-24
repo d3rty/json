@@ -3,73 +3,375 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>d3rty/json 🧼 Demo</title>
+    <title>d3rty/json Demo</title>
 
-    <!-- HTMX v2 -->
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-
-    <!-- Prism.js for syntax highlighting -->
-    <link
-            rel="stylesheet"
-            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism.min.css"
-    />
+    <!-- Prism.js for syntax highlighting - darker theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism-tomorrow.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-go.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-json.min.js"></script>
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #334155;
+            --success: #10b981;
+        }
+
         body {
-            font-family: sans-serif;
-            margin: 2rem auto;
-            padding: 0 1rem;
-            max-width: 1000px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            padding: 1.5rem;
+            line-height: 1.6;
         }
-        .container {
+
+        .header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            margin-bottom: 0.6rem;
+        }
+
+        .model-display pre {
+            background: var(--bg-tertiary);
+            border-radius: 0.5rem;
+            padding: 0.75rem 0.5rem;
+            margin: 0;
+            font-size: 0.875rem;
+            overflow-x: auto;
+        }
+
+        .config-container {
+            max-height: 450px;
+            overflow-y: auto;
+            overflow-x: visible;
+            padding-right: 0.5rem;
+        }
+
+        .card {
+            overflow: visible;
+        }
+
+        .config-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .config-container::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .config-container::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .config-section {
+            margin-bottom: 0.5rem;
+        }
+
+        .config-section-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 0.35rem;
+            cursor: pointer;
+            user-select: none;
             display: flex;
-            gap: 1rem;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .pane {
-            flex: 1;
+
+        .config-section-title::before {
+            content: '▼';
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+
+        .config-section.collapsed .config-section-title::before {
+            transform: rotate(-90deg);
+        }
+
+        .config-section.collapsed .config-fields {
+            display: none;
+        }
+
+        .config-fields {
+            padding-left: 0.75rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.25rem 0.75rem;
+        }
+
+        .config-field {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            position: relative;
+        }
+
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: help;
+            flex-shrink: 0;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            max-width: 280px;
+            width: max-content;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            border: 6px solid transparent;
+        }
+
+        .tooltip.top::after {
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-top-color: var(--bg-tertiary);
+        }
+
+        .tooltip.bottom::after {
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-bottom-color: var(--bg-tertiary);
+        }
+
+        .tooltip-icon:hover + .tooltip {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .config-field input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .config-field select {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .json-editors {
+            display: grid;
+            grid-template-columns: 2fr auto 2fr;
+            gap: 2rem;
+            align-items: start;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .editor-pane {
             display: flex;
             flex-direction: column;
+            gap: 0.75rem;
         }
-        pre {
-            background: #f4f4f4;
+
+        .editor-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .json-editor {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
             padding: 1rem;
-            overflow-x: auto;
-            border-radius: 4px;
-            margin: 0;
-            flex: 1;
+            min-height: 180px;
+            max-height: 300px;
+            max-width: 500px;
+            overflow: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9rem;
         }
-        .json-input, .json-container {
-            border: 1px solid #ccc;
+
+        .json-editor::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .json-editor::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .json-editor::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 3px;
+        }
+
+        .json-input {
             outline: none;
             cursor: text;
-            white-space: pre;
-            font-family: monospace;
         }
-        .model-code {
-            margin: 1rem 0;
+
+        .json-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        .form-footer {
+
+        .arrow-container {
             display: flex;
-            justify-content: center;
-            margin-top: 1rem;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: 3rem;
         }
+
         .clean-button {
-            padding: 1rem 2rem;
-            font-size: 1.25rem;
+            position: relative;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+            overflow: hidden;
+        }
+
+        .clean-button::before {
+            content: '→';
+            position: absolute;
+            right: 1.5rem;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-10px);
+        }
+
+        .clean-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+            padding-right: 3rem;
+        }
+
+        .clean-button:hover::before {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .clean-button:active {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+
+        pre[class*="language-"] {
+            margin: 0;
+            background: transparent;
+        }
+
+        code[class*="language-"] {
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .json-editors {
+                grid-template-columns: 1fr;
+            }
+
+            .arrow-container {
+                margin: 1rem 0;
+            }
         }
     </style>
 </head>
 <body>
 
-<h1>d3rty/json 🧼 Demo</h1>
-<p>Below is the fixed model we’ll unmarshal into:</p>
+<div class="header">
+    <h1>d3rty/json 🧼 Demo</h1>
+</div>
 
-<!-- Read‑only, syntax‑highlighted Go code -->
-<pre class="model-code"><code class="language-go">// Event is the demo model.
+<div class="main-grid">
+    <!-- Model Display -->
+    <div class="card model-display">
+        <div class="card-title">Model Definition</div>
+        <pre><code class="language-go">// Event is the demo model.
 type Event struct {
     dirty.Enabled
     Name     string `json:"name"`
@@ -77,11 +379,132 @@ type Event struct {
     IsActive bool   `json:"is_active"`
     MustBool bool   `json:"must_bool"`
 }</code></pre>
+    </div>
 
-<div class="container">
-    <div class="pane">
-        <h2>Dirty JSON</h2>
-        <pre class="json-input" contenteditable="true"><code id="json-input" class="language-json">{
+    <!-- Configuration -->
+    <div class="card">
+        <div class="card-title">Configuration</div>
+        <div class="config-container">
+            <form id="config-form">
+                <!-- Bool Section -->
+                <div class="config-section">
+                    <div class="config-section-title" onclick="toggleSection(this)">Bool</div>
+                    <div class="config-fields">
+                        <label class="config-field">
+                            <input type="checkbox" name="boolEnabled" checked>
+                            <span>Enable dirty Bool</span>
+                        </label>
+                        <label class="config-field">
+                            <span>Fallback:</span>
+                            <select name="boolFallback">
+                                <option value="false" selected>false</option>
+                                <option value="true">true</option>
+                                <option value="null">null</option>
+                            </select>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="boolFromStrings" checked>
+                            <span>FromStrings</span>
+                        </label>
+                        <label class="config-field" style="padding-left: 1rem;">
+                            <input type="checkbox" name="boolCaseInsensitive" checked>
+                            <span>CaseInsensitive</span>
+                        </label>
+                        <label class="config-field" style="padding-left: 1rem;">
+                            <input type="checkbox" name="respectFromNumbersLogic" checked>
+                            <span>RespectFromNumbersLogic</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="boolFromNumbers" checked>
+                            <span>FromNumbers</span>
+                        </label>
+                        <label class="config-field">
+                            <span>ParseFunc:</span>
+                            <select name="boolParseFunc">
+                                <option value="binary">binary</option>
+                                <option value="positive_negative">positive_negative</option>
+                                <option value="sign_of_one">sign_of_one</option>
+                            </select>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="boolFromNull" checked>
+                            <span>FromNull</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="boolNullInverse">
+                            <span>Null Inverse</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Number Section -->
+                <div class="config-section">
+                    <div class="config-section-title" onclick="toggleSection(this)">Number</div>
+                    <div class="config-fields">
+                        <label class="config-field">
+                            <input type="checkbox" name="numberEnabled" checked>
+                            <span>Enable dirty Number</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="numSpacingAllowed" checked>
+                            <span>SpacingAllowed</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="numExponentAllowed" checked>
+                            <span>ExponentNotationAllowed</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="numCommasAllowed" checked>
+                            <span>CommasAllowed</span>
+                        </label>
+                        <label class="config-field">
+                            <span>Rounding:</span>
+                            <select name="numRounding">
+                                <option value="none">none</option>
+                                <option value="floor" selected>floor</option>
+                                <option value="round">round</option>
+                            </select>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="numFromBools" checked>
+                            <span>FromBools</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="numFromNull" checked>
+                            <span>FromNull</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- FlexKeys Section -->
+                <div class="config-section">
+                    <div class="config-section-title" onclick="toggleSection(this)">FlexKeys</div>
+                    <div class="config-fields">
+                        <label class="config-field">
+                            <input type="checkbox" name="flexEnabled">
+                            <span>Enable FlexKeys</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="flexCaseInsensitive">
+                            <span>CaseInsensitive</span>
+                        </label>
+                        <label class="config-field">
+                            <input type="checkbox" name="flexChameleon">
+                            <span>ChameleonCase</span>
+                        </label>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JSON Editors -->
+<div class="json-editors">
+    <!-- Dirty JSON Input -->
+    <div class="editor-pane">
+        <div class="editor-label">Dirty JSON Input</div>
+        <pre class="json-editor json-input" contenteditable="true"><code id="json-input" class="language-json">{
   "id": "100000",
   "Is_Active": "yes",
   "must_bool": 1,
@@ -89,100 +512,158 @@ type Event struct {
 }</code></pre>
     </div>
 
-    <div class="pane">
-        <h2>Clean JSON</h2>
-        <pre class="json-container"><code id="output" class="language-json">{
-  /* result will appear here */
+    <!-- Clean Button -->
+    <div class="arrow-container">
+        <button class="clean-button" type="button">Clean 🧼</button>
+    </div>
+
+    <!-- Clean JSON Output -->
+    <div class="editor-pane">
+        <div class="editor-label">Clean JSON Output</div>
+        <pre class="json-editor"><code id="output" class="language-json">{
+  "name": "",
+  "id": 0,
+  "is_active": false,
+  "must_bool": false
 }</code></pre>
     </div>
-</div>
-
-<h2>Configuration</h2>
-<form id="config-form">
-    <fieldset>
-        <legend>Bool</legend>
-        <label><input type="checkbox" name="boolEnabled" checked> Enable dirty Bool</label><br>
-        <label>Fallback: <select name="boolFallback">
-            <option value="false" selected>false</option>
-            <option value="true">true</option>
-            <option value="null">null</option>
-        </select></label><br>
-
-        <label><input type="checkbox" name="boolFromStrings" checked> FromStrings</label><br>
-        <div class="nested">
-            <label><input type="checkbox" name="boolCaseInsensitive" checked> CaseInsensitive</label><br>
-            <label><input type="checkbox" name="respectFromNumbersLogic" checked> RespectFromNumbersLogic</label><br>
-        </div>
-
-        <label><input type="checkbox" name="boolFromNumbers" checked> FromNumbers</label><br>
-        <label>ParseFunc: <select name="boolParseFunc">
-            <option value="binary">binary</option>
-            <option value="positive_negative">positive_negative</option>
-            <option value="sign_of_one">sign_of_one</option>
-        </select></label><br>
-        <label><input type="checkbox" name="boolFromNull" checked> FromNull</label><br>
-        <label><input type="checkbox" name="boolNullInverse"> Null Inverse</label>
-    </fieldset>
-
-    <fieldset>
-        <legend>Number</legend>
-        <label><input type="checkbox" name="numberEnabled" checked> Enable dirty Number</label><br>
-        <label><input type="checkbox" name="numSpacingAllowed" checked> SpacingAllowed</label><br>
-        <label><input type="checkbox" name="numExponentAllowed" checked> ExponentNotationAllowed</label><br>
-        <label><input type="checkbox" name="numCommasAllowed" checked> CommasAllowed</label><br>
-        <label>Rounding: <select name="numRounding">
-            <option value="none">none</option>
-            <option value="floor" selected>floor</option>
-            <option value="round">round</option>
-        </select></label><br>
-        <label><input type="checkbox" name="numFromBools" checked> FromBools</label><br>
-        <label><input type="checkbox" name="numFromNull" checked> FromNull</label>
-    </fieldset>
-
-    <fieldset>
-        <legend>FlexKeys</legend>
-        <label><input type="checkbox" name="flexEnabled"> Enable FlexKeys</label><br>
-        <label><input type="checkbox" name="flexCaseInsensitive"> CaseInsensitive</label><br>
-        <label><input type="checkbox" name="flexChameleon"> ChameleonCase</label>
-    </fieldset>
-</form>
-
-<div class="form-footer">
-    <button class="clean-button" type="button">Clean it 🧼</button>
 </div>
 
 <!-- Go WASM runtime -->
 <script src="wasm_exec.js"></script>
 <script>
-	const go = new Go();
-	WebAssembly
-		.instantiateStreaming(fetch("main.wasm"), go.importObject)
-		.then(res => go.run(res.instance))
-		.catch(console.error);
+    const go = new Go();
+    WebAssembly
+        .instantiateStreaming(fetch("main.wasm"), go.importObject)
+        .then(res => go.run(res.instance))
+        .catch(console.error);
 </script>
 
-<!-- Prism highlight input on edit -->
 <script>
-	const inputEl = document.getElementById('json-input');
-	inputEl.addEventListener('input', () => {
-		Prism.highlightElement(inputEl);
-	});
-</script>
+    // Toggle config sections
+    function toggleSection(titleEl) {
+        titleEl.parentElement.classList.toggle('collapsed');
+    }
 
-<!-- Button handler to clean JSON -->
-<script>
-	document.querySelector('.clean-button').addEventListener('click', () => {
-		const jsonRaw = document.getElementById('json-input').textContent;
-		let out;
-		try {
-			out = cleanJSON(jsonRaw);
-		} catch (err) {
-			out = "failed to cleanJSON: " + err
-		}
-		const codeEl = document.getElementById('output');
-		codeEl.textContent = out;
-		Prism.highlightElement(codeEl);
-	});
+    // Prism highlight input on edit
+    const inputEl = document.getElementById('json-input');
+    inputEl.addEventListener('input', () => {
+        Prism.highlightElement(inputEl);
+    });
+
+    // Initial highlight
+    Prism.highlightAll();
+
+    // Button handler to clean JSON
+    document.querySelector('.clean-button').addEventListener('click', () => {
+        const jsonRaw = document.getElementById('json-input').textContent;
+        let out;
+        try {
+            out = cleanJSON(jsonRaw);
+        } catch (err) {
+            out = JSON.stringify({ error: String(err) }, null, 2);
+        }
+        const codeEl = document.getElementById('output');
+        codeEl.textContent = out;
+        Prism.highlightElement(codeEl);
+    });
+
+    // Load tooltips from config-schema.json
+    fetch('config-schema.json')
+        .then(res => res.json())
+        .then(schema => {
+            // Build a map of field names to descriptions
+            const descriptions = new Map();
+
+            schema.sections.forEach(section => {
+                section.fields?.forEach(field => {
+                    if (field.description) {
+                        descriptions.set(field.name, field.description);
+                    }
+                });
+
+                section.subsections?.forEach(subsection => {
+                    subsection.fields?.forEach(field => {
+                        if (field.description) {
+                            descriptions.set(field.name, field.description);
+                        }
+                    });
+                });
+            });
+
+            // Add tooltips to config fields
+            document.querySelectorAll('.config-field').forEach(fieldEl => {
+                const input = fieldEl.querySelector('input, select');
+                if (!input || !input.name) return;
+
+                // Map hardcoded field names to schema field names
+                const nameMapping = {
+                    'boolEnabled': 'Bool.Disabled',
+                    'boolFallback': 'Bool.FallbackValue',
+                    'boolFromStrings': 'Bool.FromStrings.Disabled',
+                    'boolCaseInsensitive': 'Bool.FromStrings.CaseInsensitive',
+                    'respectFromNumbersLogic': 'Bool.FromStrings.RespectFromNumbersLogic',
+                    'boolFromNumbers': 'Bool.FromNumbers.Disabled',
+                    'boolParseFunc': 'Bool.FromNumbers.CustomParseFunc',
+                    'boolFromNull': 'Bool.FromNull.Disabled',
+                    'boolNullInverse': 'Bool.FromNull.Inverse',
+                    'numberEnabled': 'Number.Disabled',
+                    'numSpacingAllowed': 'Number.FromStrings.SpacingAllowed',
+                    'numExponentAllowed': 'Number.FromStrings.ExponentNotationAllowed',
+                    'numCommasAllowed': 'Number.FromStrings.CommasAllowed',
+                    'numRounding': 'Number.FromStrings.RoundingAlgorithm',
+                    'numFromBools': 'Number.FromBools.Disabled',
+                    'numFromNull': 'Number.FromNull.Disabled',
+                    'flexEnabled': 'FlexKeys.Disabled',
+                    'flexCaseInsensitive': 'FlexKeys.CaseInsensitive',
+                    'flexChameleon': 'FlexKeys.ChameleonCase'
+                };
+
+                const schemaName = nameMapping[input.name];
+                const description = schemaName ? descriptions.get(schemaName) : null;
+
+                if (description) {
+                    const tooltipIcon = document.createElement('span');
+                    tooltipIcon.className = 'tooltip-icon';
+                    tooltipIcon.textContent = '?';
+
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip top';
+                    tooltip.textContent = description;
+
+                    // Position tooltip on hover
+                    tooltipIcon.addEventListener('mouseenter', () => {
+                        const rect = tooltipIcon.getBoundingClientRect();
+                        const tooltipRect = tooltip.getBoundingClientRect();
+
+                        // Position above the icon by default
+                        let top = rect.top - tooltipRect.height - 10;
+                        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+                        // Check if tooltip would go off-screen on top, flip to bottom
+                        if (top < 10) {
+                            top = rect.bottom + 10;
+                            tooltip.className = 'tooltip bottom';
+                        } else {
+                            tooltip.className = 'tooltip top';
+                        }
+
+                        // Keep tooltip within horizontal bounds
+                        if (left < 10) left = 10;
+                        if (left + tooltipRect.width > window.innerWidth - 10) {
+                            left = window.innerWidth - tooltipRect.width - 10;
+                        }
+
+                        tooltip.style.top = top + 'px';
+                        tooltip.style.left = left + 'px';
+                    });
+
+                    fieldEl.appendChild(tooltipIcon);
+                    fieldEl.appendChild(tooltip);
+                }
+            });
+        })
+        .catch(err => console.error('Failed to load tooltips:', err));
 </script>
 
 </body>

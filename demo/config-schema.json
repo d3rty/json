@@ -13,6 +13,7 @@
           "name": "Bool.FallbackValue",
           "label": "FallbackValue",
           "type": "text",
+          "description": "FallbackValue = false/true will be converted to maybe.Some(false/true) FallbackValue = null will be converted into maybe.None() - may cause a red result when unmarshalled. This value can be overridden for specific FromStrings/FromNumbers/FromNull subconfigs.",
           "value": "{false true}"
         }
       ],
@@ -42,12 +43,14 @@
               "name": "Bool.FromStrings.CaseInsensitive",
               "label": "CaseInsensitive",
               "type": "checkbox",
+              "description": "are considered to be case-insensitive. E.g. `True` is treated the same as `true`",
               "value": "true"
             },
             {
               "name": "Bool.FromStrings.RespectFromNumbersLogic",
               "label": "RespectFromNumbersLogic",
               "type": "checkbox",
+              "description": "as a regular number value (corresponding to the FromNumbers config).",
               "value": "true"
             }
           ]
@@ -65,8 +68,13 @@
               "name": "Bool.FromNumbers.CustomParseFunc",
               "label": "CustomParseFunc",
               "type": "select",
+              "description": "Available values: \"binary\", \"positive_negative\", \"sign_of_one\"",
               "value": "1",
               "options": [
+                {
+                  "value": "1",
+                  "label": "binary"
+                },
                 {
                   "value": "2",
                   "label": "positive_negative"
@@ -74,10 +82,6 @@
                 {
                   "value": "4",
                   "label": "sign_of_one"
-                },
-                {
-                  "value": "1",
-                  "label": "binary"
                 }
               ]
             }
@@ -96,6 +100,7 @@
               "name": "Bool.FromNull.Inverse",
               "label": "Inverse",
               "type": "checkbox",
+              "description": "If inverse:true, nulls will be considered `true` rather than `false` as by default.",
               "value": "false"
             }
           ]
@@ -126,24 +131,28 @@
               "name": "Number.FromStrings.SpacingAllowed",
               "label": "SpacingAllowed",
               "type": "checkbox",
+              "description": "in the stringified numbers.  Example: \"1 000 000\" is considered as a valid 1,000,000 in this case.",
               "value": "true"
             },
             {
               "name": "Number.FromStrings.ExponentNotationAllowed",
               "label": "ExponentNotationAllowed",
               "type": "checkbox",
+              "description": "should be accepted.  Example: \"1e6\" is considered as a valid 1,000,000 in this case.",
               "value": "true"
             },
             {
               "name": "Number.FromStrings.CommasAllowed",
               "label": "CommasAllowed",
               "type": "checkbox",
+              "description": "Example: \"1,000,000\" is considered as a valid 1,000,000 in this case.",
               "value": "true"
             },
             {
               "name": "Number.FromStrings.RoundingAlgorithm",
               "label": "RoundingAlgorithm",
               "type": "text",
+              "description": "Available values: \"none\"  - allows only float values with zero decimal parts to be parsed as integers. \"floor\" - math.Floor: decimal part is removed \"round\" - math.Round: rounding to the closest integer value.",
               "value": "2"
             }
           ]
@@ -196,6 +205,7 @@
               "name": "Date.Timezone.Default",
               "label": "Default",
               "type": "text",
+              "description": "We can specify the name of field where timezone is set e.g. `\"timezone\", \"tz\"` We can manually specify timezone which should convert all parsed time",
               "value": "UTC"
             },
             {
@@ -231,6 +241,7 @@
               "name": "Date.FromNumbers.UnixMilliTimestamp",
               "label": "UnixMilliTimestamp",
               "type": "checkbox",
+              "description": "Note: when both UnixTimestamp and UnixMilliTimestamp are enabled, we can't guarantee 100% to distinguish between them. It will work for a reasonable amount of time-range within our modern time.",
               "value": "true"
             }
           ]
@@ -254,12 +265,14 @@
               "name": "Date.FromStrings.Aliases",
               "label": "Aliases",
               "type": "checkbox",
+              "description": "e.g. `today`, `yesterday`, `tomorrow`, etc TODO(github.com/d3rty/json/issues/7): Custom Aliases",
               "value": "true"
             },
             {
               "name": "Date.FromStrings.RespectFromNumbersLogic",
               "label": "RespectFromNumbersLogic",
               "type": "checkbox",
+              "description": "as a regular number value (corresponding to the FromNumbers config).",
               "value": "true"
             }
           ]
@@ -307,12 +320,14 @@
           "name": "FlexKeys.CaseInsensitive",
           "label": "CaseInsensitive",
           "type": "checkbox",
+          "description": "Note: can cause a Yellow/Red result when a struct meets multiple keys that are considered the same. E.g. {\"key\":\"value\", \"KEY\":\"value\"} will be considered as: - Yellow if the struct field's tag strictly matches at least one candidate. - Red if it doesn't match strictly any candidate.",
           "value": "false"
         },
         {
           "name": "FlexKeys.ChameleonCase",
           "label": "ChameleonCase",
           "type": "checkbox",
+          "description": "Note: like CaseInsensitive, this can result in Yellow or Red outcomes.",
           "value": "false"
         }
       ]
