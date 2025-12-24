@@ -14,6 +14,11 @@ import (
 //go:embed default.toml
 var embeddedConfig embed.FS
 
+// EmbeddedConfig returns the embedded config filesystem for external packages to access.
+func EmbeddedConfig() embed.FS {
+	return embeddedConfig
+}
+
 // Section is a config section (toml table).
 // Section is considered disabled if Disabled=true or full its parent is nil (see cfg.init()).
 type Section struct {
