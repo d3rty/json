@@ -138,6 +138,32 @@
             transform: rotate(-90deg);
         }
 
+        .section-title-text {
+            margin-right: 0.5rem;
+        }
+
+        .section-enable-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+        }
+
+        .section-enable-checkbox input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .config-section.disabled .config-fields {
+            opacity: 0.5;
+        }
+
         .config-section.collapsed .config-fields {
             display: none;
         }
@@ -438,7 +464,9 @@
         }
 
         .copy-dropdown-menu button {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             width: 100%;
             background: transparent;
             color: var(--text-primary);
@@ -448,6 +476,13 @@
             font-size: 0.75rem;
             cursor: pointer;
             transition: background 0.2s;
+        }
+
+        .copy-dropdown-menu button .checkmark {
+            color: var(--success);
+            font-weight: bold;
+            width: 1rem;
+            flex-shrink: 0;
         }
 
         .copy-dropdown-menu button:hover {
@@ -526,20 +561,26 @@ type Event struct {
                     <svg width="10" height="6"><use href="#icon-chevron-down"/></svg>
                 </button>
                 <div class="copy-dropdown-menu" id="copy-dropdown-menu">
-                    <button type="button" id="copy-json-btn">Copy JSON</button>
+                    <button type="button" id="copy-toml-dropdown-btn">
+                        <span class="checkmark">✓</span> Copy TOML
+                    </button>
+                    <button type="button" id="copy-json-dropdown-btn">
+                        <span class="checkmark" style="visibility: hidden;">✓</span> Copy JSON
+                    </button>
                 </div>
             </div>
         </div>
         <div class="config-container">
             <form id="config-form">
                 <!-- Bool Section -->
-                <div class="config-section">
-                    <div class="config-section-title" onclick="toggleSection(this)">Bool</div>
-                    <div class="config-fields">
-                        <label class="config-field">
-                            <input type="checkbox" name="boolEnabled" checked>
-                            <span>Enable dirty Bool</span>
+                <div class="config-section" data-section="bool">
+                    <div class="config-section-title" onclick="toggleSection(this)">
+                        <span class="section-title-text">Bool</span>
+                        <label class="section-enable-checkbox" onclick="event.stopPropagation()">
+                            <input type="checkbox" name="boolEnabled" checked onchange="toggleSectionEnabled('bool', this.checked)">
                         </label>
+                    </div>
+                    <div class="config-fields">
                         <label class="config-field">
                             <span>Fallback:</span>
                             <select name="boolFallback">
@@ -584,13 +625,14 @@ type Event struct {
                 </div>
 
                 <!-- Number Section -->
-                <div class="config-section">
-                    <div class="config-section-title" onclick="toggleSection(this)">Number</div>
-                    <div class="config-fields">
-                        <label class="config-field">
-                            <input type="checkbox" name="numberEnabled" checked>
-                            <span>Enable dirty Number</span>
+                <div class="config-section" data-section="number">
+                    <div class="config-section-title" onclick="toggleSection(this)">
+                        <span class="section-title-text">Number</span>
+                        <label class="section-enable-checkbox" onclick="event.stopPropagation()">
+                            <input type="checkbox" name="numberEnabled" checked onchange="toggleSectionEnabled('number', this.checked)">
                         </label>
+                    </div>
+                    <div class="config-fields">
                         <label class="config-field">
                             <input type="checkbox" name="numSpacingAllowed" checked>
                             <span>SpacingAllowed</span>
@@ -623,19 +665,20 @@ type Event struct {
                 </div>
 
                 <!-- FlexKeys Section -->
-                <div class="config-section">
-                    <div class="config-section-title" onclick="toggleSection(this)">FlexKeys</div>
+                <div class="config-section" data-section="flexkeys">
+                    <div class="config-section-title" onclick="toggleSection(this)">
+                        <span class="section-title-text">FlexKeys</span>
+                        <label class="section-enable-checkbox" onclick="event.stopPropagation()">
+                            <input type="checkbox" name="flexEnabled" onchange="toggleSectionEnabled('flexkeys', this.checked)">
+                        </label>
+                    </div>
                     <div class="config-fields">
                         <label class="config-field">
-                            <input type="checkbox" name="flexEnabled">
-                            <span>Enable FlexKeys</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="flexCaseInsensitive">
+                            <input type="checkbox" name="flexCaseInsensitive" disabled>
                             <span>CaseInsensitive</span>
                         </label>
                         <label class="config-field">
-                            <input type="checkbox" name="flexChameleon">
+                            <input type="checkbox" name="flexChameleon" disabled>
                             <span>ChameleonCase</span>
                         </label>
                     </div>
@@ -699,6 +742,23 @@ type Event struct {
     // Toggle config sections
     function toggleSection(titleEl) {
         titleEl.parentElement.classList.toggle('collapsed');
+    }
+
+    // Toggle section enabled/disabled state
+    function toggleSectionEnabled(sectionName, enabled) {
+        const section = document.querySelector(`.config-section[data-section="${sectionName}"]`);
+        if (!section) return;
+
+        const fields = section.querySelectorAll('.config-fields input, .config-fields select');
+        fields.forEach(field => {
+            field.disabled = !enabled;
+        });
+
+        if (enabled) {
+            section.classList.remove('disabled');
+        } else {
+            section.classList.add('disabled');
+        }
     }
 
     // Prism highlight input on edit
@@ -825,7 +885,25 @@ type Event struct {
     const copyDropdownBtn = document.getElementById('copy-dropdown-btn');
     const copyDropdownMenu = document.getElementById('copy-dropdown-menu');
     const copyTomlBtn = document.getElementById('copy-toml-btn');
-    const copyJsonBtn = document.getElementById('copy-json-btn');
+    const copyTomlDropdownBtn = document.getElementById('copy-toml-dropdown-btn');
+    const copyJsonDropdownBtn = document.getElementById('copy-json-dropdown-btn');
+
+    // Track the currently selected format (default: 'toml')
+    let selectedFormat = 'toml';
+
+    // Update checkmarks based on selected format
+    function updateCheckmarks() {
+        const tomlCheckmark = copyTomlDropdownBtn.querySelector('.checkmark');
+        const jsonCheckmark = copyJsonDropdownBtn.querySelector('.checkmark');
+
+        if (selectedFormat === 'toml') {
+            tomlCheckmark.style.visibility = 'visible';
+            jsonCheckmark.style.visibility = 'hidden';
+        } else {
+            tomlCheckmark.style.visibility = 'hidden';
+            jsonCheckmark.style.visibility = 'visible';
+        }
+    }
 
     // Toggle dropdown
     copyDropdownBtn.addEventListener('click', (e) => {
@@ -886,45 +964,55 @@ type Event struct {
         // Bool section
         toml += '[Bool]\n';
         toml += `Disabled = ${!config.bool.enabled}\n`;
-        toml += `FallbackValue = ${config.bool.fallback}\n\n`;
+        if (config.bool.enabled) {
+            toml += `FallbackValue = ${config.bool.fallback}\n\n`;
 
-        toml += '[Bool.FromStrings]\n';
-        toml += `Disabled = ${!config.bool.fromStrings}\n`;
-        toml += 'CustomListForTrue = ["true", "yes", "on"]\n';
-        toml += 'CustomListForFalse = ["false", "no", "off", ""]\n';
-        toml += `CaseInsensitive = ${config.bool.caseInsensitive}\n`;
-        toml += `RespectFromNumbersLogic = ${config.bool.respectFromNumbersLogic}\n\n`;
+            toml += '[Bool.FromStrings]\n';
+            toml += `Disabled = ${!config.bool.fromStrings}\n`;
+            toml += 'CustomListForTrue = ["true", "yes", "on"]\n';
+            toml += 'CustomListForFalse = ["false", "no", "off", ""]\n';
+            toml += `CaseInsensitive = ${config.bool.caseInsensitive}\n`;
+            toml += `RespectFromNumbersLogic = ${config.bool.respectFromNumbersLogic}\n\n`;
 
-        toml += '[Bool.FromNumbers]\n';
-        toml += `Disabled = ${!config.bool.fromNumbers}\n`;
-        toml += `CustomParseFunc = "${config.bool.parseFunc}"\n\n`;
+            toml += '[Bool.FromNumbers]\n';
+            toml += `Disabled = ${!config.bool.fromNumbers}\n`;
+            toml += `CustomParseFunc = "${config.bool.parseFunc}"\n\n`;
 
-        toml += '[Bool.FromNull]\n';
-        toml += `Disabled = ${!config.bool.fromNull}\n`;
-        toml += `Inverse = ${config.bool.nullInverse}\n\n`;
+            toml += '[Bool.FromNull]\n';
+            toml += `Disabled = ${!config.bool.fromNull}\n`;
+            toml += `Inverse = ${config.bool.nullInverse}\n\n`;
+        } else {
+            toml += '\n';
+        }
 
         // Number section
         toml += '[Number]\n';
-        toml += `Disabled = ${!config.number.enabled}\n\n`;
+        toml += `Disabled = ${!config.number.enabled}\n`;
+        if (config.number.enabled) {
+            toml += '\n';
+            toml += '[Number.FromStrings]\n';
+            toml += 'Disabled = false\n';
+            toml += `SpacingAllowed = ${config.number.spacingAllowed}\n`;
+            toml += `ExponentNotationAllowed = ${config.number.exponentAllowed}\n`;
+            toml += `CommasAllowed = ${config.number.commasAllowed}\n`;
+            toml += `RoundingAlgorithm = "${config.number.rounding}"\n\n`;
 
-        toml += '[Number.FromStrings]\n';
-        toml += 'Disabled = false\n';
-        toml += `SpacingAllowed = ${config.number.spacingAllowed}\n`;
-        toml += `ExponentNotationAllowed = ${config.number.exponentAllowed}\n`;
-        toml += `CommasAllowed = ${config.number.commasAllowed}\n`;
-        toml += `RoundingAlgorithm = "${config.number.rounding}"\n\n`;
+            toml += '[Number.FromBools]\n';
+            toml += `Disabled = ${!config.number.fromBools}\n\n`;
 
-        toml += '[Number.FromBools]\n';
-        toml += `Disabled = ${!config.number.fromBools}\n\n`;
-
-        toml += '[Number.FromNull]\n';
-        toml += `Disabled = ${!config.number.fromNull}\n\n`;
+            toml += '[Number.FromNull]\n';
+            toml += `Disabled = ${!config.number.fromNull}\n\n`;
+        } else {
+            toml += '\n';
+        }
 
         // FlexKeys section
         toml += '[FlexKeys]\n';
         toml += `Disabled = ${!config.flexKeys.enabled}\n`;
-        toml += `CaseInsensitive = ${config.flexKeys.caseInsensitive}\n`;
-        toml += `ChameleonCase = ${config.flexKeys.chameleonCase}\n`;
+        if (config.flexKeys.enabled) {
+            toml += `CaseInsensitive = ${config.flexKeys.caseInsensitive}\n`;
+            toml += `ChameleonCase = ${config.flexKeys.chameleonCase}\n`;
+        }
 
         return toml;
     }
@@ -933,46 +1021,58 @@ type Event struct {
     function generateJSON(config) {
         const jsonConfig = {
             Bool: {
-                Disabled: !config.bool.enabled,
-                FallbackValue: config.bool.fallback,
-                FromStrings: {
-                    Disabled: !config.bool.fromStrings,
-                    CustomListForTrue: ['true', 'yes', 'on'],
-                    CustomListForFalse: ['false', 'no', 'off', ''],
-                    CaseInsensitive: config.bool.caseInsensitive,
-                    RespectFromNumbersLogic: config.bool.respectFromNumbersLogic
-                },
-                FromNumbers: {
-                    Disabled: !config.bool.fromNumbers,
-                    CustomParseFunc: config.bool.parseFunc
-                },
-                FromNull: {
-                    Disabled: !config.bool.fromNull,
-                    Inverse: config.bool.nullInverse
-                }
+                Disabled: !config.bool.enabled
             },
             Number: {
-                Disabled: !config.number.enabled,
-                FromStrings: {
-                    Disabled: false,
-                    SpacingAllowed: config.number.spacingAllowed,
-                    ExponentNotationAllowed: config.number.exponentAllowed,
-                    CommasAllowed: config.number.commasAllowed,
-                    RoundingAlgorithm: config.number.rounding
-                },
-                FromBools: {
-                    Disabled: !config.number.fromBools
-                },
-                FromNull: {
-                    Disabled: !config.number.fromNull
-                }
+                Disabled: !config.number.enabled
             },
             FlexKeys: {
-                Disabled: !config.flexKeys.enabled,
-                CaseInsensitive: config.flexKeys.caseInsensitive,
-                ChameleonCase: config.flexKeys.chameleonCase
+                Disabled: !config.flexKeys.enabled
             }
         };
+
+        // Only include Bool sub-options if enabled
+        if (config.bool.enabled) {
+            jsonConfig.Bool.FallbackValue = config.bool.fallback;
+            jsonConfig.Bool.FromStrings = {
+                Disabled: !config.bool.fromStrings,
+                CustomListForTrue: ['true', 'yes', 'on'],
+                CustomListForFalse: ['false', 'no', 'off', ''],
+                CaseInsensitive: config.bool.caseInsensitive,
+                RespectFromNumbersLogic: config.bool.respectFromNumbersLogic
+            };
+            jsonConfig.Bool.FromNumbers = {
+                Disabled: !config.bool.fromNumbers,
+                CustomParseFunc: config.bool.parseFunc
+            };
+            jsonConfig.Bool.FromNull = {
+                Disabled: !config.bool.fromNull,
+                Inverse: config.bool.nullInverse
+            };
+        }
+
+        // Only include Number sub-options if enabled
+        if (config.number.enabled) {
+            jsonConfig.Number.FromStrings = {
+                Disabled: false,
+                SpacingAllowed: config.number.spacingAllowed,
+                ExponentNotationAllowed: config.number.exponentAllowed,
+                CommasAllowed: config.number.commasAllowed,
+                RoundingAlgorithm: config.number.rounding
+            };
+            jsonConfig.Number.FromBools = {
+                Disabled: !config.number.fromBools
+            };
+            jsonConfig.Number.FromNull = {
+                Disabled: !config.number.fromNull
+            };
+        }
+
+        // Only include FlexKeys sub-options if enabled
+        if (config.flexKeys.enabled) {
+            jsonConfig.FlexKeys.CaseInsensitive = config.flexKeys.caseInsensitive;
+            jsonConfig.FlexKeys.ChameleonCase = config.flexKeys.chameleonCase;
+        }
 
         return JSON.stringify(jsonConfig, null, 2);
     }
@@ -1010,20 +1110,46 @@ type Event struct {
         });
     });
 
-    // Copy TOML button handler
+    // Main copy button handler - uses selected format
     copyTomlBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        const config = getConfigFromForm();
+
+        if (selectedFormat === 'toml') {
+            const toml = generateTOML(config);
+            copyToClipboard(toml, copyTomlBtn);
+        } else {
+            const json = generateJSON(config);
+            copyToClipboard(json, copyTomlBtn);
+        }
+    });
+
+    // Copy TOML dropdown button handler
+    copyTomlDropdownBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectedFormat = 'toml';
+        updateCheckmarks();
+
         const config = getConfigFromForm();
         const toml = generateTOML(config);
         copyToClipboard(toml, copyTomlBtn);
     });
 
-    // Copy JSON button handler
-    copyJsonBtn.addEventListener('click', (e) => {
+    // Copy JSON dropdown button handler
+    copyJsonDropdownBtn.addEventListener('click', (e) => {
         e.stopPropagation();
+        selectedFormat = 'json';
+        updateCheckmarks();
+
         const config = getConfigFromForm();
         const json = generateJSON(config);
         copyToClipboard(json, copyTomlBtn);
+    });
+
+    // Initialize section states on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        // FlexKeys is disabled by default since flexEnabled is unchecked
+        toggleSectionEnabled('flexkeys', false);
     });
 </script>
 
