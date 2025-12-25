@@ -1,0 +1,11 @@
+# Dependencies
+node_modules/
+
+# Build files
+*.wasm
+
+# Third-party scripts
+wasm_exec.js
+
+# Config files
+config-schema.json

@@ -1,0 +1,14 @@
+{
+  "name": "d3rtyjson-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Demo for d3rty/json library",
+  "scripts": {
+    "lint": "eslint '**/*.{js,html}'",
+    "lint:fix": "eslint '**/*.{js,html}' --fix"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-plugin-html": "^7.1.0"
+  }
+}

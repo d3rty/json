@@ -690,7 +690,7 @@ type Event struct {
 <script>
     const go = new Go();
     WebAssembly
-        .instantiateStreaming(fetch("main.wasm"), go.importObject)
+        .instantiateStreaming(fetch('main.wasm'), go.importObject)
         .then(res => go.run(res.instance))
         .catch(console.error);
 </script>
@@ -890,8 +890,8 @@ type Event struct {
 
         toml += '[Bool.FromStrings]\n';
         toml += `Disabled = ${!config.bool.fromStrings}\n`;
-        toml += `CustomListForTrue = ["true", "yes", "on"]\n`;
-        toml += `CustomListForFalse = ["false", "no", "off", ""]\n`;
+        toml += 'CustomListForTrue = ["true", "yes", "on"]\n';
+        toml += 'CustomListForFalse = ["false", "no", "off", ""]\n';
         toml += `CaseInsensitive = ${config.bool.caseInsensitive}\n`;
         toml += `RespectFromNumbersLogic = ${config.bool.respectFromNumbersLogic}\n\n`;
 
@@ -908,7 +908,7 @@ type Event struct {
         toml += `Disabled = ${!config.number.enabled}\n\n`;
 
         toml += '[Number.FromStrings]\n';
-        toml += `Disabled = false\n`;
+        toml += 'Disabled = false\n';
         toml += `SpacingAllowed = ${config.number.spacingAllowed}\n`;
         toml += `ExponentNotationAllowed = ${config.number.exponentAllowed}\n`;
         toml += `CommasAllowed = ${config.number.commasAllowed}\n`;
@@ -937,8 +937,8 @@ type Event struct {
                 FallbackValue: config.bool.fallback,
                 FromStrings: {
                     Disabled: !config.bool.fromStrings,
-                    CustomListForTrue: ["true", "yes", "on"],
-                    CustomListForFalse: ["false", "no", "off", ""],
+                    CustomListForTrue: ['true', 'yes', 'on'],
+                    CustomListForFalse: ['false', 'no', 'off', ''],
                     CaseInsensitive: config.bool.caseInsensitive,
                     RespectFromNumbersLogic: config.bool.respectFromNumbersLogic
                 },
