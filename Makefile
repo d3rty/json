@@ -10,6 +10,12 @@ tidy:
 	@go vet $$(go list ./...)
 	@go mod tidy
 
+# Tidy WASM code: format and vet with js/wasm build tags
+wasm-tidy:
+	@echo "🔧 Formatting and vetting WASM code..."
+	@go fmt ./cmd/wasm-demo
+	@GOOS=js GOARCH=wasm go vet ./cmd/wasm-demo
+
 # Install golangci-lint only if it's not already installed
 lint-install:
 	@if ! [ -x "$(GOLANGCI_LINT)" ]; then \
@@ -39,9 +45,26 @@ wasm:
 	cp $$GOROOT/lib/wasm/wasm_exec.js demo/; \
 
 
-demoserve:
+# Demo frontend commands (pnpm/eslint)
+demo-install:
+	@echo "📦 Installing demo dependencies..."
+	cd demo && pnpm install
+
+demo-eslint:
+	@echo "🔍 Running ESLint on demo..."
+	cd demo && pnpm run lint
+
+demo-eslint-fix:
+	@echo "🔧 Running ESLint with auto-fix on demo..."
+	cd demo && pnpm run lint:fix
+
+demo-clean:
+	@echo "🧹 Cleaning demo dependencies..."
+	cd demo && rm -rf node_modules pnpm-lock.yaml
+
+demo-serve:
 	@echo "📡  Serving demo/ at http://localhost:8080"
 	cd demo && python3 -m http.server 8080
 
 # Phony targets
-.PHONY: all tidy lint-install lint test wasm demoserve
+.PHONY: all tidy wasm-tidy lint-install lint test wasm demo-serve demo-install demo-eslint demo-eslint-fix demo-clean

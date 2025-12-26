@@ -1,545 +1,568 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>d3rty/json Demo</title>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>d3rty/json Demo</title>
+
+        <!-- Prism.js for syntax highlighting - darker theme -->
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism-tomorrow.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-go.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-json.min.js"></script>
+
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            :root {
+                --bg-primary: #0f172a;
+                --bg-secondary: #1e293b;
+                --bg-tertiary: #334155;
+                --text-primary: #f8fafc;
+                --text-secondary: #cbd5e1;
+                --accent: #3b82f6;
+                --accent-hover: #2563eb;
+                --border: #334155;
+                --success: #10b981;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+                    sans-serif;
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                padding: 1.5rem;
+                line-height: 1.6;
+            }
+
+            .header {
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
 
-    <!-- Prism.js for syntax highlighting - darker theme -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism-tomorrow.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-go.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-json.min.js"></script>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --bg-primary: #0f172a;
-            --bg-secondary: #1e293b;
-            --bg-tertiary: #334155;
-            --text-primary: #f8fafc;
-            --text-secondary: #cbd5e1;
-            --accent: #3b82f6;
-            --accent-hover: #2563eb;
-            --border: #334155;
-            --success: #10b981;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            padding: 1.5rem;
-            line-height: 1.6;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 1rem;
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 3fr;
-            gap: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card {
-            background: var(--bg-secondary);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            border: 1px solid var(--border);
-        }
-
-        .card-title {
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-            margin-bottom: 0.6rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .model-display pre {
-            background: var(--bg-tertiary);
-            border-radius: 0.5rem;
-            padding: 0.75rem 0.5rem;
-            margin: 0;
-            font-size: 0.875rem;
-            overflow-x: auto;
-        }
-
-        .config-container {
-            max-height: 450px;
-            overflow-y: auto;
-            overflow-x: visible;
-            padding-right: 0.5rem;
-        }
-
-        .card {
-            overflow: visible;
-        }
-
-        .config-container::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .config-container::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-            border-radius: 3px;
-        }
-
-        .config-container::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 3px;
-        }
-
-        .config-section {
-            margin-bottom: 0.5rem;
-        }
-
-        .config-section-title {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--accent);
-            margin-bottom: 0.35rem;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .config-section-title::before {
-            content: '▼';
-            font-size: 0.7rem;
-            transition: transform 0.2s;
-        }
-
-        .config-section.collapsed .config-section-title::before {
-            transform: rotate(-90deg);
-        }
-
-        .section-title-text {
-            margin-right: 0.5rem;
-        }
-
-        .section-enable-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            user-select: none;
-            margin: 0;
-        }
-
-        .section-enable-checkbox input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            cursor: pointer;
-            accent-color: var(--accent);
-        }
-
-        .config-section.disabled .config-fields {
-            opacity: 0.5;
-        }
-
-        .config-section.collapsed .config-fields {
-            display: none;
-        }
-
-        .config-fields {
-            padding-left: 0.75rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.25rem 0.75rem;
-        }
-
-        .config-field {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.8rem;
-            position: relative;
-        }
-
-        .tooltip-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: var(--accent);
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
-            cursor: help;
-            flex-shrink: 0;
-        }
-
-        .tooltip {
-            position: fixed;
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.5rem;
-            font-size: 0.75rem;
-            line-height: 1.4;
-            max-width: 280px;
-            width: max-content;
-            z-index: 10000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .tooltip::after {
-            content: '';
-            position: absolute;
-            border: 6px solid transparent;
-        }
-
-        .tooltip.top::after {
-            top: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-top-color: var(--bg-tertiary);
-        }
-
-        .tooltip.bottom::after {
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            border-bottom-color: var(--bg-tertiary);
-        }
-
-        .tooltip-icon:hover + .tooltip {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .config-field input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
-            cursor: pointer;
-            accent-color: var(--accent);
-        }
-
-        .config-field select {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border: 1px solid var(--border);
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.25rem;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-
-        .json-editors {
-            display: grid;
-            grid-template-columns: 2fr auto 2fr;
-            gap: 2rem;
-            align-items: start;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .editor-pane {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-        .editor-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: var(--text-secondary);
-        }
-
-        .json-editor {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            min-height: 180px;
-            max-height: 300px;
-            max-width: 500px;
-            overflow: auto;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9rem;
-        }
-
-        .json-editor::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .json-editor::-webkit-scrollbar-track {
-            background: var(--bg-tertiary);
-            border-radius: 3px;
-        }
-
-        .json-editor::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 3px;
-        }
-
-        .json-input {
-            outline: none;
-            cursor: text;
-        }
-
-        .json-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .arrow-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            padding-top: 3rem;
-        }
-
-        .clean-button {
-            position: relative;
-            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2.5rem;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
-            overflow: hidden;
-        }
-
-        .clean-button::before {
-            content: '→';
-            position: absolute;
-            right: 1.5rem;
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateX(-10px);
-        }
-
-        .clean-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
-            padding-right: 3rem;
-        }
-
-        .clean-button:hover::before {
-            opacity: 1;
-            transform: translateX(0);
-        }
-
-        .clean-button:active {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        }
-
-        pre[class*="language-"] {
-            margin: 0;
-            background: transparent;
-        }
-
-        code[class*="language-"] {
-            font-size: 0.875rem;
-        }
-
-        /* Copy button base styles */
-        .copy-icon-btn,
-        .copy-icon-btn-dropdown {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-            border-radius: 0.375rem;
-            padding: 0.4rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .copy-icon-btn:hover,
-        .copy-icon-btn-dropdown:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-            border-color: var(--text-secondary);
-        }
-
-        .copy-icon-btn:active,
-        .copy-icon-btn-dropdown:active {
-            transform: scale(0.95);
-        }
-
-        .copy-icon-btn.copied {
-            background: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-
-        /* Split button container */
-        .split-button-container {
-            position: relative;
-            display: inline-flex;
-            align-items: stretch;
-            gap: 0;
-        }
-
-        .copy-icon-btn.config-copy-btn {
-            border-radius: 0.375rem 0 0 0.375rem;
-            border-right: none;
-        }
-
-        .copy-icon-btn-dropdown {
-            border-radius: 0 0.375rem 0.375rem 0;
-        }
-
-        .editor-wrapper {
-            position: relative;
-        }
-
-        .editor-copy-btn {
-            position: absolute;
-            top: 1rem;
-            right: 1.5rem;
-            z-index: 10;
-            opacity: 0.7;
-        }
-
-        .editor-copy-btn:hover {
-            opacity: 1;
-        }
-
-        .json-editor {
-            position: relative;
-        }
-
-        .copy-dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 0.25rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 0.375rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            display: none;
-            min-width: 120px;
-        }
-
-        .copy-dropdown-menu.show {
-            display: block;
-        }
-
-        .copy-dropdown-menu button {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            width: 100%;
-            background: transparent;
-            color: var(--text-primary);
-            border: none;
-            padding: 0.5rem 0.75rem;
-            text-align: left;
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .copy-dropdown-menu button .checkmark {
-            color: var(--success);
-            font-weight: bold;
-            width: 1rem;
-            flex-shrink: 0;
-        }
-
-        .copy-dropdown-menu button:hover {
-            background: var(--bg-tertiary);
-        }
-
-        .copy-dropdown-menu button:first-child {
-            border-radius: 0.375rem 0.375rem 0 0;
-        }
-
-        .copy-dropdown-menu button:last-child {
-            border-radius: 0 0 0.375rem 0.375rem;
-        }
-
-        @media (max-width: 1024px) {
             .main-grid {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 2fr 3fr;
+                gap: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .card {
+                background: var(--bg-secondary);
+                border-radius: 0.75rem;
+                padding: 1rem;
+                border: 1px solid var(--border);
+            }
+
+            .card-title {
+                font-size: 0.8rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--text-secondary);
+                margin-bottom: 0.6rem;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .model-display pre {
+                background: var(--bg-tertiary);
+                border-radius: 0.5rem;
+                padding: 0.75rem 0.5rem;
+                margin: 0;
+                font-size: 0.875rem;
+                overflow-x: auto;
+            }
+
+            .config-container {
+                max-height: 450px;
+                overflow-y: auto;
+                overflow-x: visible;
+                padding-right: 0.5rem;
+            }
+
+            .card {
+                overflow: visible;
+            }
+
+            .config-container::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .config-container::-webkit-scrollbar-track {
+                background: var(--bg-tertiary);
+                border-radius: 3px;
+            }
+
+            .config-container::-webkit-scrollbar-thumb {
+                background: var(--accent);
+                border-radius: 3px;
+            }
+
+            .config-section {
+                margin-bottom: 0.5rem;
+            }
+
+            .config-section-title {
+                font-weight: 600;
+                font-size: 0.85rem;
+                color: var(--accent);
+                margin-bottom: 0.35rem;
+                cursor: pointer;
+                user-select: none;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .config-section-title::before {
+                content: "▼";
+                font-size: 0.7rem;
+                transition: transform 0.2s;
+            }
+
+            .config-section.collapsed .config-section-title::before {
+                transform: rotate(-90deg);
+            }
+
+            .section-title-text {
+                margin-right: 0.5rem;
+            }
+
+            .section-enable-checkbox {
+                display: flex;
+                align-items: center;
+                gap: 0.3rem;
+                font-size: 0.75rem;
+                color: var(--text-secondary);
+                cursor: pointer;
+                user-select: none;
+                margin: 0;
+            }
+
+            .section-enable-checkbox input[type="checkbox"] {
+                width: 14px;
+                height: 14px;
+                cursor: pointer;
+                accent-color: var(--accent);
+            }
+
+            .config-section.disabled .config-fields {
+                opacity: 0.5;
+            }
+
+            .config-section.collapsed .config-fields {
+                display: none;
+            }
+
+            .config-fields {
+                padding-left: 0.75rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 0.25rem 0.75rem;
+            }
+
+            .config-field {
+                display: flex;
+                align-items: center;
+                gap: 0.4rem;
+                font-size: 0.8rem;
+                position: relative;
+            }
+
+            .tooltip-icon {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                background: var(--accent);
+                color: white;
+                font-size: 10px;
+                font-weight: bold;
+                cursor: help;
+                flex-shrink: 0;
+            }
+
+            .tooltip {
+                position: fixed;
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+                padding: 0.5rem 0.75rem;
+                border-radius: 0.5rem;
+                font-size: 0.75rem;
+                line-height: 1.4;
+                max-width: 280px;
+                width: max-content;
+                z-index: 10000;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s;
+                border: 1px solid var(--border);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            .tooltip::after {
+                content: "";
+                position: absolute;
+                border: 6px solid transparent;
+            }
+
+            .tooltip.top::after {
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-top-color: var(--bg-tertiary);
+            }
+
+            .tooltip.bottom::after {
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border-bottom-color: var(--bg-tertiary);
+            }
+
+            .tooltip-icon:hover + .tooltip {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            .config-field input[type="checkbox"] {
+                width: 14px;
+                height: 14px;
+                cursor: pointer;
+                accent-color: var(--accent);
+            }
+
+            .config-field select {
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+                border: 1px solid var(--border);
+                padding: 0.2rem 0.4rem;
+                border-radius: 0.25rem;
+                font-size: 0.8rem;
+                cursor: pointer;
             }
 
             .json-editors {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 2fr auto 2fr;
+                gap: 2rem;
+                align-items: start;
+                max-width: 1400px;
+                margin: 0 auto;
+            }
+
+            .editor-pane {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .editor-label {
+                font-size: 0.875rem;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: var(--text-secondary);
+            }
+
+            .json-editor {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border);
+                border-radius: 0.75rem;
+                padding: 1rem;
+                min-height: 180px;
+                max-height: 300px;
+                max-width: 500px;
+                overflow: auto;
+                font-family: "Consolas", "Monaco", monospace;
+                font-size: 0.9rem;
+            }
+
+            .json-editor::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .json-editor::-webkit-scrollbar-track {
+                background: var(--bg-tertiary);
+                border-radius: 3px;
+            }
+
+            .json-editor::-webkit-scrollbar-thumb {
+                background: var(--accent);
+                border-radius: 3px;
+            }
+
+            .json-input {
+                outline: none;
+                cursor: text;
+            }
+
+            .json-input:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
             }
 
             .arrow-container {
-                margin: 1rem 0;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                align-items: center;
+                padding-top: 3rem;
             }
-        }
-    </style>
-</head>
-<body>
 
-<!-- SVG Sprite Definitions -->
-<svg style="display: none;" aria-hidden="true">
-    <defs>
-        <symbol id="icon-copy" viewBox="0 0 16 16">
-            <path d="M5.75 4.75H10.25V1.75H5.75V4.75ZM4.5 1.75C4.5 1.05964 5.05964 0.5 5.75 0.5H10.25C10.9404 0.5 11.5 1.05964 11.5 1.75V4.75H13.25C13.9404 4.75 14.5 5.30964 14.5 6V13.25C14.5 13.9404 13.9404 14.5 13.25 14.5H2.75C2.05964 14.5 1.5 13.9404 1.5 13.25V6C1.5 5.30964 2.05964 4.75 2.75 4.75H4.5V1.75Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-        </symbol>
-        <symbol id="icon-chevron-down" viewBox="0 0 10 6">
-            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </symbol>
-    </defs>
-</svg>
+            .clean-button {
+                position: relative;
+                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                color: white;
+                border: none;
+                padding: 1rem 2.5rem;
+                border-radius: 0.75rem;
+                font-weight: 600;
+                font-size: 1rem;
+                cursor: pointer;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+                overflow: hidden;
+            }
 
-<div class="header">
-    <h1>d3rty/json 🧼 Demo</h1>
-</div>
+            .clean-button::before {
+                content: "→";
+                position: absolute;
+                right: 1.5rem;
+                opacity: 0;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateX(-10px);
+            }
 
-<div class="main-grid">
-    <!-- Model Display -->
-    <div class="card model-display">
-        <div class="card-title">
-            <span>Model Definition</span>
-            <button class="copy-icon-btn" data-copy-target="model-code" type="button" title="Copy to clipboard">
-                <svg width="16" height="16"><use href="#icon-copy"/></svg>
-            </button>
+            .clean-button:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+                padding-right: 3rem;
+            }
+
+            .clean-button:hover::before {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            .clean-button:active {
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            }
+
+            pre[class*="language-"] {
+                margin: 0;
+                background: transparent;
+            }
+
+            code[class*="language-"] {
+                font-size: 0.875rem;
+            }
+
+            /* Copy button base styles */
+            .copy-icon-btn,
+            .copy-icon-btn-dropdown {
+                background: transparent;
+                color: var(--text-secondary);
+                border: 1px solid var(--border);
+                border-radius: 0.375rem;
+                padding: 0.4rem;
+                cursor: pointer;
+                transition: all 0.2s;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .copy-icon-btn:hover,
+            .copy-icon-btn-dropdown:hover {
+                background: var(--bg-tertiary);
+                color: var(--text-primary);
+                border-color: var(--text-secondary);
+            }
+
+            .copy-icon-btn:active,
+            .copy-icon-btn-dropdown:active {
+                transform: scale(0.95);
+            }
+
+            .copy-icon-btn.copied {
+                background: var(--success);
+                border-color: var(--success);
+                color: white;
+            }
+
+            /* Split button container */
+            .split-button-container {
+                position: relative;
+                display: inline-flex;
+                align-items: stretch;
+                gap: 0;
+            }
+
+            .copy-icon-btn.config-copy-btn {
+                border-radius: 0.375rem 0 0 0.375rem;
+                border-right: none;
+            }
+
+            .copy-icon-btn-dropdown {
+                border-radius: 0 0.375rem 0.375rem 0;
+            }
+
+            .editor-wrapper {
+                position: relative;
+            }
+
+            .editor-copy-btn {
+                position: absolute;
+                top: 1rem;
+                right: 1.5rem;
+                z-index: 10;
+                opacity: 0.7;
+            }
+
+            .editor-copy-btn:hover {
+                opacity: 1;
+            }
+
+            .json-editor {
+                position: relative;
+            }
+
+            .copy-dropdown-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 0.25rem;
+                background: var(--bg-secondary);
+                border: 1px solid var(--border);
+                border-radius: 0.375rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                display: none;
+                min-width: 120px;
+            }
+
+            .copy-dropdown-menu.show {
+                display: block;
+            }
+
+            .copy-dropdown-menu button {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                width: 100%;
+                background: transparent;
+                color: var(--text-primary);
+                border: none;
+                padding: 0.5rem 0.75rem;
+                text-align: left;
+                font-size: 0.75rem;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            .copy-dropdown-menu button .checkmark {
+                color: var(--success);
+                font-weight: bold;
+                width: 1rem;
+                flex-shrink: 0;
+            }
+
+            .copy-dropdown-menu button:hover {
+                background: var(--bg-tertiary);
+            }
+
+            .copy-dropdown-menu button:first-child {
+                border-radius: 0.375rem 0.375rem 0 0;
+            }
+
+            .copy-dropdown-menu button:last-child {
+                border-radius: 0 0 0.375rem 0.375rem;
+            }
+
+            @media (max-width: 1024px) {
+                .main-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .json-editors {
+                    grid-template-columns: 1fr;
+                }
+
+                .arrow-container {
+                    margin: 1rem 0;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- SVG Sprite Definitions -->
+        <svg style="display: none" aria-hidden="true">
+            <defs>
+                <symbol id="icon-copy" viewBox="0 0 16 16">
+                    <path
+                        d="M5.75 4.75H10.25V1.75H5.75V4.75ZM4.5 1.75C4.5 1.05964 5.05964 0.5 5.75 0.5H10.25C10.9404 0.5 11.5 1.05964 11.5 1.75V4.75H13.25C13.9404 4.75 14.5 5.30964 14.5 6V13.25C14.5 13.9404 13.9404 14.5 13.25 14.5H2.75C2.05964 14.5 1.5 13.9404 1.5 13.25V6C1.5 5.30964 2.05964 4.75 2.75 4.75H4.5V1.75Z"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        fill="none"
+                    />
+                </symbol>
+                <symbol id="icon-chevron-down" viewBox="0 0 10 6">
+                    <path
+                        d="M1 1L5 5L9 1"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        fill="none"
+                    />
+                </symbol>
+            </defs>
+        </svg>
+
+        <div class="header">
+            <h1>d3rty/json 🧼 Demo</h1>
         </div>
-        <pre><code id="model-code" class="language-go">// Event is the demo model.
+
+        <div class="main-grid">
+            <!-- Model Display -->
+            <div class="card model-display">
+                <div class="card-title">
+                    <span>Model Definition</span>
+                    <button
+                        class="copy-icon-btn"
+                        data-copy-target="model-code"
+                        type="button"
+                        title="Copy to clipboard"
+                    >
+                        <svg width="16" height="16">
+                            <use href="#icon-copy" />
+                        </svg>
+                    </button>
+                </div>
+                <pre><code id="model-code" class="language-go">// Event is the demo model.
 type Event struct {
     dirty.Enabled
     Name     string `json:"name"`
@@ -547,611 +570,821 @@ type Event struct {
     IsActive bool   `json:"is_active"`
     MustBool bool   `json:"must_bool"`
 }</code></pre>
-    </div>
+            </div>
 
-    <!-- Configuration -->
-    <div class="card">
-        <div class="card-title">
-            <span>Configuration</span>
-            <div class="split-button-container">
-                <button class="copy-icon-btn config-copy-btn" id="copy-toml-btn" type="button" title="Copy TOML">
-                    <svg width="16" height="16"><use href="#icon-copy"/></svg>
-                </button>
-                <button class="copy-icon-btn-dropdown" id="copy-dropdown-btn" type="button" title="Toggle format">
-                    <svg width="10" height="6"><use href="#icon-chevron-down"/></svg>
-                </button>
-                <div class="copy-dropdown-menu" id="copy-dropdown-menu">
-                    <button type="button" id="copy-toml-dropdown-btn">
-                        <span class="checkmark">✓</span> Copy TOML
-                    </button>
-                    <button type="button" id="copy-json-dropdown-btn">
-                        <span class="checkmark" style="visibility: hidden;">✓</span> Copy JSON
-                    </button>
+            <!-- Configuration -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Configuration</span>
+                    <div class="split-button-container">
+                        <button
+                            class="copy-icon-btn config-copy-btn"
+                            id="copy-toml-btn"
+                            type="button"
+                            title="Copy TOML"
+                        >
+                            <svg width="16" height="16">
+                                <use href="#icon-copy" />
+                            </svg>
+                        </button>
+                        <button
+                            class="copy-icon-btn-dropdown"
+                            id="copy-dropdown-btn"
+                            type="button"
+                            title="Toggle format"
+                        >
+                            <svg width="10" height="6">
+                                <use href="#icon-chevron-down" />
+                            </svg>
+                        </button>
+                        <div class="copy-dropdown-menu" id="copy-dropdown-menu">
+                            <button type="button" id="copy-toml-dropdown-btn">
+                                <span class="checkmark">✓</span> Copy TOML
+                            </button>
+                            <button type="button" id="copy-json-dropdown-btn">
+                                <span
+                                    class="checkmark"
+                                    style="visibility: hidden"
+                                    >✓</span
+                                >
+                                Copy JSON
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="config-container">
+                    <form id="config-form">
+                        <!-- Bool Section -->
+                        <div class="config-section" data-section="bool">
+                            <div
+                                class="config-section-title"
+                                onclick="toggleSection(this)"
+                            >
+                                <span class="section-title-text">Bool</span>
+                                <label
+                                    class="section-enable-checkbox"
+                                    onclick="event.stopPropagation()"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="boolEnabled"
+                                        checked
+                                        onchange="toggleSectionEnabled('bool', this.checked)"
+                                    />
+                                </label>
+                            </div>
+                            <div class="config-fields">
+                                <label class="config-field">
+                                    <span>Fallback:</span>
+                                    <select name="boolFallback">
+                                        <option value="false" selected>
+                                            false
+                                        </option>
+                                        <option value="true">true</option>
+                                        <option value="null">null</option>
+                                    </select>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="boolFromStrings"
+                                        checked
+                                    />
+                                    <span>FromStrings</span>
+                                </label>
+                                <label
+                                    class="config-field"
+                                    style="padding-left: 1rem"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="boolCaseInsensitive"
+                                        checked
+                                    />
+                                    <span>CaseInsensitive</span>
+                                </label>
+                                <label
+                                    class="config-field"
+                                    style="padding-left: 1rem"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="respectFromNumbersLogic"
+                                        checked
+                                    />
+                                    <span>RespectFromNumbersLogic</span>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="boolFromNumbers"
+                                        checked
+                                    />
+                                    <span>FromNumbers</span>
+                                </label>
+                                <label class="config-field">
+                                    <span>ParseFunc:</span>
+                                    <select name="boolParseFunc">
+                                        <option value="binary">binary</option>
+                                        <option value="positive_negative">
+                                            positive_negative
+                                        </option>
+                                        <option value="sign_of_one">
+                                            sign_of_one
+                                        </option>
+                                    </select>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="boolFromNull"
+                                        checked
+                                    />
+                                    <span>FromNull</span>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="boolNullInverse"
+                                    />
+                                    <span>Null Inverse</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Number Section -->
+                        <div class="config-section" data-section="number">
+                            <div
+                                class="config-section-title"
+                                onclick="toggleSection(this)"
+                            >
+                                <span class="section-title-text">Number</span>
+                                <label
+                                    class="section-enable-checkbox"
+                                    onclick="event.stopPropagation()"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="numberEnabled"
+                                        checked
+                                        onchange="toggleSectionEnabled('number', this.checked)"
+                                    />
+                                </label>
+                            </div>
+                            <div class="config-fields">
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="numSpacingAllowed"
+                                        checked
+                                    />
+                                    <span>SpacingAllowed</span>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="numExponentAllowed"
+                                        checked
+                                    />
+                                    <span>ExponentNotationAllowed</span>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="numCommasAllowed"
+                                        checked
+                                    />
+                                    <span>CommasAllowed</span>
+                                </label>
+                                <label class="config-field">
+                                    <span>Rounding:</span>
+                                    <select name="numRounding">
+                                        <option value="none">none</option>
+                                        <option value="floor" selected>
+                                            floor
+                                        </option>
+                                        <option value="round">round</option>
+                                    </select>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="numFromBools"
+                                        checked
+                                    />
+                                    <span>FromBools</span>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="numFromNull"
+                                        checked
+                                    />
+                                    <span>FromNull</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- FlexKeys Section -->
+                        <div class="config-section" data-section="flexkeys">
+                            <div
+                                class="config-section-title"
+                                onclick="toggleSection(this)"
+                            >
+                                <span class="section-title-text">FlexKeys</span>
+                                <label
+                                    class="section-enable-checkbox"
+                                    onclick="event.stopPropagation()"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        name="flexEnabled"
+                                        onchange="toggleSectionEnabled('flexkeys', this.checked)"
+                                    />
+                                </label>
+                            </div>
+                            <div class="config-fields">
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="flexCaseInsensitive"
+                                        checked
+                                    />
+                                    <span>CaseInsensitive</span>
+                                </label>
+                                <label class="config-field">
+                                    <input
+                                        type="checkbox"
+                                        name="flexChameleon"
+                                        checked
+                                    />
+                                    <span>ChameleonCase</span>
+                                </label>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-        <div class="config-container">
-            <form id="config-form">
-                <!-- Bool Section -->
-                <div class="config-section" data-section="bool">
-                    <div class="config-section-title" onclick="toggleSection(this)">
-                        <span class="section-title-text">Bool</span>
-                        <label class="section-enable-checkbox" onclick="event.stopPropagation()">
-                            <input type="checkbox" name="boolEnabled" checked onchange="toggleSectionEnabled('bool', this.checked)">
-                        </label>
-                    </div>
-                    <div class="config-fields">
-                        <label class="config-field">
-                            <span>Fallback:</span>
-                            <select name="boolFallback">
-                                <option value="false" selected>false</option>
-                                <option value="true">true</option>
-                                <option value="null">null</option>
-                            </select>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="boolFromStrings" checked>
-                            <span>FromStrings</span>
-                        </label>
-                        <label class="config-field" style="padding-left: 1rem;">
-                            <input type="checkbox" name="boolCaseInsensitive" checked>
-                            <span>CaseInsensitive</span>
-                        </label>
-                        <label class="config-field" style="padding-left: 1rem;">
-                            <input type="checkbox" name="respectFromNumbersLogic" checked>
-                            <span>RespectFromNumbersLogic</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="boolFromNumbers" checked>
-                            <span>FromNumbers</span>
-                        </label>
-                        <label class="config-field">
-                            <span>ParseFunc:</span>
-                            <select name="boolParseFunc">
-                                <option value="binary">binary</option>
-                                <option value="positive_negative">positive_negative</option>
-                                <option value="sign_of_one">sign_of_one</option>
-                            </select>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="boolFromNull" checked>
-                            <span>FromNull</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="boolNullInverse">
-                            <span>Null Inverse</span>
-                        </label>
-                    </div>
-                </div>
 
-                <!-- Number Section -->
-                <div class="config-section" data-section="number">
-                    <div class="config-section-title" onclick="toggleSection(this)">
-                        <span class="section-title-text">Number</span>
-                        <label class="section-enable-checkbox" onclick="event.stopPropagation()">
-                            <input type="checkbox" name="numberEnabled" checked onchange="toggleSectionEnabled('number', this.checked)">
-                        </label>
-                    </div>
-                    <div class="config-fields">
-                        <label class="config-field">
-                            <input type="checkbox" name="numSpacingAllowed" checked>
-                            <span>SpacingAllowed</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="numExponentAllowed" checked>
-                            <span>ExponentNotationAllowed</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="numCommasAllowed" checked>
-                            <span>CommasAllowed</span>
-                        </label>
-                        <label class="config-field">
-                            <span>Rounding:</span>
-                            <select name="numRounding">
-                                <option value="none">none</option>
-                                <option value="floor" selected>floor</option>
-                                <option value="round">round</option>
-                            </select>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="numFromBools" checked>
-                            <span>FromBools</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="numFromNull" checked>
-                            <span>FromNull</span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- FlexKeys Section -->
-                <div class="config-section" data-section="flexkeys">
-                    <div class="config-section-title" onclick="toggleSection(this)">
-                        <span class="section-title-text">FlexKeys</span>
-                        <label class="section-enable-checkbox" onclick="event.stopPropagation()">
-                            <input type="checkbox" name="flexEnabled" onchange="toggleSectionEnabled('flexkeys', this.checked)">
-                        </label>
-                    </div>
-                    <div class="config-fields">
-                        <label class="config-field">
-                            <input type="checkbox" name="flexCaseInsensitive" disabled>
-                            <span>CaseInsensitive</span>
-                        </label>
-                        <label class="config-field">
-                            <input type="checkbox" name="flexChameleon" disabled>
-                            <span>ChameleonCase</span>
-                        </label>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- JSON Editors -->
-<div class="json-editors">
-    <!-- Dirty JSON Input -->
-    <div class="editor-pane">
-        <div class="editor-label">Dirty JSON Input</div>
-        <div class="editor-wrapper">
-            <button class="copy-icon-btn editor-copy-btn" data-copy-target="json-input" type="button" title="Copy to clipboard">
-                <svg width="16" height="16"><use href="#icon-copy"/></svg>
-            </button>
-            <pre class="json-editor json-input" contenteditable="true"><code id="json-input" class="language-json">{
+        <!-- JSON Editors -->
+        <div class="json-editors">
+            <!-- Dirty JSON Input -->
+            <div class="editor-pane">
+                <div class="editor-label">Dirty JSON Input</div>
+                <div class="editor-wrapper">
+                    <button
+                        class="copy-icon-btn editor-copy-btn"
+                        data-copy-target="json-input"
+                        type="button"
+                        title="Copy to clipboard"
+                    >
+                        <svg width="16" height="16">
+                            <use href="#icon-copy" />
+                        </svg>
+                    </button>
+                    <pre
+                        class="json-editor json-input"
+                        contenteditable="true"
+                    ><code id="json-input" class="language-json">{
   "id": "100000",
   "Is_Active": "yes",
   "must_bool": 1,
   "Name": "hello World"
 }</code></pre>
-        </div>
-    </div>
+                </div>
+            </div>
 
-    <!-- Clean Button -->
-    <div class="arrow-container">
-        <button class="clean-button" type="button">Clean 🧼</button>
-    </div>
+            <!-- Clean Button -->
+            <div class="arrow-container">
+                <button class="clean-button" type="button">Clean 🧼</button>
+            </div>
 
-    <!-- Clean JSON Output -->
-    <div class="editor-pane">
-        <div class="editor-label">Clean JSON Output</div>
-        <div class="editor-wrapper">
-            <button class="copy-icon-btn editor-copy-btn" data-copy-target="output" type="button" title="Copy to clipboard">
-                <svg width="16" height="16"><use href="#icon-copy"/></svg>
-            </button>
-            <pre class="json-editor"><code id="output" class="language-json">{
+            <!-- Clean JSON Output -->
+            <div class="editor-pane">
+                <div class="editor-label">Clean JSON Output</div>
+                <div class="editor-wrapper">
+                    <button
+                        class="copy-icon-btn editor-copy-btn"
+                        data-copy-target="output"
+                        type="button"
+                        title="Copy to clipboard"
+                    >
+                        <svg width="16" height="16">
+                            <use href="#icon-copy" />
+                        </svg>
+                    </button>
+                    <pre
+                        class="json-editor"
+                    ><code id="output" class="language-json">{
   "name": "",
   "id": 0,
   "is_active": false,
   "must_bool": false
 }</code></pre>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<!-- Go WASM runtime -->
-<script src="wasm_exec.js"></script>
-<script>
-    const go = new Go();
-    WebAssembly
-        .instantiateStreaming(fetch('main.wasm'), go.importObject)
-        .then(res => go.run(res.instance))
-        .catch(console.error);
-</script>
+        <!-- Go WASM runtime -->
+        <script src="wasm_exec.js"></script>
+        <script>
+            const go = new Go();
+            WebAssembly.instantiateStreaming(
+                fetch('main.wasm'),
+                go.importObject,
+            )
+                .then((res) => go.run(res.instance))
+                .catch(console.error);
+        </script>
 
-<script>
-    // Toggle config sections
-    function toggleSection(titleEl) {
-        titleEl.parentElement.classList.toggle('collapsed');
-    }
+        <script>
+            // Toggle config sections
+            function toggleSection(titleEl) {
+                titleEl.parentElement.classList.toggle('collapsed');
+            }
 
-    // Toggle section enabled/disabled state
-    function toggleSectionEnabled(sectionName, enabled) {
-        const section = document.querySelector(`.config-section[data-section="${sectionName}"]`);
-        if (!section) return;
+            // Toggle section enabled/disabled state
+            function toggleSectionEnabled(sectionName, enabled) {
+                const section = document.querySelector(
+                    `.config-section[data-section="${sectionName}"]`,
+                );
+                if (!section) return;
 
-        const fields = section.querySelectorAll('.config-fields input, .config-fields select');
-        fields.forEach(field => {
-            field.disabled = !enabled;
-        });
-
-        if (enabled) {
-            section.classList.remove('disabled');
-        } else {
-            section.classList.add('disabled');
-        }
-    }
-
-    // Prism highlight input on edit
-    const inputEl = document.getElementById('json-input');
-    inputEl.addEventListener('input', () => {
-        Prism.highlightElement(inputEl);
-    });
-
-    // Initial highlight
-    Prism.highlightAll();
-
-    // Button handler to clean JSON
-    document.querySelector('.clean-button').addEventListener('click', () => {
-        const jsonRaw = document.getElementById('json-input').textContent;
-        let out;
-        try {
-            out = cleanJSON(jsonRaw);
-        } catch (err) {
-            out = JSON.stringify({ error: String(err) }, null, 2);
-        }
-        const codeEl = document.getElementById('output');
-        codeEl.textContent = out;
-        Prism.highlightElement(codeEl);
-    });
-
-    // Load tooltips from config-schema.json
-    fetch('config-schema.json')
-        .then(res => res.json())
-        .then(schema => {
-            // Build a map of field names to descriptions
-            const descriptions = new Map();
-
-            schema.sections.forEach(section => {
-                section.fields?.forEach(field => {
-                    if (field.description) {
-                        descriptions.set(field.name, field.description);
-                    }
+                const fields = section.querySelectorAll(
+                    '.config-fields input, .config-fields select',
+                );
+                fields.forEach((field) => {
+                    field.disabled = !enabled;
                 });
 
-                section.subsections?.forEach(subsection => {
-                    subsection.fields?.forEach(field => {
-                        if (field.description) {
-                            descriptions.set(field.name, field.description);
-                        }
-                    });
-                });
+                if (enabled) {
+                    section.classList.remove('disabled');
+                } else {
+                    section.classList.add('disabled');
+                }
+            }
+
+            // Prism highlight input on edit
+            const inputEl = document.getElementById('json-input');
+            inputEl.addEventListener('input', () => {
+                Prism.highlightElement(inputEl);
             });
 
-            // Add tooltips to config fields
-            document.querySelectorAll('.config-field').forEach(fieldEl => {
-                const input = fieldEl.querySelector('input, select');
-                if (!input || !input.name) return;
+            // Initial highlight
+            Prism.highlightAll();
 
-                // Map hardcoded field names to schema field names
-                const nameMapping = {
-                    'boolEnabled': 'Bool.Disabled',
-                    'boolFallback': 'Bool.FallbackValue',
-                    'boolFromStrings': 'Bool.FromStrings.Disabled',
-                    'boolCaseInsensitive': 'Bool.FromStrings.CaseInsensitive',
-                    'respectFromNumbersLogic': 'Bool.FromStrings.RespectFromNumbersLogic',
-                    'boolFromNumbers': 'Bool.FromNumbers.Disabled',
-                    'boolParseFunc': 'Bool.FromNumbers.CustomParseFunc',
-                    'boolFromNull': 'Bool.FromNull.Disabled',
-                    'boolNullInverse': 'Bool.FromNull.Inverse',
-                    'numberEnabled': 'Number.Disabled',
-                    'numSpacingAllowed': 'Number.FromStrings.SpacingAllowed',
-                    'numExponentAllowed': 'Number.FromStrings.ExponentNotationAllowed',
-                    'numCommasAllowed': 'Number.FromStrings.CommasAllowed',
-                    'numRounding': 'Number.FromStrings.RoundingAlgorithm',
-                    'numFromBools': 'Number.FromBools.Disabled',
-                    'numFromNull': 'Number.FromNull.Disabled',
-                    'flexEnabled': 'FlexKeys.Disabled',
-                    'flexCaseInsensitive': 'FlexKeys.CaseInsensitive',
-                    'flexChameleon': 'FlexKeys.ChameleonCase'
+            // Button handler to clean JSON
+            document
+                .querySelector('.clean-button')
+                .addEventListener('click', () => {
+                    const jsonRaw =
+                        document.getElementById('json-input').textContent;
+                    const config = getConfigFromForm();
+                    const configToml = generateTOML(config); // Convert to TOML
+                    let out;
+                    try {
+                        out = cleanJSON(jsonRaw, configToml); // Pass TOML to WASM
+                    } catch (err) {
+                        out = JSON.stringify({ error: String(err) }, null, 2);
+                    }
+                    const codeEl = document.getElementById('output');
+                    codeEl.textContent = out;
+                    Prism.highlightElement(codeEl);
+                });
+
+            // Load tooltips from config-schema.json
+            fetch('config-schema.json')
+                .then((res) => res.json())
+                .then((schema) => {
+                    // Build a map of field names to descriptions
+                    const descriptions = new Map();
+
+                    schema.sections.forEach((section) => {
+                        section.fields?.forEach((field) => {
+                            if (field.description) {
+                                descriptions.set(field.name, field.description);
+                            }
+                        });
+
+                        section.subsections?.forEach((subsection) => {
+                            subsection.fields?.forEach((field) => {
+                                if (field.description) {
+                                    descriptions.set(
+                                        field.name,
+                                        field.description,
+                                    );
+                                }
+                            });
+                        });
+                    });
+
+                    // Add tooltips to config fields
+                    document
+                        .querySelectorAll('.config-field')
+                        .forEach((fieldEl) => {
+                            const input =
+                                fieldEl.querySelector('input, select');
+                            if (!input || !input.name) return;
+
+                            // Map hardcoded field names to schema field names
+                            const nameMapping = {
+                                boolEnabled: 'Bool.Disabled',
+                                boolFallback: 'Bool.FallbackValue',
+                                boolFromStrings: 'Bool.FromStrings.Disabled',
+                                boolCaseInsensitive:
+                                    'Bool.FromStrings.CaseInsensitive',
+                                respectFromNumbersLogic:
+                                    'Bool.FromStrings.RespectFromNumbersLogic',
+                                boolFromNumbers: 'Bool.FromNumbers.Disabled',
+                                boolParseFunc:
+                                    'Bool.FromNumbers.CustomParseFunc',
+                                boolFromNull: 'Bool.FromNull.Disabled',
+                                boolNullInverse: 'Bool.FromNull.Inverse',
+                                numberEnabled: 'Number.Disabled',
+                                numSpacingAllowed:
+                                    'Number.FromStrings.SpacingAllowed',
+                                numExponentAllowed:
+                                    'Number.FromStrings.ExponentNotationAllowed',
+                                numCommasAllowed:
+                                    'Number.FromStrings.CommasAllowed',
+                                numRounding:
+                                    'Number.FromStrings.RoundingAlgorithm',
+                                numFromBools: 'Number.FromBools.Disabled',
+                                numFromNull: 'Number.FromNull.Disabled',
+                                flexEnabled: 'FlexKeys.Disabled',
+                                flexCaseInsensitive: 'FlexKeys.CaseInsensitive',
+                                flexChameleon: 'FlexKeys.ChameleonCase',
+                            };
+
+                            const schemaName = nameMapping[input.name];
+                            const description = schemaName
+                                ? descriptions.get(schemaName)
+                                : null;
+
+                            if (description) {
+                                const tooltipIcon =
+                                    document.createElement('span');
+                                tooltipIcon.className = 'tooltip-icon';
+                                tooltipIcon.textContent = '?';
+
+                                const tooltip = document.createElement('div');
+                                tooltip.className = 'tooltip top';
+                                tooltip.textContent = description;
+
+                                // Position tooltip on hover
+                                tooltipIcon.addEventListener(
+                                    'mouseenter',
+                                    () => {
+                                        const rect =
+                                            tooltipIcon.getBoundingClientRect();
+                                        const tooltipRect =
+                                            tooltip.getBoundingClientRect();
+
+                                        // Position above the icon by default
+                                        let top =
+                                            rect.top - tooltipRect.height - 10;
+                                        let left =
+                                            rect.left +
+                                            rect.width / 2 -
+                                            tooltipRect.width / 2;
+
+                                        // Check if tooltip would go off-screen on top, flip to bottom
+                                        if (top < 10) {
+                                            top = rect.bottom + 10;
+                                            tooltip.className =
+                                                'tooltip bottom';
+                                        } else {
+                                            tooltip.className = 'tooltip top';
+                                        }
+
+                                        // Keep tooltip within horizontal bounds
+                                        if (left < 10) left = 10;
+                                        if (
+                                            left + tooltipRect.width >
+                                            window.innerWidth - 10
+                                        ) {
+                                            left =
+                                                window.innerWidth -
+                                                tooltipRect.width -
+                                                10;
+                                        }
+
+                                        tooltip.style.top = top + 'px';
+                                        tooltip.style.left = left + 'px';
+                                    },
+                                );
+
+                                fieldEl.appendChild(tooltipIcon);
+                                fieldEl.appendChild(tooltip);
+                            }
+                        });
+                })
+                .catch((err) => console.error('Failed to load tooltips:', err));
+
+            // Copy button functionality
+            const copyDropdownBtn =
+                document.getElementById('copy-dropdown-btn');
+            const copyDropdownMenu =
+                document.getElementById('copy-dropdown-menu');
+            const copyTomlBtn = document.getElementById('copy-toml-btn');
+            const copyTomlDropdownBtn = document.getElementById(
+                'copy-toml-dropdown-btn',
+            );
+            const copyJsonDropdownBtn = document.getElementById(
+                'copy-json-dropdown-btn',
+            );
+
+            // Track the currently selected format (default: 'toml')
+            let selectedFormat = 'toml';
+
+            // Update checkmarks based on selected format
+            function updateCheckmarks() {
+                const tomlCheckmark =
+                    copyTomlDropdownBtn.querySelector('.checkmark');
+                const jsonCheckmark =
+                    copyJsonDropdownBtn.querySelector('.checkmark');
+
+                if (selectedFormat === 'toml') {
+                    tomlCheckmark.style.visibility = 'visible';
+                    jsonCheckmark.style.visibility = 'hidden';
+                } else {
+                    tomlCheckmark.style.visibility = 'hidden';
+                    jsonCheckmark.style.visibility = 'visible';
+                }
+            }
+
+            // Toggle dropdown
+            copyDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                copyDropdownMenu.classList.toggle('show');
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                copyDropdownMenu.classList.remove('show');
+            });
+
+            // Prevent dropdown from closing when clicking inside
+            copyDropdownMenu.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            // Get config from form
+            function getConfigFromForm() {
+                const form = document.getElementById('config-form');
+                const formData = new FormData(form);
+
+                const config = {
+                    bool: {
+                        enabled: formData.get('boolEnabled') === 'on',
+                        fallback: formData.get('boolFallback') || 'false',
+                        fromStrings: formData.get('boolFromStrings') === 'on',
+                        caseInsensitive:
+                            formData.get('boolCaseInsensitive') === 'on',
+                        respectFromNumbersLogic:
+                            formData.get('respectFromNumbersLogic') === 'on',
+                        fromNumbers: formData.get('boolFromNumbers') === 'on',
+                        parseFunc: formData.get('boolParseFunc') || 'binary',
+                        fromNull: formData.get('boolFromNull') === 'on',
+                        nullInverse: formData.get('boolNullInverse') === 'on',
+                    },
+                    number: {
+                        enabled: formData.get('numberEnabled') === 'on',
+                        spacingAllowed:
+                            formData.get('numSpacingAllowed') === 'on',
+                        exponentAllowed:
+                            formData.get('numExponentAllowed') === 'on',
+                        commasAllowed:
+                            formData.get('numCommasAllowed') === 'on',
+                        rounding: formData.get('numRounding') || 'floor',
+                        fromBools: formData.get('numFromBools') === 'on',
+                        fromNull: formData.get('numFromNull') === 'on',
+                    },
+                    flexKeys: {
+                        enabled: formData.get('flexEnabled') === 'on',
+                        caseInsensitive:
+                            formData.get('flexCaseInsensitive') === 'on',
+                        chameleonCase: formData.get('flexChameleon') === 'on',
+                    },
                 };
 
-                const schemaName = nameMapping[input.name];
-                const description = schemaName ? descriptions.get(schemaName) : null;
+                return config;
+            }
 
-                if (description) {
-                    const tooltipIcon = document.createElement('span');
-                    tooltipIcon.className = 'tooltip-icon';
-                    tooltipIcon.textContent = '?';
+            // Generate TOML from config
+            function generateTOML(config) {
+                let toml = '# d3rty/json Configuration\n\n';
 
-                    const tooltip = document.createElement('div');
-                    tooltip.className = 'tooltip top';
-                    tooltip.textContent = description;
+                // Bool section
+                toml += '[Bool]\n';
+                if (!config.bool.enabled) {
+                    toml += 'Disabled = true\n\n';
+                } else {
+                    toml += `FallbackValue = ${config.bool.fallback}\n\n`;
 
-                    // Position tooltip on hover
-                    tooltipIcon.addEventListener('mouseenter', () => {
-                        const rect = tooltipIcon.getBoundingClientRect();
-                        const tooltipRect = tooltip.getBoundingClientRect();
+                    toml += '[Bool.FromStrings]\n';
+                    if (!config.bool.fromStrings) {
+                        toml += 'Disabled = true\n\n';
+                    } else {
+                        toml += 'CustomListForTrue = ["true", "yes", "on"]\n';
+                        toml += 'CustomListForFalse = ["false", "no", "off", ""]\n';
+                        toml += `CaseInsensitive = ${config.bool.caseInsensitive}\n`;
+                        toml += `RespectFromNumbersLogic = ${config.bool.respectFromNumbersLogic}\n\n`;
+                    }
 
-                        // Position above the icon by default
-                        let top = rect.top - tooltipRect.height - 10;
-                        let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+                    toml += '[Bool.FromNumbers]\n';
+                    if (!config.bool.fromNumbers) {
+                        toml += 'Disabled = true\n\n';
+                    } else {
+                        toml += `CustomParseFunc = "${config.bool.parseFunc}"\n\n`;
+                    }
 
-                        // Check if tooltip would go off-screen on top, flip to bottom
-                        if (top < 10) {
-                            top = rect.bottom + 10;
-                            tooltip.className = 'tooltip bottom';
-                        } else {
-                            tooltip.className = 'tooltip top';
+                    toml += '[Bool.FromNull]\n';
+                    if (!config.bool.fromNull) {
+                        toml += 'Disabled = true\n\n';
+                    } else {
+                        toml += `Inverse = ${config.bool.nullInverse}\n\n`;
+                    }
+                }
+
+                // Number section
+                toml += '[Number]\n';
+                if (!config.number.enabled) {
+                    toml += 'Disabled = true\n\n';
+                } else {
+                    toml += '[Number.FromStrings]\n';
+                    toml += `SpacingAllowed = ${config.number.spacingAllowed}\n`;
+                    toml += `ExponentNotationAllowed = ${config.number.exponentAllowed}\n`;
+                    toml += `CommasAllowed = ${config.number.commasAllowed}\n`;
+                    toml += `RoundingAlgorithm = "${config.number.rounding}"\n\n`;
+
+                    toml += '[Number.FromBools]\n';
+                    if (!config.number.fromBools) {
+                        toml += 'Disabled = true\n\n';
+                    } else {
+                        toml += '\n';
+                    }
+
+                    toml += '[Number.FromNull]\n';
+                    if (!config.number.fromNull) {
+                        toml += 'Disabled = true\n\n';
+                    } else {
+                        toml += '\n';
+                    }
+                }
+
+                // FlexKeys section
+                toml += '[FlexKeys]\n';
+                if (!config.flexKeys.enabled) {
+                    toml += 'Disabled = true\n';
+                } else {
+                    toml += `CaseInsensitive = ${config.flexKeys.caseInsensitive}\n`;
+                    toml += `ChameleonCase = ${config.flexKeys.chameleonCase}\n`;
+                }
+
+                return toml;
+            }
+
+            // Generate JSON from config
+            function generateJSON(config) {
+                const jsonConfig = {
+                    Bool: {
+                        Disabled: !config.bool.enabled,
+                    },
+                    Number: {
+                        Disabled: !config.number.enabled,
+                    },
+                    FlexKeys: {
+                        Disabled: !config.flexKeys.enabled,
+                    },
+                };
+
+                // Only include Bool sub-options if enabled
+                if (config.bool.enabled) {
+                    jsonConfig.Bool.FallbackValue = config.bool.fallback;
+                    jsonConfig.Bool.FromStrings = {
+                        Disabled: !config.bool.fromStrings,
+                        CustomListForTrue: ['true', 'yes', 'on'],
+                        CustomListForFalse: ['false', 'no', 'off', ''],
+                        CaseInsensitive: config.bool.caseInsensitive,
+                        RespectFromNumbersLogic:
+                            config.bool.respectFromNumbersLogic,
+                    };
+                    jsonConfig.Bool.FromNumbers = {
+                        Disabled: !config.bool.fromNumbers,
+                        CustomParseFunc: config.bool.parseFunc,
+                    };
+                    jsonConfig.Bool.FromNull = {
+                        Disabled: !config.bool.fromNull,
+                        Inverse: config.bool.nullInverse,
+                    };
+                }
+
+                // Only include Number sub-options if enabled
+                if (config.number.enabled) {
+                    jsonConfig.Number.FromStrings = {
+                        Disabled: false,
+                        SpacingAllowed: config.number.spacingAllowed,
+                        ExponentNotationAllowed: config.number.exponentAllowed,
+                        CommasAllowed: config.number.commasAllowed,
+                        RoundingAlgorithm: config.number.rounding,
+                    };
+                    jsonConfig.Number.FromBools = {
+                        Disabled: !config.number.fromBools,
+                    };
+                    jsonConfig.Number.FromNull = {
+                        Disabled: !config.number.fromNull,
+                    };
+                }
+
+                // Only include FlexKeys sub-options if enabled
+                if (config.flexKeys.enabled) {
+                    jsonConfig.FlexKeys.CaseInsensitive =
+                        config.flexKeys.caseInsensitive;
+                    jsonConfig.FlexKeys.ChameleonCase =
+                        config.flexKeys.chameleonCase;
+                }
+
+                return JSON.stringify(jsonConfig, null, 2);
+            }
+
+            // Copy to clipboard with visual feedback
+            async function copyToClipboard(text, button) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    // Provide visual feedback
+                    button.classList.add('copied');
+                    const originalTitle = button.title;
+                    button.title = 'Copied!';
+
+                    setTimeout(() => {
+                        button.classList.remove('copied');
+                        button.title = originalTitle;
+                    }, 2000);
+
+                    copyDropdownMenu.classList.remove('show');
+                } catch (err) {
+                    console.error('Failed to copy:', err);
+                    alert('Failed to copy to clipboard');
+                }
+            }
+
+            // Generic copy button handler for data-copy-target buttons
+            document
+                .querySelectorAll('.copy-icon-btn[data-copy-target]')
+                .forEach((btn) => {
+                    btn.addEventListener('click', () => {
+                        const targetId = btn.getAttribute('data-copy-target');
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            const text = targetElement.textContent;
+                            copyToClipboard(text, btn);
                         }
-
-                        // Keep tooltip within horizontal bounds
-                        if (left < 10) left = 10;
-                        if (left + tooltipRect.width > window.innerWidth - 10) {
-                            left = window.innerWidth - tooltipRect.width - 10;
-                        }
-
-                        tooltip.style.top = top + 'px';
-                        tooltip.style.left = left + 'px';
                     });
+                });
 
-                    fieldEl.appendChild(tooltipIcon);
-                    fieldEl.appendChild(tooltip);
+            // Main copy button handler - uses selected format
+            copyTomlBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const config = getConfigFromForm();
+
+                if (selectedFormat === 'toml') {
+                    const toml = generateTOML(config);
+                    copyToClipboard(toml, copyTomlBtn);
+                } else {
+                    const json = generateJSON(config);
+                    copyToClipboard(json, copyTomlBtn);
                 }
             });
-        })
-        .catch(err => console.error('Failed to load tooltips:', err));
 
-    // Copy button functionality
-    const copyDropdownBtn = document.getElementById('copy-dropdown-btn');
-    const copyDropdownMenu = document.getElementById('copy-dropdown-menu');
-    const copyTomlBtn = document.getElementById('copy-toml-btn');
-    const copyTomlDropdownBtn = document.getElementById('copy-toml-dropdown-btn');
-    const copyJsonDropdownBtn = document.getElementById('copy-json-dropdown-btn');
+            // Copy TOML dropdown button handler
+            copyTomlDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectedFormat = 'toml';
+                updateCheckmarks();
 
-    // Track the currently selected format (default: 'toml')
-    let selectedFormat = 'toml';
+                const config = getConfigFromForm();
+                const toml = generateTOML(config);
+                copyToClipboard(toml, copyTomlBtn);
+            });
 
-    // Update checkmarks based on selected format
-    function updateCheckmarks() {
-        const tomlCheckmark = copyTomlDropdownBtn.querySelector('.checkmark');
-        const jsonCheckmark = copyJsonDropdownBtn.querySelector('.checkmark');
+            // Copy JSON dropdown button handler
+            copyJsonDropdownBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectedFormat = 'json';
+                updateCheckmarks();
 
-        if (selectedFormat === 'toml') {
-            tomlCheckmark.style.visibility = 'visible';
-            jsonCheckmark.style.visibility = 'hidden';
-        } else {
-            tomlCheckmark.style.visibility = 'hidden';
-            jsonCheckmark.style.visibility = 'visible';
-        }
-    }
+                const config = getConfigFromForm();
+                const json = generateJSON(config);
+                copyToClipboard(json, copyTomlBtn);
+            });
 
-    // Toggle dropdown
-    copyDropdownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        copyDropdownMenu.classList.toggle('show');
-    });
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', () => {
-        copyDropdownMenu.classList.remove('show');
-    });
-
-    // Prevent dropdown from closing when clicking inside
-    copyDropdownMenu.addEventListener('click', (e) => {
-        e.stopPropagation();
-    });
-
-    // Get config from form
-    function getConfigFromForm() {
-        const form = document.getElementById('config-form');
-        const formData = new FormData(form);
-
-        const config = {
-            bool: {
-                enabled: formData.get('boolEnabled') === 'on',
-                fallback: formData.get('boolFallback') || 'false',
-                fromStrings: formData.get('boolFromStrings') === 'on',
-                caseInsensitive: formData.get('boolCaseInsensitive') === 'on',
-                respectFromNumbersLogic: formData.get('respectFromNumbersLogic') === 'on',
-                fromNumbers: formData.get('boolFromNumbers') === 'on',
-                parseFunc: formData.get('boolParseFunc') || 'binary',
-                fromNull: formData.get('boolFromNull') === 'on',
-                nullInverse: formData.get('boolNullInverse') === 'on'
-            },
-            number: {
-                enabled: formData.get('numberEnabled') === 'on',
-                spacingAllowed: formData.get('numSpacingAllowed') === 'on',
-                exponentAllowed: formData.get('numExponentAllowed') === 'on',
-                commasAllowed: formData.get('numCommasAllowed') === 'on',
-                rounding: formData.get('numRounding') || 'floor',
-                fromBools: formData.get('numFromBools') === 'on',
-                fromNull: formData.get('numFromNull') === 'on'
-            },
-            flexKeys: {
-                enabled: formData.get('flexEnabled') === 'on',
-                caseInsensitive: formData.get('flexCaseInsensitive') === 'on',
-                chameleonCase: formData.get('flexChameleon') === 'on'
-            }
-        };
-
-        return config;
-    }
-
-    // Generate TOML from config
-    function generateTOML(config) {
-        let toml = '# d3rty/json Configuration\n\n';
-
-        // Bool section
-        toml += '[Bool]\n';
-        toml += `Disabled = ${!config.bool.enabled}\n`;
-        if (config.bool.enabled) {
-            toml += `FallbackValue = ${config.bool.fallback}\n\n`;
-
-            toml += '[Bool.FromStrings]\n';
-            toml += `Disabled = ${!config.bool.fromStrings}\n`;
-            toml += 'CustomListForTrue = ["true", "yes", "on"]\n';
-            toml += 'CustomListForFalse = ["false", "no", "off", ""]\n';
-            toml += `CaseInsensitive = ${config.bool.caseInsensitive}\n`;
-            toml += `RespectFromNumbersLogic = ${config.bool.respectFromNumbersLogic}\n\n`;
-
-            toml += '[Bool.FromNumbers]\n';
-            toml += `Disabled = ${!config.bool.fromNumbers}\n`;
-            toml += `CustomParseFunc = "${config.bool.parseFunc}"\n\n`;
-
-            toml += '[Bool.FromNull]\n';
-            toml += `Disabled = ${!config.bool.fromNull}\n`;
-            toml += `Inverse = ${config.bool.nullInverse}\n\n`;
-        } else {
-            toml += '\n';
-        }
-
-        // Number section
-        toml += '[Number]\n';
-        toml += `Disabled = ${!config.number.enabled}\n`;
-        if (config.number.enabled) {
-            toml += '\n';
-            toml += '[Number.FromStrings]\n';
-            toml += 'Disabled = false\n';
-            toml += `SpacingAllowed = ${config.number.spacingAllowed}\n`;
-            toml += `ExponentNotationAllowed = ${config.number.exponentAllowed}\n`;
-            toml += `CommasAllowed = ${config.number.commasAllowed}\n`;
-            toml += `RoundingAlgorithm = "${config.number.rounding}"\n\n`;
-
-            toml += '[Number.FromBools]\n';
-            toml += `Disabled = ${!config.number.fromBools}\n\n`;
-
-            toml += '[Number.FromNull]\n';
-            toml += `Disabled = ${!config.number.fromNull}\n\n`;
-        } else {
-            toml += '\n';
-        }
-
-        // FlexKeys section
-        toml += '[FlexKeys]\n';
-        toml += `Disabled = ${!config.flexKeys.enabled}\n`;
-        if (config.flexKeys.enabled) {
-            toml += `CaseInsensitive = ${config.flexKeys.caseInsensitive}\n`;
-            toml += `ChameleonCase = ${config.flexKeys.chameleonCase}\n`;
-        }
-
-        return toml;
-    }
-
-    // Generate JSON from config
-    function generateJSON(config) {
-        const jsonConfig = {
-            Bool: {
-                Disabled: !config.bool.enabled
-            },
-            Number: {
-                Disabled: !config.number.enabled
-            },
-            FlexKeys: {
-                Disabled: !config.flexKeys.enabled
-            }
-        };
-
-        // Only include Bool sub-options if enabled
-        if (config.bool.enabled) {
-            jsonConfig.Bool.FallbackValue = config.bool.fallback;
-            jsonConfig.Bool.FromStrings = {
-                Disabled: !config.bool.fromStrings,
-                CustomListForTrue: ['true', 'yes', 'on'],
-                CustomListForFalse: ['false', 'no', 'off', ''],
-                CaseInsensitive: config.bool.caseInsensitive,
-                RespectFromNumbersLogic: config.bool.respectFromNumbersLogic
-            };
-            jsonConfig.Bool.FromNumbers = {
-                Disabled: !config.bool.fromNumbers,
-                CustomParseFunc: config.bool.parseFunc
-            };
-            jsonConfig.Bool.FromNull = {
-                Disabled: !config.bool.fromNull,
-                Inverse: config.bool.nullInverse
-            };
-        }
-
-        // Only include Number sub-options if enabled
-        if (config.number.enabled) {
-            jsonConfig.Number.FromStrings = {
-                Disabled: false,
-                SpacingAllowed: config.number.spacingAllowed,
-                ExponentNotationAllowed: config.number.exponentAllowed,
-                CommasAllowed: config.number.commasAllowed,
-                RoundingAlgorithm: config.number.rounding
-            };
-            jsonConfig.Number.FromBools = {
-                Disabled: !config.number.fromBools
-            };
-            jsonConfig.Number.FromNull = {
-                Disabled: !config.number.fromNull
-            };
-        }
-
-        // Only include FlexKeys sub-options if enabled
-        if (config.flexKeys.enabled) {
-            jsonConfig.FlexKeys.CaseInsensitive = config.flexKeys.caseInsensitive;
-            jsonConfig.FlexKeys.ChameleonCase = config.flexKeys.chameleonCase;
-        }
-
-        return JSON.stringify(jsonConfig, null, 2);
-    }
-
-    // Copy to clipboard with visual feedback
-    async function copyToClipboard(text, button) {
-        try {
-            await navigator.clipboard.writeText(text);
-            // Provide visual feedback
-            button.classList.add('copied');
-            const originalTitle = button.title;
-            button.title = 'Copied!';
-
-            setTimeout(() => {
-                button.classList.remove('copied');
-                button.title = originalTitle;
-            }, 2000);
-
-            copyDropdownMenu.classList.remove('show');
-        } catch (err) {
-            console.error('Failed to copy:', err);
-            alert('Failed to copy to clipboard');
-        }
-    }
-
-    // Generic copy button handler for data-copy-target buttons
-    document.querySelectorAll('.copy-icon-btn[data-copy-target]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const targetId = btn.getAttribute('data-copy-target');
-            const targetElement = document.getElementById(targetId);
-            if (targetElement) {
-                const text = targetElement.textContent;
-                copyToClipboard(text, btn);
-            }
-        });
-    });
-
-    // Main copy button handler - uses selected format
-    copyTomlBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const config = getConfigFromForm();
-
-        if (selectedFormat === 'toml') {
-            const toml = generateTOML(config);
-            copyToClipboard(toml, copyTomlBtn);
-        } else {
-            const json = generateJSON(config);
-            copyToClipboard(json, copyTomlBtn);
-        }
-    });
-
-    // Copy TOML dropdown button handler
-    copyTomlDropdownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectedFormat = 'toml';
-        updateCheckmarks();
-
-        const config = getConfigFromForm();
-        const toml = generateTOML(config);
-        copyToClipboard(toml, copyTomlBtn);
-    });
-
-    // Copy JSON dropdown button handler
-    copyJsonDropdownBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectedFormat = 'json';
-        updateCheckmarks();
-
-        const config = getConfigFromForm();
-        const json = generateJSON(config);
-        copyToClipboard(json, copyTomlBtn);
-    });
-
-    // Initialize section states on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        // FlexKeys is disabled by default since flexEnabled is unchecked
-        toggleSectionEnabled('flexkeys', false);
-    });
-</script>
-
-</body>
+            // Initialize section states on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                // FlexKeys is disabled by default since flexEnabled is unchecked
+                toggleSectionEnabled('flexkeys', false);
+            });
+        </script>
+    </body>
 </html>

@@ -33,26 +33,57 @@ func (e *Event) Dirty() any {
 	}{}
 }
 
-// cleanJSON is exposed to JavaScript. It takes one argument:
+// cleanJSON is exposed to JavaScript. It takes two arguments:
 //
 //	args[0] = raw JSON string
+//	args[1] = TOML config string (optional, from generateTOML(getConfigFromForm()))
 //
 // It unmarshals into Event (with dirty fallback), then pretty‑prints or returns an error.
-func cleanJSON(this js.Value, args []js.Value) interface{} {
+func cleanJSON(this js.Value, args []js.Value) any {
+	console := js.Global().Get("console")
+
 	if len(args) < 1 {
-		return js.ValueOf("error: cleanJSON(jsonStr) expects one argument")
+		return js.ValueOf("error: cleanJSON(jsonStr, configToml) expects at least one argument")
 	}
 	jsonStr := args[0].String()
 
+	console.Call("log", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	console.Call("log", "📥 INPUT:")
+	console.Call("log", jsonStr)
+
+	// Apply config from TOML if provided
+	if len(args) >= 2 && !args[1].IsUndefined() && !args[1].IsNull() {
+		configToml := args[1].String()
+		console.Call("log", "⚙️  CONFIG:")
+		console.Call("log", configToml)
+
+		if cfg := dirty.ConfigFromBytes([]byte(configToml)); cfg != nil {
+			dirty.ConfigSetGlobal(func(c *dirty.Config) {
+				*c = *cfg
+			})
+		}
+	}
+
 	var e Event
 	if err := dirty.Unmarshal([]byte(jsonStr), &e); err != nil {
-		return js.ValueOf("unmarshal error: " + err.Error())
+		errMsg := "unmarshal error: " + err.Error()
+		console.Call("log", "❌ ERROR:", errMsg)
+		console.Call("log", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		return js.ValueOf(errMsg)
 	}
 
 	out, err := json.MarshalIndent(e, "", "  ")
 	if err != nil {
-		return js.ValueOf("marshal error: " + err.Error())
+		errMsg := "marshal error: " + err.Error()
+		console.Call("log", "❌ ERROR:", errMsg)
+		console.Call("log", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		return js.ValueOf(errMsg)
 	}
+
+	console.Call("log", "✅ RESULT:")
+	console.Call("log", string(out))
+	console.Call("log", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
 	return js.ValueOf(string(out))
 }
 

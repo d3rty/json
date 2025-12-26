@@ -26,6 +26,9 @@ func Unmarshal(data []byte, v any) error {
 var (
 	// ConfigSetGlobal allows us to update the global config.
 	ConfigSetGlobal = config.SetGlobal
+
+	// ConfigFromBytes parses a TOML configuration from bytes.
+	ConfigFromBytes = config.FromBytes
 )
 
 type Config = config.Config
