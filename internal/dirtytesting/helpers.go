@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"unicode"
 
-	"github.com/d3rty/json/internal/cases"
+	"github.com/d3rty/json/cases"
 	"github.com/d3rty/json/internal/flipping"
 )
 

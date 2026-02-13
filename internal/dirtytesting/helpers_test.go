@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/d3rty/json/internal/cases"
+	"github.com/d3rty/json/cases"
 	"github.com/d3rty/json/internal/dirtytesting"
 	"github.com/stretchr/testify/assert"
 )
