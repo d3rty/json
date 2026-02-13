@@ -5,7 +5,7 @@ go 1.25
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/amberpixels/k1 v0.1.4 // latest
-	github.com/amberpixels/years v0.0.7 // latest
+	github.com/amberpixels/years v0.0.8 // latest
 	github.com/stretchr/testify v1.11.1
 )
 
