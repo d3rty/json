@@ -20,13 +20,16 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.26'
+
+      - name: Set up Just
+        uses: extractions/setup-just@v3
 
       - name: Generate config schema
-        run: make config-schema.json
+        run: just config-schema
 
       - name: Build WASM
-        run: make wasm
+        run: just wasm
 
       # ← removed configure-pages step
 
