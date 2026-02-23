@@ -101,7 +101,15 @@ func TestDateTimeUnmarshalJSON(t *testing.T) {
 				assert.Error(t, err, "Expected error for input %v", tc.input)
 			} else {
 				require.NoError(t, err, "Unexpected error for input %v", tc.input)
-				assert.Equal(t, tc.expected, time.Time(dt), "Expected %v for input %v, got %v", tc.expected, tc.input, time.Time(dt))
+				assert.Equal(
+					t,
+					tc.expected,
+					time.Time(dt),
+					"Expected %v for input %v, got %v",
+					tc.expected,
+					tc.input,
+					time.Time(dt),
+				)
 			}
 		})
 	}
