@@ -4,6 +4,7 @@ import (
 	"slices"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 )
 
 // Case defines the target naming convention.
@@ -263,7 +264,7 @@ func IsHybridCase(s string) bool {
 		if part == "" {
 			continue
 		}
-		r := []rune(part)[0]
+		r, _ := utf8.DecodeRuneInString(part)
 		if unicode.IsUpper(r) {
 			hasUpper = true
 		}
@@ -390,7 +391,8 @@ func capitalizeWords(words []string) []string {
 		if w == "" {
 			out[i] = ""
 		} else {
-			out[i] = strings.ToUpper(string([]rune(w)[0])) + strings.ToLower(w[1:])
+			r, size := utf8.DecodeRuneInString(w)
+			out[i] = strings.ToUpper(string(r)) + strings.ToLower(w[size:])
 		}
 	}
 	return out

@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	dirty "github.com/d3rty/json"
 	testmodels "github.com/d3rty/json/tests/models"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSample2_Clean(t *testing.T) {

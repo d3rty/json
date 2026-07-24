@@ -1,12 +1,11 @@
 package config_test
 
 import (
-	"encoding/json"
 	"testing"
 
-	"github.com/d3rty/json/internal/config"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+
+	"github.com/d3rty/json/internal/config"
 )
 
 // Example section struct implementing the disabler interface.
@@ -53,11 +52,6 @@ func TestClone(t *testing.T) {
 	// Clone the original config
 	cloned := cfg.Clone()
 
-	// in JSON representation they now must be the same as well
-	origBytes, err := json.Marshal(cfg)
-	require.NoError(t, err)
-	clonedBytes, err := json.Marshal(cloned)
-	require.NoError(t, err)
-
-	assert.Equal(t, string(origBytes), string(clonedBytes))
+	// The clone must deeply equal the original
+	assert.Equal(t, cfg, cloned)
 }

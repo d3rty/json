@@ -3,9 +3,10 @@ package cases_test
 import (
 	"testing"
 
-	"github.com/d3rty/json/cases"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/d3rty/json/cases"
 )
 
 func TestIsCamelCase(t *testing.T) {

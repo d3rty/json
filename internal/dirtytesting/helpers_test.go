@@ -4,9 +4,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/d3rty/json/cases"
 	"github.com/d3rty/json/internal/dirtytesting"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestTransformToHybridCase_NilRNG(t *testing.T) {
@@ -27,7 +28,7 @@ func TestTransformToHybridCase_NilRNG(t *testing.T) {
 		assert.Len(t, words, 12, words)
 		for _, word := range words {
 			// Each word should have its first letter either uppercase or lowercase.
-			if len(word) > 0 {
+			if word != "" {
 				first := word[0]
 				assert.True(t, (first >= 'A' && first <= 'Z') || (first >= 'a' && first <= 'z'),
 					"Each word should start with an alphabetic character")

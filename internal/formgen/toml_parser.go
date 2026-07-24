@@ -36,9 +36,8 @@ func ParseTOMLComments(content string) (TOMLComments, error) {
 		}
 
 		// Handle comments
-		if strings.HasPrefix(trimmed, "#") {
-			commentText := strings.TrimPrefix(trimmed, "#")
-			commentText = strings.TrimSpace(commentText)
+		if after, ok := strings.CutPrefix(trimmed, "#"); ok {
+			commentText := strings.TrimSpace(after)
 
 			// Skip comments that are just section descriptions (they start with the section name)
 			if len(currentSection) > 0 {

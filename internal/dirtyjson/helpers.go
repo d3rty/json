@@ -10,7 +10,7 @@ const (
 )
 
 func limitedStr(s string, limitArg ...int) string {
-	var limit = maxMessageLength
+	limit := maxMessageLength
 	if len(limitArg) > 0 {
 		limit = limitArg[0]
 	}

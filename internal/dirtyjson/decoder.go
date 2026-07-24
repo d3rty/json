@@ -207,7 +207,7 @@ func (dec *Decoder) decodeStruct(val reflect.Value) error {
 				fieldFound = true
 				fv := val.Field(i)
 				// If the field is a pointer and nil, allocate it.
-				if fv.Kind() == reflect.Ptr && fv.IsNil() {
+				if fv.Kind() == reflect.Pointer && fv.IsNil() {
 					fv.Set(reflect.New(fv.Type().Elem()))
 				}
 				// Decode into the underlying value.

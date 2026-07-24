@@ -6,6 +6,7 @@ import (
 	"slices"
 
 	"github.com/amberpixels/k1/maybe"
+
 	"github.com/d3rty/json/internal/config"
 	"github.com/d3rty/json/internal/flipping"
 )

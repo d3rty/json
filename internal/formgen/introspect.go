@@ -34,7 +34,7 @@ func Introspect(cfg any) (*FormModel, error) {
 // introspectWithComments is the internal version that accepts parsed comments.
 func introspectWithComments(cfg any, comments TOMLComments) (*FormModel, error) {
 	v := reflect.ValueOf(cfg)
-	if v.Kind() == reflect.Ptr {
+	if v.Kind() == reflect.Pointer {
 		v = v.Elem()
 	}
 
@@ -53,7 +53,7 @@ func introspectWithComments(cfg any, comments TOMLComments) (*FormModel, error) 
 		}
 
 		fv := v.Field(i)
-		if fv.Kind() != reflect.Ptr || fv.IsNil() {
+		if fv.Kind() != reflect.Pointer || fv.IsNil() {
 			continue
 		}
 
@@ -79,7 +79,7 @@ func introspectWithComments(cfg any, comments TOMLComments) (*FormModel, error) 
 				continue
 			}
 			// skip nested structs
-			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
+			if subFi.Type.Kind() == reflect.Pointer && subFi.Type.Elem().Kind() == reflect.Struct {
 				continue
 			}
 			fv2 := sectVal.Field(j)
@@ -89,7 +89,7 @@ func introspectWithComments(cfg any, comments TOMLComments) (*FormModel, error) 
 		// 3) nested subsections
 		for j := range sectVal.NumField() {
 			subFi := sectVal.Type().Field(j)
-			if subFi.Type.Kind() == reflect.Ptr && subFi.Type.Elem().Kind() == reflect.Struct {
+			if subFi.Type.Kind() == reflect.Pointer && subFi.Type.Elem().Kind() == reflect.Struct {
 				if sectVal.Field(j).IsNil() {
 					continue
 				}

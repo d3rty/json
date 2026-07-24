@@ -54,7 +54,6 @@ type (
 		Section
 
 		// TODO(github.com/d3rty/json/issues/3) precache customListForTrue + CaseInsensitive (so we don't do lower of the list each time)
-
 		CustomListForTrue       []string `toml:"CustomListForTrue"`
 		CustomListForFalse      []string `toml:"CustomListForFalse"`
 		CaseInsensitive         bool     `toml:"CaseInsensitive"`
@@ -129,7 +128,7 @@ type (
 			Time     []string `toml:"Time"`
 			Date     []string `toml:"Date"`
 			DateTime []string `toml:"DateTime"`
-		}
+		} `toml:"Layouts"`
 		Aliases                 bool `toml:"Aliases"`
 		RespectFromNumbersLogic bool `toml:"RespectFromNumbersLogic"`
 	}
@@ -182,6 +181,18 @@ func (cfg *Config) Clone() *Config {
 	return cloned
 }
 
+// newConfig returns a new (empty/clean) config that disables all dirty options.
+// dirty unmarshalling with an empty config behaves the same as standard unmarshalling.
+func newConfig() *Config {
+	return (&Config{}).init()
+}
+
+// ResetToEmpty resets config to its clean state (clean config).
+func (cfg *Config) ResetToEmpty() { *cfg = *newConfig() }
+
+// ResetToDefault resets config to the default state.
+func (cfg *Config) ResetToDefault() { *cfg = *Default() }
+
 // init sets default for all the config fields.
 // if a subconfig is nil, it automatically changes it to an empty config with Disabled=true.
 func (cfg *Config) init() *Config {
@@ -196,18 +207,6 @@ func (cfg *Config) init() *Config {
 
 	return cfg
 }
-
-// newConfig returns a new (empty/clean) config that disables all dirty options.
-// dirty unmarshalling with an empty config behaves the same as standard unmarshalling.
-func newConfig() *Config {
-	return (&Config{}).init()
-}
-
-// ResetToEmpty resets config to its clean state (clean config).
-func (cfg *Config) ResetToEmpty() { *cfg = *newConfig() }
-
-// ResetToDefault resets config to the default state.
-func (cfg *Config) ResetToDefault() { *cfg = *Default() }
 
 // New creates a new and empty config.
 func New() *Config { return newConfig() }

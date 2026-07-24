@@ -3,10 +3,11 @@ package dirty_test
 import (
 	"testing"
 
-	dirty "github.com/d3rty/json"
-	"github.com/d3rty/json/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	dirty "github.com/d3rty/json"
+	"github.com/d3rty/json/internal/config"
 )
 
 type Event0 struct {

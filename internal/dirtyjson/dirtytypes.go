@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/amberpixels/k1/maybe"
-	"github.com/d3rty/json/internal/config"
-
 	"github.com/amberpixels/years"
+
+	"github.com/d3rty/json/internal/config"
 )
 
 // that allow us to init and retrieve dirty data.
@@ -351,7 +351,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			if len(cfg.CustomListForTrue) > 0 {
 				if cfg.CaseInsensitive {
 					for _, ts := range cfg.CustomListForTrue {
-						if sLower == strings.ToLower(ts) {
+						if strings.EqualFold(sLower, ts) {
 							return maybe.True()
 						}
 					}
@@ -362,7 +362,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 				if literalForTrue == s {
 					return maybe.True()
 				}
-				if cfg.CaseInsensitive && literalForTrue == strings.ToLower(s) {
+				if cfg.CaseInsensitive && strings.EqualFold(literalForTrue, s) {
 					return maybe.True()
 				}
 			}
@@ -370,7 +370,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 			if len(cfg.CustomListForFalse) > 0 {
 				if cfg.CaseInsensitive {
 					for _, ts := range cfg.CustomListForFalse {
-						if sLower == strings.ToLower(ts) {
+						if strings.EqualFold(sLower, ts) {
 							return maybe.False()
 						}
 					}
@@ -381,7 +381,7 @@ func (v *Bool) UnmarshalJSON(data []byte) error {
 				if literalForFalse == s {
 					return maybe.False()
 				}
-				if cfg.CaseInsensitive && literalForFalse == strings.ToLower(s) {
+				if cfg.CaseInsensitive && strings.EqualFold(literalForFalse, s) {
 					return maybe.False()
 				}
 			}
@@ -532,7 +532,7 @@ func (v *Date) UnmarshalJSON(data []byte) error {
 	}
 
 	// trimming DateTime to Date
-	var t = time.Time(res)
+	t := time.Time(res)
 	*v = Date(
 		years.Mutate(&t).TruncateToDay().Time(),
 	)
@@ -550,7 +550,7 @@ func (v *Time) UnmarshalJSON(data []byte) error {
 		return fmt.Errorf("dirty.Date unmarshal failure: %w", err)
 	}
 
-	var t = time.Time(res)
+	t := time.Time(res)
 	*v = Time(
 		years.Mutate(&t).SetYear(0).SetMonth(0).SetDay(0).Time(),
 	)

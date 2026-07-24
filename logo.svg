@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 338 136" width="338" height="136" xml:space="preserve">
+  <style>
+    text { font-family: 'Menlo','Consolas','DejaVu Sans Mono',monospace; font-size: 26px; font-weight: 700; white-space: pre; }
+  </style>
+  <rect width="338" height="136" fill="transparent"/>
+  <!-- D -->
+  <text x="6" y="26" fill="#78350F">░█▀▄</text>
+  <text x="6" y="48" fill="#78350F">░█░█</text>
+  <text x="6" y="70" fill="#78350F">░▀▀░</text>
+  <!-- 3 (dropped) -->
+  <text x="72" y="40" fill="#92400E">░▀▀█</text>
+  <text x="72" y="62" fill="#92400E">░░▀▄</text>
+  <text x="72" y="84" fill="#92400E">░▀▀░</text>
+  <!-- R (dropped; notched mid bar) -->
+  <text x="138" y="54" fill="#A16207">░█▀▄</text>
+  <text x="138" y="76" fill="#A16207">░█▀░</text>
+  <text x="138" y="98" fill="#A16207">░▀░▀</text>
+  <!-- T (dropped; scanline left of foot) -->
+  <text x="204" y="68" fill="#CA8A04">░▀█▀</text>
+  <text x="204" y="90" fill="#CA8A04">░░█░</text>
+  <text x="204" y="112" fill="#CA8A04">░▄▀░</text>
+  <!-- Y (dropped; clean — the dirt washed out) -->
+  <text x="270" y="82" fill="#22D3EE">░█░█</text>
+  <text x="270" y="104" fill="#22D3EE">░▀█▀</text>
+  <text x="270" y="126" fill="#22D3EE">░░▀░</text>
+</svg>

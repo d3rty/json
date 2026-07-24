@@ -3,10 +3,11 @@ package dirtytests
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	dirty "github.com/d3rty/json"
 	"github.com/d3rty/json/internal/config"
 	testmodels "github.com/d3rty/json/tests/models"
-	"github.com/stretchr/testify/require"
 )
 
 func XTestSampleSandbox(t *testing.T) {
@@ -72,8 +73,4 @@ func XTestSampleSandbox(t *testing.T) {
 	require.Error(t,
 		dirty.Unmarshal(contents, &dirtyResult),
 	)
-
-	// TODO
-	_ = dirtyResult
-	// fmt.Println("=> ", dirtyResult)
 }

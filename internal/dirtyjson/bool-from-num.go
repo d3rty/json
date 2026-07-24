@@ -2,6 +2,7 @@ package dirtyjson
 
 import (
 	"github.com/amberpixels/k1/maybe"
+
 	"github.com/d3rty/json/internal/config"
 )
 
@@ -13,7 +14,6 @@ type boolFromNum = func(i float64) maybe.Bool
 //nolint:gochecknoglobals // we're ok with it as well
 var (
 	parsersBoolFromNum = map[config.BoolFromNumberAlg]boolFromNum{
-
 		config.BoolFromNumberBinary: func(i float64) maybe.Bool {
 			switch i {
 			case 0:

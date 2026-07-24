@@ -1,12 +1,14 @@
 package dirtyjson_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/amberpixels/k1/maybe"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/d3rty/json/internal/config"
 	"github.com/d3rty/json/internal/dirtyjson"
-	"github.com/stretchr/testify/assert"
 )
 
 // TestBoolFromNumberBinary tests the BoolFromNumberBinary algorithm.
@@ -115,13 +117,7 @@ func TestAllBoolFromNumberAlgs(t *testing.T) {
 
 	// Check that all expected algorithms are in the list
 	for _, expected := range expectedAlgs {
-		found := false
-		for _, alg := range algs {
-			if alg == expected {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(algs, expected)
 		assert.True(t, found, "Expected algorithm %v not found in available algorithms", expected)
 	}
 

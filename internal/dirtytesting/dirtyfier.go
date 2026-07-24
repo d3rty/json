@@ -37,27 +37,6 @@ func NewDirtifier(threshold float64, cfg *config.Config, coinArg ...*flipping.Co
 	}
 }
 
-// keepItClean returns true/false depending on the current rand generation and the threshold
-// keepItClean returns true if we should omit dirtifying, and false if we should do dirtifying.
-func (d *Dirtifier) keepItClean() bool { return d.coin.Chance(d.threshold) }
-
-func (d *Dirtifier) randomCase(s string) string {
-	// Optionally, seed the random number generator once in your main function or init block.
-	// rand.Seed(time.Now().UnixNano())
-
-	// Convert the string to a slice of runes to properly handle Unicode characters.
-	runes := []rune(s)
-	for i, r := range runes {
-		// With a 50% chance convert to lower case, else upper case.
-		if d.coin.Flip() {
-			runes[i] = unicode.ToLower(r)
-		} else {
-			runes[i] = unicode.ToUpper(r)
-		}
-	}
-	return string(runes)
-}
-
 // Make makes dirty values applying random dirtify-transformations.
 func (d *Dirtifier) Make(val any) any {
 	switch v := val.(type) {
@@ -87,6 +66,25 @@ func (d *Dirtifier) Make(val any) any {
 		// For other types (strings, nil, etc.), leave unchanged.
 		return v
 	}
+}
+
+// keepItClean returns true/false depending on the current rand generation and the threshold
+// keepItClean returns true if we should omit dirtifying, and false if we should do dirtifying.
+func (d *Dirtifier) keepItClean() bool { return d.coin.Chance(d.threshold) }
+
+// randomCase randomly flips each rune of the string to lower or upper case.
+func (d *Dirtifier) randomCase(s string) string {
+	// Convert the string to a slice of runes to properly handle Unicode characters.
+	runes := []rune(s)
+	for i, r := range runes {
+		// With a 50% chance convert to lower case, else upper case.
+		if d.coin.Flip() {
+			runes[i] = unicode.ToLower(r)
+		} else {
+			runes[i] = unicode.ToUpper(r)
+		}
+	}
+	return string(runes)
 }
 
 // makeDirtyKey makes a dirty key from a given clean key.
@@ -193,7 +191,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 
 		if !numberToBeStringified {
 			if v {
-				var sTrue = "true" // by default, the "true" string is considered to be as true
+				sTrue := "true" // by default, the "true" string is considered to be as true
 				if len(cfgFromStrings.CustomListForTrue) > 0 {
 					sTrue = flipping.FeelingLucky(cfgFromStrings.CustomListForTrue, d.coin)
 				}
@@ -204,7 +202,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 				return d.maybeBoolNilify(v, sTrue)
 			}
 
-			var sFalse = "false"
+			sFalse := "false"
 			if len(
 				cfgFromStrings.CustomListForFalse,
 			) > 0 { // by default, the "false" string is considered to be as false
@@ -216,7 +214,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 			return d.maybeBoolNilify(v, sFalse)
 		}
 
-		// numberToBeStringified = true
+		// Reaching here means the bool goes through the number flow, stringified.
 		fallthrough
 	case "number":
 		cfg := d.cfg.Bool.FromNumbers
@@ -242,9 +240,7 @@ func (d *Dirtifier) makeDirtyBool(v bool) any {
 			} else {
 				intBoolResult = -1
 			}
-		case config.BoolFromNumberUndefined:
-			fallthrough
-		default:
+		default: // config.BoolFromNumberUndefined included
 			panic("something really bad")
 		}
 

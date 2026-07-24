@@ -2,11 +2,13 @@ package flipping_test
 
 import (
 	"math/rand"
+	"slices"
 	"testing"
 	"time"
 
-	"github.com/d3rty/json/internal/flipping"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/d3rty/json/internal/flipping"
 )
 
 func TestNewCoin(t *testing.T) {
@@ -72,13 +74,7 @@ func TestFeelingLucky(t *testing.T) {
 	coin := flipping.NewCoin(rng)
 
 	result := flipping.FeelingLucky(nums, coin)
-	found := false
-	for _, v := range nums {
-		if result == v {
-			found = true
-			break
-		}
-	}
+	found := slices.Contains(nums, result)
 	assert.True(t, found, "FeelingLucky should return one of the items in the slice")
 
 	// Test with an empty slice, expecting the zero value.

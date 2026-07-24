@@ -1,30 +1,29 @@
-name: Go
+name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.26"
+          go-version-file: go.mod
+      - uses: extractions/setup-just@v3
 
-      - name: Set up Just
-        uses: extractions/setup-just@v3
-
-      - name: Tidy
-        run: just tidy
-
-      #    - name: Lint
-      #      uses: golangci/golangci-lint-action@v7
+      - name: Lint
+        run: just lint
 
       - name: Test
         run: just test
+
+      # Cheap cross-compile check: catches wasm breakage without a js runner.
+      - name: Build (js/wasm)
+        run: GOOS=js GOARCH=wasm go build ./cmd/wasm-demo

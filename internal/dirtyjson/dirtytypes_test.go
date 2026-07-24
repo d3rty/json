@@ -5,10 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/d3rty/json/internal/config"
-	"github.com/d3rty/json/internal/dirtyjson"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/d3rty/json/internal/config"
+	"github.com/d3rty/json/internal/dirtyjson"
 )
 
 // TestDateTimeUnmarshalJSON tests the DateTime.UnmarshalJSON method.

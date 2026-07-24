@@ -46,7 +46,7 @@ func handleDefaultFieldDisabled(v any) {
 
 	// Ensure we have a pointer to a struct.
 	rv := reflect.ValueOf(v)
-	if rv.Kind() != reflect.Ptr || rv.Elem().Kind() != reflect.Struct {
+	if rv.Kind() != reflect.Pointer || rv.Elem().Kind() != reflect.Struct {
 		return
 	}
 	rv = rv.Elem()
@@ -61,7 +61,7 @@ func handleDefaultFieldDisabled(v any) {
 			handleDefaultFieldDisabled(field.Addr().Interface())
 			continue
 		}
-		if field.Kind() != reflect.Ptr {
+		if field.Kind() != reflect.Pointer {
 			continue
 		}
 		if field.Type().Elem().Kind() != reflect.Struct {

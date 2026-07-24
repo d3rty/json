@@ -8,11 +8,12 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	dirty "github.com/d3rty/json"
 	"github.com/d3rty/json/internal/config"
 	. "github.com/d3rty/json/internal/dirtytesting"
 	testmodels "github.com/d3rty/json/tests/models"
-	"github.com/stretchr/testify/require"
 )
 
 const (
