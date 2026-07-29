@@ -24,7 +24,7 @@ jobs:
           cache-dependency-path: |
             go.sum
             justfile
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - name: Lint
         run: just lint
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: extractions/setup-just@v3
+      - uses: extractions/setup-just@v4
 
       - id: pin
         run: echo "go=$(just --evaluate floor_go | sed 's/^go//')" >>"$GITHUB_OUTPUT"
