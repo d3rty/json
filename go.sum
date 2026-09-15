@@ -2,8 +2,8 @@ github.com/BurntSushi/toml v1.6.0 h1:dRaEfpa2VI55EwlIW72hMRHdWouJeRF7TPYhI+AUQjk
 github.com/BurntSushi/toml v1.6.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=
 github.com/IGLOU-EU/go-wildcard v1.0.3 h1:r8T46+8/9V1STciXJomTWRpPEv4nGJATDbJkdU0Nou0=
 github.com/IGLOU-EU/go-wildcard v1.0.3/go.mod h1:/qeV4QLmydCbwH0UMQJmXDryrFKJknWi/jjO8IiuQfY=
-github.com/amberpixels/k1 v0.2.3 h1:qvnNOIxbXukPh/OBZqVhxMWGL7fo+oDCl+/XaYJ8/sg=
-github.com/amberpixels/k1 v0.2.3/go.mod h1:/IsjZlaz0fqKciCNdYm2IBrNobx7ia0BIhV10Xqz+X4=
+github.com/amberpixels/k1 v0.3.0 h1:RlbmRIAYCpGjfNYvmskEV3Ku/GLyntzMgn9ZmDRxZG0=
+github.com/amberpixels/k1 v0.3.0/go.mod h1:FbxSAe8H+aQ9RVburxYwd07jcSxw6UE4AmOMsHrU0dI=
 github.com/amberpixels/years v0.4.0 h1:/CnfMkKfLkHKocNS79s2QCT/Tmxzk8Zc3zBPE6yei38=
 github.com/amberpixels/years v0.4.0/go.mod h1:tAa93YwahEx8zRtrIeV+xRO466gQB+0rQlK2HqVKgoc=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
